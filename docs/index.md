@@ -17,3 +17,5 @@ We will build the mobile client with React Native for Android and iOS.
 
 We can revise dependencies or architecture patterns when product needs require a change.
 
+As a developer I am fimilar with Android development. 
+
