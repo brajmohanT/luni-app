@@ -2,13 +2,15 @@
 
 Use this document to track Luni mobile delivery, blockers, and release gates.
 
-Status: planning. The `luni-app` folder has no Expo application yet.
+Status: foundation in progress. The Expo application runs with TypeScript, Expo Router, TanStack Query, SecureStore, and SQLite.
 
 ## Foundation
 
 - [ ] Create `packages/contracts` with shared Zod schemas for API requests, responses, and errors.
 - [ ] Add backend tests for authentication, chat idempotency, conversations, memory deletion, and account deletion.
-- [ ] Create the Expo app with TypeScript, Expo Router, EAS development builds, SecureStore, and SQLite.
+- [x] Create the Expo app with TypeScript and Expo Router.
+- [x] Add TanStack Query, SecureStore, and the SQLite persistence foundation.
+- [ ] Configure EAS development builds.
 - [ ] Connect Supabase authentication to the Luni API.
 
 ## Chat and memory

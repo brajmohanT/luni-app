@@ -10,7 +10,7 @@ Android is the first test platform, followed by iOS.
 
 ## Current repository state
 
-This `luni-app` directory contains planning documentation. An Expo application has not been created yet.
+This `luni-app` directory contains an initialized Expo application and project documentation. The app has TypeScript, Expo Router, TanStack Query, SecureStore, and a versioned SQLite persistence foundation. EAS development builds and authentication are not configured yet.
 
 ## Architecture
 
