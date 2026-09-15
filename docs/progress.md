@@ -10,8 +10,9 @@ Status: foundation in progress. The Expo application runs with TypeScript, Expo 
 - [ ] Add backend tests for authentication, chat idempotency, conversations, memory deletion, and account deletion.
 - [x] Create the Expo app with TypeScript and Expo Router.
 - [x] Add TanStack Query, SecureStore, and the SQLite persistence foundation.
+- [x] Add the Supabase client, session provider, and protected auth/app route groups.
 - [ ] Configure EAS development builds.
-- [ ] Connect Supabase authentication to the Luni API.
+- [ ] Build sign-in and sign-up forms, then connect Supabase authentication to the Luni API.
 
 ## Chat and memory
 
