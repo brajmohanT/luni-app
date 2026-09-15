@@ -4,6 +4,7 @@ import { type PropsWithChildren, useState } from 'react';
 
 import { DATABASE_NAME } from '@/lib/database/database';
 import { migrateDatabase } from '@/lib/database/migrations';
+import { AuthProvider } from '@/providers/auth-provider';
 
 export function AppProviders({ children }: PropsWithChildren) {
   const [queryClient] = useState(() => new QueryClient());
@@ -11,7 +12,7 @@ export function AppProviders({ children }: PropsWithChildren) {
   return (
     <QueryClientProvider client={queryClient}>
       <SQLiteProvider databaseName={DATABASE_NAME} onInit={migrateDatabase}>
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </SQLiteProvider>
     </QueryClientProvider>
   );
