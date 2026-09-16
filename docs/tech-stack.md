@@ -18,7 +18,7 @@ Luni is a mobile AI companion. The first release is native-feeling text chat wit
 | Builds and updates | EAS Build and EAS Update | Managed Android/iOS builds and controlled over-the-air JavaScript updates. |
 | Server data | TanStack Query | Fetching, caching, retries, loading states, and cache invalidation for conversations, profiles, and memories. |
 | Local UI state | Zustand | Small, explicit stores for ephemeral UI state. Do not put server data here. |
-| Forms and validation | React Hook Form + Zod | Efficient mobile forms and schemas that can align with backend validation. |
+| Forms and validation | React Hook Form + Zod + `@hookform/resolvers` | Typed, efficient mobile forms. The resolver connects the Zod schema to React Hook Form. Used for the implemented email/password authentication forms. |
 | Auth token storage | expo-secure-store | Stores session credentials in platform secure storage. |
 | Local database | expo-sqlite, before external beta | Store drafts, pending messages, and a recent-chat cache. The server remains the source of truth. |
 | Chat rendering | FlashList, when the chat UI is implemented | Designed for efficient long, scrolling message lists. |

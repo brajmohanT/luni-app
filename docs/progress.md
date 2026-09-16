@@ -11,8 +11,11 @@ Status: foundation in progress. The Expo application runs with TypeScript, Expo 
 - [x] Create the Expo app with TypeScript and Expo Router.
 - [x] Add TanStack Query, SecureStore, and the SQLite persistence foundation.
 - [x] Add the Supabase client, session provider, and protected auth/app route groups.
+- [x] Add React Hook Form, Zod, and the Zod resolver for typed form validation.
+- [x] Build validated email/password sign-in and sign-up forms connected to Supabase Auth.
 - [ ] Configure EAS development builds.
-- [ ] Build sign-in and sign-up forms, then connect Supabase authentication to the Luni API.
+- [ ] Connect the authenticated Supabase session to the Luni API.
+- [ ] Re-enable Supabase email confirmation and implement the `luniapp://auth/callback` deep-link flow before external testing.
 
 ## Chat and memory
 
