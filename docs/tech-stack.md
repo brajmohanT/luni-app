@@ -14,6 +14,7 @@ Luni is a mobile AI companion. The first release is native-feeling text chat wit
 | --- | --- | --- |
 | Mobile framework | Expo + React Native + TypeScript | Fast cross-platform delivery while retaining access to native capabilities when Luni needs them. |
 | Development workflow | Expo development builds, not Expo Go | Required for production-like native modules and a reliable Android-first test path. |
+| Package manager layout | pnpm with `nodeLinker: hoisted` | Keeps React Native native-module paths short and flattened for reliable Windows CMake/Android builds. |
 | Navigation | Expo Router | File-based routes, deep-link support, and a conventional Expo structure. |
 | Builds and updates | EAS Build and EAS Update | Managed Android/iOS builds and controlled over-the-air JavaScript updates. |
 | Server data | TanStack Query | Fetching, caching, retries, loading states, and cache invalidation for conversations, profiles, and memories. |
@@ -59,6 +60,10 @@ Existing Luni API
   ├── Memory and personalization
   └── Postgres, OpenAI, safety controls
 ```
+
+## Local Android build constraint
+
+Windows CMake builds can exceed their object-path limit when pnpm's isolated layout adds long `.pnpm` package paths to native dependencies such as `react-native-worklets`. Keep the repository at a short local path and retain `nodeLinker: hoisted` in `pnpm-workspace.yaml`. After changing that setting, reinstall dependencies and clear generated Android build artifacts before rebuilding.
 
 ## Deliberately not choosing yet
 

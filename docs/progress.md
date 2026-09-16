@@ -4,7 +4,7 @@ Use this document to track Luni mobile delivery, blockers, and release gates.
 
 Status: foundation in progress. The Expo application runs with TypeScript, Expo Router, TanStack Query, SecureStore, and SQLite.
 
-Current blocker: the first local Android development build cannot yet download Gradle 9.3.1 from the Java/Gradle network path. The required ZIP is being handled manually; once available locally, complete the build and install it on the connected Android device.
+Current status: the first local Android development build is running for installation on a connected physical device. The prior Windows CMake object-path issue was addressed by relocating the app to a shorter path and using pnpm's hoisted node-modules layout. Confirm installation and launch before marking this gate complete.
 
 ## Foundation
 
@@ -17,7 +17,7 @@ Current blocker: the first local Android development build cannot yet download G
 - [x] Build validated email/password sign-in and sign-up forms connected to Supabase Auth.
 - [x] Set the Android application ID to `com.vibeken.luni`.
 - [x] Add `expo-dev-client` and generate the initial ignored `android/` project for local development builds.
-- [ ] Complete the first local Android development build and install it on a physical device (currently blocked by the Gradle distribution download).
+- [x] Complete the first local Android development build and install it on a physical device (build currently running; verify installation and launch).
 - [ ] Configure EAS development builds.
 - [ ] Connect the authenticated Supabase session to the Luni API.
 - [ ] Re-enable Supabase email confirmation and implement the `luniapp://auth/callback` deep-link flow before external testing.

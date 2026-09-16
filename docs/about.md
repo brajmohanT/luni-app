@@ -10,11 +10,13 @@ Android is the first test platform, followed by iOS.
 
 ## Current repository state
 
-This `luni-app` directory contains an initialized Expo application and project documentation. The app has TypeScript, Expo Router, TanStack Query, SecureStore, a versioned SQLite persistence foundation, and a Supabase session provider with protected auth and app route groups. Email/password sign-in and sign-up forms use React Hook Form and Zod, and persist Supabase sessions in SecureStore. EAS development builds, mobile deep-link completion flows, and Luni API integration are not configured yet.
+This `luni-app` directory contains an initialized Expo application and project documentation. The app has TypeScript, Expo Router, TanStack Query, SecureStore, a versioned SQLite persistence foundation, and a Supabase session provider with protected auth and app route groups. Email/password sign-in and sign-up forms use React Hook Form and Zod, and persist Supabase sessions in SecureStore. The first local Android development build is running for a connected device. EAS development builds, mobile deep-link completion flows, and Luni API integration are not configured yet.
 
 ## Architecture
 
 The mobile client will use Expo, React Native, and TypeScript. It will call the existing Luni API over HTTPS with a bearer token. The mobile client must not call OpenAI or the database directly.
+
+For local Windows Android builds, pnpm uses the hoisted node-modules layout configured in `pnpm-workspace.yaml`, and the repository must remain at a short path. This avoids CMake object-path failures from deeply nested native-module paths.
 
 The backend already exists outside this directory. It uses Node.js, TypeScript, Express, Supabase Auth, managed Postgres, Drizzle ORM, the OpenAI Responses API, and Render deployment.
 
