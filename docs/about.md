@@ -10,7 +10,7 @@ Android is the first test platform, followed by iOS.
 
 ## Current repository state
 
-This `luni-app` directory contains an initialized Expo application and project documentation. The app has TypeScript, Expo Router, TanStack Query, SecureStore, a versioned SQLite persistence foundation, and a Supabase session provider with protected auth and app route groups. Email/password sign-in and sign-up forms use React Hook Form and Zod, and persist Supabase sessions in SecureStore. The first local Android development build has installed and launched on a connected device, where the login and sign-up screens render correctly. EAS development builds, mobile deep-link completion flows, and Luni API integration are not configured yet.
+This `luni-app` directory contains an initialized Expo application and project documentation. The app has TypeScript, Expo Router, TanStack Query, SecureStore, a versioned SQLite persistence foundation, and a Supabase session provider with protected auth and app route groups. Email/password sign-in and sign-up forms use React Hook Form and Zod, and persist Supabase sessions in SecureStore. The first local Android development build has installed and launched on a connected device, where the login and sign-up screens render correctly. A typed Luni API client sends authenticated requests, correlation IDs, and app metadata, but no screens use its conversation endpoints yet. EAS development builds and mobile deep-link completion flows are not configured yet.
 
 ## Architecture
 
@@ -18,7 +18,7 @@ The mobile client will use Expo, React Native, and TypeScript. It will call the 
 
 For local Windows Android builds, pnpm uses the hoisted node-modules layout configured in `pnpm-workspace.yaml`, and the repository must remain at a short path. This avoids CMake object-path failures from deeply nested native-module paths.
 
-The backend already exists outside this directory. It uses Node.js, TypeScript, Express, Supabase Auth, managed Postgres, Drizzle ORM, the OpenAI Responses API, and Render deployment.
+The backend already exists outside this directory. It uses Node.js, TypeScript, Express, Supabase Auth, managed Postgres, Drizzle ORM, the OpenAI Responses API, and Render deployment. The backend repository's OpenAPI document is the API-contract source of truth. `docs/openapi.yaml` in this mobile repository is a read-only reference copy; agents must not edit it.
 
 The backend owns authentication, conversations, AI generation, memory extraction and retrieval, safety policy, billing checks, and personal-data handling. The client owns screens, navigation, local drafts and recent-chat cache, message UI state, and secure token storage.
 
@@ -33,9 +33,9 @@ The backend owns authentication, conversations, AI generation, memory extraction
 
 ## Delivery priorities
 
-1. Create shared Zod API contracts and backend test coverage.
-2. Create the Expo app and connect Supabase authentication to the Luni API.
-3. Build reliable chat with streaming, idempotency, retries, drafts, and app-restart recovery.
+1. Maintain API contracts and backend test coverage in the backend repository.
+2. Connect the Expo app to the Luni API.
+3. Build reliable non-streaming chat with idempotency, retries, drafts, and app-restart recovery. Add streaming in a later contract revision.
 4. Add memory review, correction, deletion, disable, export, and account-deletion flows.
 5. Add release controls, privacy-safe monitoring, analytics, and test coverage before external beta.
 

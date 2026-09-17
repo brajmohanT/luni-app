@@ -1,0 +1,535 @@
+openapi: 3.1.0
+info:
+  title: Luni API
+  version: 1.0.0
+  description: |
+    API contract for the Luni mobile application.
+    Any unmatched route returns 404 ROUTE_NOT_FOUND with the ApiError schema.
+servers:
+  - url: http://localhost:8080
+    description: Local development
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Check that the process is running
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/AppVersion'
+        - $ref: '#/components/parameters/AppBuild'
+        - $ref: '#/components/parameters/Platform'
+        - $ref: '#/components/parameters/PlatformVersion'
+      security: []
+      responses:
+        '200':
+          description: Process is live
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Liveness'
+  /ready:
+    get:
+      operationId: getReadiness
+      summary: Check that the process can accept traffic and reach the database
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/AppVersion'
+        - $ref: '#/components/parameters/AppBuild'
+        - $ref: '#/components/parameters/Platform'
+        - $ref: '#/components/parameters/PlatformVersion'
+      security: []
+      responses:
+        '200':
+          description: Application is ready
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ready'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /conversations:
+    get:
+      operationId: listConversations
+      summary: List the authenticated user's recent conversations
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/AppVersion'
+        - $ref: '#/components/parameters/AppBuild'
+        - $ref: '#/components/parameters/Platform'
+        - $ref: '#/components/parameters/PlatformVersion'
+      responses:
+        '200':
+          description: Up to 50 conversations, newest first
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [conversations]
+                properties:
+                  conversations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Conversation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/EmailNotConfirmed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceDraining'
+  /conversations/{conversationId}/messages:
+    get:
+      operationId: getConversationMessages
+      summary: Load the authenticated user's conversation and recent messages
+      parameters:
+        - $ref: '#/components/parameters/ConversationId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/AppVersion'
+        - $ref: '#/components/parameters/AppBuild'
+        - $ref: '#/components/parameters/Platform'
+        - $ref: '#/components/parameters/PlatformVersion'
+      responses:
+        '200':
+          description: Up to 100 messages in chronological order
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [conversation, messages]
+                properties:
+                  conversation:
+                    $ref: '#/components/schemas/Conversation'
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/EmailNotConfirmed'
+        '404':
+          $ref: '#/components/responses/ConversationNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceDraining'
+  /chat:
+    post:
+      operationId: sendChatMessage
+      summary: Save a user message and generate a companion reply
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/AppVersion'
+        - $ref: '#/components/parameters/AppBuild'
+        - $ref: '#/components/parameters/Platform'
+        - $ref: '#/components/parameters/PlatformVersion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Reply generated, or the completed result replayed for a duplicate client request ID
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '400':
+          $ref: '#/components/responses/InvalidChatRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/EmailNotConfirmed'
+        '404':
+          $ref: '#/components/responses/ConversationNotFound'
+        '409':
+          $ref: '#/components/responses/ChatConflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceDraining'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase session access token.
+  headers:
+    RequestId:
+      description: Request correlation UUID. The server always returns this header.
+      schema:
+        type: string
+        format: uuid
+  parameters:
+    RequestId:
+      name: X-Request-Id
+      in: header
+      required: false
+      description: Optional request correlation UUID. The server reuses a valid UUID and otherwise generates one.
+      schema:
+        type: string
+        format: uuid
+    AppVersion:
+      name: X-App-Version
+      in: header
+      required: false
+      description: Mobile application semantic version, used for compatibility and release-level observability.
+      schema:
+        type: string
+        pattern: '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$'
+        examples: ['1.0.0', '1.2.0-beta.1']
+    AppBuild:
+      name: X-App-Build
+      in: header
+      required: false
+      description: Native application build identifier, used with X-App-Version for release-level observability.
+      schema:
+        type: string
+        minLength: 1
+        examples: ['42', '20260318.1']
+    Platform:
+      name: X-Platform
+      in: header
+      required: false
+      description: Mobile platform that issued the request.
+      schema:
+        type: string
+        enum: [android, ios]
+    PlatformVersion:
+      name: X-Platform-Version
+      in: header
+      required: false
+      description: Mobile operating-system version, used for platform-specific diagnostics.
+      schema:
+        type: string
+        minLength: 1
+        examples: ['15', '18.3']
+    ConversationId:
+      name: conversationId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    Unauthorized:
+      description: Missing, invalid, or expired bearer token
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/MissingAccessTokenError'
+              - $ref: '#/components/schemas/InvalidAccessTokenError'
+    EmailNotConfirmed:
+      description: The authenticated Supabase account has no confirmed email address
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EmailNotConfirmedError'
+    ConversationNotFound:
+      description: The conversation does not exist or does not belong to the authenticated user
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConversationNotFoundError'
+    ValidationError:
+      description: Request body or route parameter failed validation
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+    InvalidChatRequest:
+      description: Invalid JSON or a chat request that failed validation
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/InvalidJsonError'
+              - $ref: '#/components/schemas/ValidationError'
+    ChatConflict:
+      description: A duplicate chat request or another message in the conversation is processing
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/ChatRequestInProgressError'
+              - $ref: '#/components/schemas/ConversationBusyError'
+    PayloadTooLarge:
+      description: JSON request body exceeds 16 KB
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PayloadTooLargeError'
+    ServiceDraining:
+      description: Application is shutting down and rejects new requests
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ServiceDrainingError'
+    ServiceUnavailable:
+      description: Application cannot serve readiness traffic
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ServiceUnavailableError'
+    InternalError:
+      description: Unexpected server or provider failure
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalError'
+  schemas:
+    Conversation:
+      type: object
+      required: [id, title, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: [string, 'null']
+          description: Always null in the current API. The backend will provide titles in a future contract revision.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Message:
+      type: object
+      required: [id, role, content, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [user, assistant, system]
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    ChatRequest:
+      type: object
+      additionalProperties: false
+      required: [message, clientRequestId]
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 4000
+          description: The server trims whitespace before validating and saving this value.
+        clientRequestId:
+          type: string
+          format: uuid
+          description: Generate one UUID per user send. Reuse it only to retry that same send.
+        conversationId:
+          type: string
+          format: uuid
+          description: Omit to create a new conversation.
+    ChatResponse:
+      type: object
+      required: [reply, responseId, conversationId]
+      properties:
+        reply:
+          type: string
+        responseId:
+          type: [string, 'null']
+        conversationId:
+          type: string
+          format: uuid
+    ApiError:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          enum:
+            - MISSING_ACCESS_TOKEN
+            - INVALID_ACCESS_TOKEN
+            - EMAIL_NOT_CONFIRMED
+            - VALIDATION_ERROR
+            - INVALID_JSON
+            - PAYLOAD_TOO_LARGE
+            - CONVERSATION_NOT_FOUND
+            - CHAT_REQUEST_IN_PROGRESS
+            - CONVERSATION_BUSY
+            - SERVICE_DRAINING
+            - SERVICE_UNAVAILABLE
+            - ROUTE_NOT_FOUND
+            - INVALID_REQUEST
+            - INTERNAL_ERROR
+        message:
+          type: string
+        details:
+          type: array
+          description: Present for VALIDATION_ERROR responses.
+          items:
+            type: object
+            required: [path, message]
+            properties:
+              path:
+                type: string
+              message:
+                type: string
+    MissingAccessTokenError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              const: MISSING_ACCESS_TOKEN
+    InvalidAccessTokenError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              const: INVALID_ACCESS_TOKEN
+    EmailNotConfirmedError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              const: EMAIL_NOT_CONFIRMED
+    ConversationNotFoundError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              const: CONVERSATION_NOT_FOUND
+    ValidationError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          required: [details]
+          properties:
+            code:
+              const: VALIDATION_ERROR
+    InvalidJsonError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              const: INVALID_JSON
+    PayloadTooLargeError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              const: PAYLOAD_TOO_LARGE
+    ChatRequestInProgressError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              const: CHAT_REQUEST_IN_PROGRESS
+    ConversationBusyError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              const: CONVERSATION_BUSY
+    ServiceDrainingError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              const: SERVICE_DRAINING
+    InternalError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              const: INTERNAL_ERROR
+    ServiceUnavailableError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              const: SERVICE_UNAVAILABLE
+    Liveness:
+      type: object
+      required: [status, uptimeSeconds, timestamp]
+      properties:
+        status:
+          type: string
+          const: ok
+        uptimeSeconds:
+          type: integer
+          minimum: 0
+        timestamp:
+          type: string
+          format: date-time
+    Ready:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          const: ready

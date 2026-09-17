@@ -19,7 +19,9 @@ Current status: the first local Android development build installed and launched
 - [x] Add `expo-dev-client` and generate the initial ignored `android/` project for local development builds.
 - [x] Complete the first local Android development build and install it on a physical device; verified the login and sign-up screens render.
 - [ ] Configure EAS development builds.
-- [ ] Connect the authenticated Supabase session to the Luni API.
+- [x] Add a typed Luni API client with Supabase bearer authentication, request IDs, app metadata headers, OpenAPI response parsing, and typed errors.
+- [x] Add TanStack Query hooks for conversation lists, conversation messages, and non-retrying chat sends.
+- [ ] Connect conversation screens to the authenticated Luni API.
 - [ ] Re-enable Supabase email confirmation and implement the `luniapp://auth/callback` deep-link flow before external testing.
 
 ## Chat and memory
