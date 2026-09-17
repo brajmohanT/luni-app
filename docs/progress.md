@@ -26,7 +26,11 @@ Current status: the first local Android development build installed and launched
 
 ## Chat and memory
 
-- [ ] Build onboarding, conversation list, cached chat, drafts, retry controls, and error states.
+- [x] Build the authenticated conversation list with loading, empty, refresh, and retry states.
+- [x] Build conversation detail with chronological message rendering, refresh, and recovery states.
+- [x] Build new chat with non-streaming send, idempotency keys, and explicit retry.
+- [x] Share the composer between new and existing conversations, including send and retry state.
+- [ ] Build onboarding, cached chat, drafts, and app-restart recovery.
 - [ ] Define streaming events, cancellation, reconnect, partial output, duplicate requests, and failed requests.
 - [ ] Implement response streaming.
 - [ ] Add memory view, correction, and deletion controls.
