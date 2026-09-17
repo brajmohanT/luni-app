@@ -10,7 +10,7 @@ Android is the first test platform, followed by iOS.
 
 ## Current repository state
 
-This `luni-app` directory contains an initialized Expo application and project documentation. The app has TypeScript, Expo Router, TanStack Query, SecureStore, a versioned SQLite persistence foundation, and a Supabase session provider with protected auth and app route groups. Email/password sign-in and sign-up forms use React Hook Form and Zod, and persist Supabase sessions in SecureStore. The first local Android development build is running for a connected device. EAS development builds, mobile deep-link completion flows, and Luni API integration are not configured yet.
+This `luni-app` directory contains an initialized Expo application and project documentation. The app has TypeScript, Expo Router, TanStack Query, SecureStore, a versioned SQLite persistence foundation, and a Supabase session provider with protected auth and app route groups. Email/password sign-in and sign-up forms use React Hook Form and Zod, and persist Supabase sessions in SecureStore. The first local Android development build has installed and launched on a connected device, where the login and sign-up screens render correctly. EAS development builds, mobile deep-link completion flows, and Luni API integration are not configured yet.
 
 ## Architecture
 

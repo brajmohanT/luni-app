@@ -4,7 +4,7 @@ Use this document to track Luni mobile delivery, blockers, and release gates.
 
 Status: foundation in progress. The Expo application runs with TypeScript, Expo Router, TanStack Query, SecureStore, and SQLite.
 
-Current status: the first local Android development build is running for installation on a connected physical device. The prior Windows CMake object-path issue was addressed by relocating the app to a shorter path and using pnpm's hoisted node-modules layout. Confirm installation and launch before marking this gate complete.
+Current status: the first local Android development build installed and launched successfully on a connected physical device. The login and sign-up screens render correctly. The prior Windows CMake object-path issue was addressed by relocating the app to a shorter path and using pnpm's hoisted node-modules layout.
 
 ## Foundation
 
@@ -17,7 +17,7 @@ Current status: the first local Android development build is running for install
 - [x] Build validated email/password sign-in and sign-up forms connected to Supabase Auth.
 - [x] Set the Android application ID to `com.vibeken.luni`.
 - [x] Add `expo-dev-client` and generate the initial ignored `android/` project for local development builds.
-- [x] Complete the first local Android development build and install it on a physical device (build currently running; verify installation and launch).
+- [x] Complete the first local Android development build and install it on a physical device; verified the login and sign-up screens render.
 - [ ] Configure EAS development builds.
 - [ ] Connect the authenticated Supabase session to the Luni API.
 - [ ] Re-enable Supabase email confirmation and implement the `luniapp://auth/callback` deep-link flow before external testing.
