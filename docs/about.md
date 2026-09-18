@@ -46,3 +46,10 @@ The backend owns authentication, conversations, AI generation, memory extraction
 - Update this brief when implementation or confirmed decisions change.
 
 See [index.md](index.md) for the human-authored overview, [progress.md](progress.md) for delivery status, [tech-stack.md](tech-stack.md) for technology decisions, and [mobile-app-practices.md](mobile-app-practices.md) for implementation requirements.
+
+## Flow diagrams
+
+- [Authentication and protected routing](flows/authentication-and-protected-routing.md)
+- [Conversations: list to detail](flows/conversations-list-to-detail.md)
+- [Chat: send and retry](flows/chat-send-retry.md)
+- [Data ownership and caching](flows/data-ownership-and-caching.md)
