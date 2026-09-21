@@ -1,0 +1,44 @@
+<div id="luni-combined-memory" aria-label="Combined memory wireframe">
+<style>
+#luni-combined-memory{font-family:Arial,sans-serif;color:light-dark(#242424,#eee);padding:12px}#luni-combined-memory *{box-sizing:border-box}
+#luni-combined-memory .phone{max-width:370px;margin:auto;border:1px solid light-dark(#aaa,#777);border-radius:28px;background:light-dark(#fafafa,#202020);padding:20px}
+#luni-combined-memory .status{display:flex;justify-content:space-between;font-size:12px}#luni-combined-memory header{display:flex;align-items:center;gap:8px;margin:22px 0}
+#luni-combined-memory h2{font-size:24px;font-weight:500;margin:0}#luni-combined-memory button{font:inherit;font-size:14px;min-height:44px;padding:10px 12px;border:1px solid light-dark(#aaa,#777);border-radius:8px;background:transparent;color:inherit;cursor:pointer}
+#luni-combined-memory .back{border:0;width:44px;display:grid;place-items:center}#luni-combined-memory p{font-size:14px;line-height:1.6;margin:0}
+#luni-combined-memory .intro{color:light-dark(#666,#bbb);margin-bottom:24px}#luni-combined-memory .text{white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid light-dark(#aaa,#777);border-radius:10px;padding:16px;min-height:240px}
+#luni-combined-memory .actions{display:flex;gap:8px;margin-top:16px}#luni-combined-memory .actions button{flex:1}#luni-combined-memory .primary{background:light-dark(#333,#ddd);color:light-dark(#fff,#222);border-color:transparent}
+#luni-combined-memory textarea{font:inherit;font-size:16px;line-height:1.6;width:100%;min-width:0;resize:vertical;padding:14px;border:1px solid light-dark(#999,#888);border-radius:10px;background:light-dark(#fff,#292929);color:inherit}
+#luni-combined-memory label{display:block;font-size:13px;margin-bottom:8px}#luni-combined-memory .confirmation{border:1px solid light-dark(#999,#777);border-radius:10px;padding:14px;margin-top:16px}#luni-combined-memory .confirmation p{font-size:13px}
+#luni-combined-memory .empty{padding:55px 0;text-align:center;color:light-dark(#666,#bbb)}#luni-combined-memory .feedback{font-size:12px;color:light-dark(#666,#bbb);margin-top:16px}#luni-combined-memory .home{height:4px;width:100px;border-radius:4px;background:light-dark(#666,#bbb);margin:28px auto 0}#luni-combined-memory [hidden]{display:none}
+</style>
+<section class="phone" aria-label="Memory screen">
+ <div class="status" aria-hidden="true"><span>9:41</span><span>••• ▰</span></div>
+ <header><button class="back" type="button" aria-label="Back to settings"><i data-lucide="arrow-left" aria-hidden="true"></i></button><h2>Memory</h2></header>
+ <p class="intro">What Luni remembers about you from your chats. Edit this text to correct or remove details.</p>
+ <div class="read"><p class="text">You prefer to be called Alex. You’re studying computer science and enjoy taking a walk after work. When you talk about a difficult day, you prefer someone to listen before offering advice.</p><div class="actions"><button class="edit primary" type="button">Edit memory</button><button class="clear" type="button">Clear memory</button></div></div>
+ <form hidden><label for="luni-memory-text">Your memory</label><textarea id="luni-memory-text" rows="9"></textarea><div class="actions"><button class="primary" type="submit">Save changes</button><button class="cancel" type="button">Cancel</button></div></form>
+ <div class="confirmation" hidden><p>Clear the entire memory? Your chat messages will remain.</p><div class="actions"><button class="keep" type="button">Keep memory</button><button class="confirm" type="button">Clear memory</button></div></div>
+ <p class="empty" hidden>No saved memory yet.</p>
+ <p class="feedback" role="status" aria-live="polite" hidden></p>
+ <div class="home" aria-hidden="true"></div>
+</section>
+<script>
+(()=>{
+ const root=document.getElementById('luni-combined-memory');
+ const text=root.querySelector('.text');
+ const form=root.querySelector('form');
+ const input=root.querySelector('textarea');
+ const confirmation=root.querySelector('.confirmation');
+ let memory=text.textContent;
+ function render(){text.textContent=memory;root.querySelector('.read').hidden=!memory;root.querySelector('.empty').hidden=!!memory;form.hidden=true;confirmation.hidden=true;}
+ function notify(message){const feedback=root.querySelector('.feedback');feedback.textContent=message;feedback.hidden=false;}
+ root.querySelector('.edit').onclick=()=>{input.value=memory;root.querySelector('.read').hidden=true;confirmation.hidden=true;form.hidden=false;input.focus();};
+ root.querySelector('.cancel').onclick=render;
+ form.onsubmit=e=>{e.preventDefault();if(!input.value.trim()){notify('Use Clear memory to remove the entire text.');return;}memory=input.value.trim();render();notify('Memory updated in this preview.');};
+ root.querySelector('.clear').onclick=()=>{confirmation.hidden=false;};
+ root.querySelector('.keep').onclick=()=>{confirmation.hidden=true;};
+ root.querySelector('.confirm').onclick=()=>{memory='';render();notify('Memory cleared in this preview.');};
+ root.querySelector('.back').onclick=()=>notify('Prototype: return to settings.');
+})();
+</script>
+</div>

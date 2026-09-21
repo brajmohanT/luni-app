@@ -1,0 +1,75 @@
+<div id="luni-style" aria-label="Luni conversation style wireframe">
+ <style>
+ #luni-style {font-family:Arial,sans-serif;color:light-dark(#242424,#ededed);padding:12px;}
+ #luni-style * {box-sizing:border-box;}
+ #luni-style .phone {max-width:370px;margin:auto;border:1px solid light-dark(#a5a5a5,#686868);border-radius:28px;background:light-dark(#fafafa,#202020);padding:22px 24px 18px;}
+ #luni-style .status {display:flex;justify-content:space-between;font-size:12px;}
+ #luni-style .brand {margin:34px 0 32px;font-size:20px;font-weight:500;}
+ #luni-style h2 {font-size:28px;line-height:1.18;font-weight:500;margin:0 0 12px;letter-spacing:-.6px;}
+ #luni-style p {font-size:14px;line-height:1.5;margin:0;color:light-dark(#606060,#bebebe);}
+ #luni-style fieldset {border:0;padding:0;margin:26px 0 20px;min-width:0;display:grid;gap:10px;}
+ #luni-style legend {font-size:13px;margin-bottom:10px;}
+ #luni-style label {display:flex;align-items:center;gap:12px;border:1px solid light-dark(#aaa,#737373);border-radius:9px;padding:15px 12px;font-size:15px;cursor:pointer;min-height:52px;}
+ #luni-style label:has(input:checked) {border-color:light-dark(#333,#ddd);background:light-dark(#ececec,#353535);}
+ #luni-style input {margin:0;width:18px;height:18px;flex-shrink:0;accent-color:light-dark(#333,#ddd);}
+ #luni-style .example {border-left:2px solid light-dark(#aaa,#777);padding-left:14px;min-height:116px;}
+ #luni-style .example-label {font-size:12px;margin-bottom:8px;}
+ #luni-style .reply {color:inherit;margin-top:8px;}
+ #luni-style .actions {display:grid;gap:6px;margin-top:26px;}
+ #luni-style button {font:inherit;font-size:15px;min-height:48px;padding:12px;border:1px solid transparent;border-radius:9px;background:transparent;color:inherit;cursor:pointer;width:100%;}
+ #luni-style .primary {background:light-dark(#303030,#e0e0e0);color:light-dark(#fafafa,#202020);}
+ #luni-style .hint {font-size:12px;text-align:center;margin-top:12px;}
+ #luni-style .feedback {font-size:13px;padding:12px;border:1px solid light-dark(#999,#777);border-radius:8px;margin-top:12px;}
+ #luni-style .home {height:4px;width:100px;background:light-dark(#6a6a6a,#bdbdbd);border-radius:4px;margin:26px auto 0;}
+ #luni-style [hidden] {display:none;}
+ </style>
+ <section class="phone" aria-label="Conversation style screen">
+   <div class="status" aria-hidden="true"><span>9:41</span><span>••• ▰</span></div>
+   <div class="brand">luni</div>
+   <h2>How would you like<br>me to talk with you?</h2>
+   <p>Pick a starting style. You can change it anytime.</p>
+   <fieldset>
+     <legend>Conversation style</legend>
+     <label><input type="radio" name="luni-tone" value="gentle">Gentle and reassuring</label>
+     <label><input type="radio" name="luni-tone" value="playful">Playful and casual</label>
+     <label><input type="radio" name="luni-tone" value="direct">Direct and thoughtful</label>
+   </fieldset>
+   <div class="example" aria-live="polite">
+     <p class="example-label">SAMPLE CONVERSATION</p>
+     <p>You: “I finally finished that assignment.”</p>
+     <p class="reply">Choose a style to preview Luni’s reply.</p>
+   </div>
+   <div class="actions">
+     <button class="primary" type="button">Start chatting</button>
+     <button class="skip" type="button">Decide later</button>
+   </div>
+   <p class="hint">No preference? Start with Luni’s warm, balanced style.</p>
+   <p class="feedback" role="status" aria-live="polite" hidden></p>
+   <div class="home" aria-hidden="true"></div>
+ </section>
+ <script>
+ (() => {
+   const root = document.getElementById('luni-style');
+   const reply = root.querySelector('.reply');
+   const feedback = root.querySelector('.feedback');
+   const samples = {
+     gentle:'Luni: “That must feel good. You put a lot into it. How are you feeling now?”',
+     playful:'Luni: “Assignment defeated! What’s the plan for your well-earned freedom?”',
+     direct:'Luni: “Nice work getting it done. What helped you finish?”'
+   };
+   root.querySelectorAll('input').forEach(input => input.addEventListener('change',() => {
+     reply.textContent = samples[input.value];
+     feedback.hidden = true;
+   }));
+   root.querySelector('.primary').addEventListener('click',() => {
+     const selected = root.querySelector('input:checked');
+     feedback.textContent = 'Prototype: open your conversation with ' + (selected ? selected.parentElement.textContent.trim().toLowerCase() : 'warm, balanced') + ' replies.';
+     feedback.hidden = false;
+   });
+   root.querySelector('.skip').addEventListener('click',() => {
+     feedback.textContent = 'Prototype: open your conversation with Luni’s warm, balanced style.';
+     feedback.hidden = false;
+   });
+ })();
+ </script>
+</div>

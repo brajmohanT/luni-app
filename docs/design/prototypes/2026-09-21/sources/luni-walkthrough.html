@@ -1,0 +1,123 @@
+<div id="luni-settings-flow" aria-label="Luni connected app walkthrough">
+<style>
+#luni-settings-flow{font-family:Arial,sans-serif;color:light-dark(#242424,#eee);padding:12px}#luni-settings-flow *{box-sizing:border-box}
+#luni-settings-flow .phone{position:relative;max-width:370px;min-height:660px;margin:auto;border:1px solid light-dark(#aaa,#777);border-radius:28px;background:light-dark(#fafafa,#202020);padding:20px;display:flex;flex-direction:column}
+#luni-settings-flow .status{display:flex;justify-content:space-between;font-size:12px}#luni-settings-flow header{display:flex;align-items:center;gap:8px;margin:22px 0}
+#luni-settings-flow h2{font-size:23px;font-weight:500;margin:0}#luni-settings-flow h3{font-size:16px;font-weight:500;margin:0 0 12px}
+#luni-settings-flow button{font:inherit;font-size:14px;color:inherit;cursor:pointer;background:transparent;min-height:44px;padding:10px 12px;border:1px solid light-dark(#aaa,#777);border-radius:8px}
+#luni-settings-flow .back{border:0;padding:10px;width:44px;flex-shrink:0}#luni-settings-flow p{font-size:14px;line-height:1.6;margin:0 0 18px}#luni-settings-flow .muted{color:light-dark(#666,#bbb)}
+#luni-settings-flow .group{font-size:12px;color:light-dark(#666,#bbb);margin:24px 0 6px}#luni-settings-flow .row{width:100%;display:flex;align-items:center;gap:10px;text-align:left;border:0;border-bottom:1px solid light-dark(#ddd,#555);border-radius:0;padding:16px 0;min-height:68px}
+#luni-settings-flow .row span:first-child{flex:1}#luni-settings-flow .row small{display:block;font-size:12px;line-height:1.5;color:light-dark(#666,#bbb);margin-top:5px}
+#luni-settings-flow .actions{display:flex;gap:8px;margin:18px 0}#luni-settings-flow .actions button{flex:1}#luni-settings-flow .primary{background:light-dark(#333,#ddd);color:light-dark(#fff,#222);border-color:transparent}
+#luni-settings-flow label{display:block;font-size:13px;margin:14px 0 8px}#luni-settings-flow input:not([type=radio]),#luni-settings-flow textarea{font:inherit;font-size:16px;line-height:1.5;width:100%;min-width:0;padding:12px;border:1px solid light-dark(#999,#888);border-radius:8px;background:light-dark(#fff,#292929);color:inherit}
+#luni-settings-flow textarea{resize:vertical}#luni-settings-flow .choice{display:flex;align-items:center;gap:12px;border:1px solid light-dark(#aaa,#777);border-radius:9px;padding:15px 12px;min-height:50px;font-size:14px}#luni-settings-flow .choice:has(:checked){background:light-dark(#e9e9e9,#353535)}
+#luni-settings-flow input[type=radio]{accent-color:light-dark(#333,#ddd)}#luni-settings-flow .memory{white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid light-dark(#aaa,#777);border-radius:10px;padding:16px}
+#luni-settings-flow .sample{border-left:2px solid light-dark(#aaa,#777);padding-left:14px;margin-top:24px}#luni-settings-flow .sample small{font-size:12px;display:block;margin-bottom:8px}
+#luni-settings-flow .home{height:4px;width:100px;border-radius:4px;background:light-dark(#666,#bbb);margin:28px auto 0}#luni-settings-flow main{flex:1}#luni-settings-flow .notice{font-size:12px;margin:14px 0 0;color:light-dark(#666,#bbb)}
+#luni-settings-flow .overlay{position:absolute;inset:0;z-index:2;border-radius:28px;background:light-dark(#0006,#0009);display:flex;align-items:center;padding:22px}#luni-settings-flow .dialog{width:100%;background:light-dark(#fafafa,#292929);border:1px solid light-dark(#aaa,#777);border-radius:14px;padding:20px}#luni-settings-flow .dialog p{font-size:13px}
+#luni-settings-flow [hidden]{display:none}
+#luni-settings-flow .stack{display:grid;gap:10px;margin:24px 0}#luni-settings-flow .chat-log{display:flex;flex-direction:column;gap:14px;padding:12px 0 24px;min-height:240px}#luni-settings-flow .bubble{padding:12px 14px;max-width:90%;font-size:14px;line-height:1.5;border-radius:14px 14px 14px 4px;background:light-dark(#eaeaea,#363636);overflow-wrap:anywhere}#luni-settings-flow .user{align-self:flex-end;background:light-dark(#333,#ddd);color:light-dark(#fff,#222);border-radius:14px 14px 4px 14px}#luni-settings-flow .compose{display:flex;gap:8px;align-items:end}#luni-settings-flow .compose textarea{flex:1;width:0}#luni-settings-flow button:disabled{opacity:.5;cursor:default}#luni-settings-flow .chat-settings{margin-left:auto}#luni-settings-flow .hero{padding-top:28px}#luni-settings-flow .hero h3{font-size:28px;line-height:1.2}#luni-settings-flow .event{border:1px solid light-dark(#999,#777);padding:16px;border-radius:12px;width:100%}#luni-settings-flow .event p{margin-bottom:8px}#luni-settings-flow .hint{font-size:12px;color:light-dark(#666,#bbb)}
+</style>
+<section class="phone">
+ <div class="status" aria-hidden="true"><span>9:41</span><span>••• ▰</span></div>
+ <header><button class="back" type="button" aria-label="Back">←</button><h2>Settings</h2></header>
+ <main></main>
+ <p class="notice" role="status" aria-live="polite" hidden></p>
+ <div class="home" aria-hidden="true"></div>
+ <div class="overlay" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="luni-dialog-title"></section></div>
+</section>
+<script>
+(()=>{
+ const root=document.getElementById('luni-settings-flow'),main=root.querySelector('main'),heading=root.querySelector('h2'),notice=root.querySelector('.notice'),overlay=root.querySelector('.overlay'),dialog=root.querySelector('.dialog');
+ const state={notifications:'Not asked',entry:'New user',login:'Success',message:'Success',data:'Loaded'};
+ let onboarded=false,draft='',email='alex@example.com',chatMessages=[],pendingReminder=null,editReturn='reminders';
+ const deliveredReminder={title:'Submit my assignment',date:'2026-09-22',time:'18:00',delivered:true};
+ let notificationTarget=null;
+ let page='settings',preferredName='Alex',style='Gentle and reassuring',memory='You prefer to be called Alex. You’re studying computer science and enjoy taking a walk after work. When you talk about a difficult day, you prefer someone to listen before offering advice.',activeReminder=null,lastFocus=null;
+ const reminders=[];
+ const initialMemory=memory;memory='';preferredName='';style='Warm and balanced';
+ function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
+ function btn(text,fn,cls){const n=el('button',text,cls);n.type='button';n.onclick=fn;return n;}
+ function tell(text){notice.textContent=text;notice.hidden=false;}
+ function actions(...buttons){const n=el('div',undefined,'actions');n.append(...buttons);return n;}
+ function row(title,detail,fn){const n=btn('',fn,'row'),s=el('span',title);if(detail)s.append(el('small',detail));n.append(s,el('span','›'));return n;}
+ function field(form,title,value,type='text'){const label=el('label',title),input=el('input');input.id='field-'+title.replace(/\W/g,'');label.htmlFor=input.id;input.type=type;input.value=value;form.append(label,input);return input;}
+ function close(){overlay.hidden=true;root.querySelector('header').inert=false;main.inert=false;if(lastFocus&&lastFocus.isConnected)lastFocus.focus();}
+ function modal(title,build){lastFocus=document.activeElement;dialog.replaceChildren();const h=el('h3',title);h.id='luni-dialog-title';dialog.append(h);build(dialog);overlay.hidden=false;root.querySelector('header').inert=true;main.inert=true;dialog.querySelector('input,button')?.focus();}
+ overlay.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();close();}if(e.key==='Tab'){const items=[...dialog.querySelectorAll('input,button')];if(e.shiftKey&&document.activeElement===items[0]){e.preventDefault();items.at(-1).focus();}else if(!e.shiftKey&&document.activeElement===items.at(-1)){e.preventDefault();items[0].focus();}}});
+ function nameDialog(){modal('Preferred name',box=>{const form=el('form'),input=field(form,'Name or nickname',preferredName);const save=btn('Save',()=>{},'primary');save.type='submit';form.append(actions(btn('Cancel',close),save));form.onsubmit=e=>{e.preventDefault();preferredName=input.value.trim();close();show('settings');};box.append(form);});}
+ function enterChat(){onboarded=true;if(!chatMessages.length)chatMessages.push({role:'assistant',text:preferredName?'Hey '+preferredName+', how’s your day going?':'Hey, how’s your day going?'});show('chat');}
+ function signedIn(){if(state.login==='Failed'){show('loginError');return;}if(state.login==='Cancelled'){show('login');tell('Sign-in cancelled. Choose an option to continue.');return;}if(onboarded)enterChat();else show('name');}
+ function resolveMessage(item){
+  item.failed=false;
+  if(item.text.toLowerCase().includes('remind')){
+   if(/tomorrow at 6\s*p/i.test(item.text))saveReminder();
+   else {pendingReminder=true;chatMessages.push({role:'assistant',text:'What should I remind you about, and when?'});}
+  }else if(pendingReminder){saveReminder();}
+  else chatMessages.push({role:'assistant',text:item.text.toLowerCase().includes('hang out')?'I’m here. What have you been up to today?':'That sounds like a rough day. What happened?'});
+  show('chat');
+ }
+ function saveReminder(){const r={title:'Submit my assignment',date:'2026-09-22',time:'18:00'};reminders.push(r);chatMessages.push({role:'assistant',reminder:r});pendingReminder=null;}
+ function reminderCard(r){const card=el('section',undefined,'event');card.append(el('p',r.cancelled?'Reminder cancelled':r.delivered?'Reminder · time to act':'✓ Reminder saved','hint'),el('h3',r.title),el('p',r.date+' · '+r.time),el('p','India Standard Time','hint'));if(!r.cancelled&&!r.delivered)card.append(actions(btn('Edit',()=>{activeReminder=r;editReturn='chat';show('editReminder');}),btn('Cancel reminder',()=>{r.cancelled=true;const i=reminders.indexOf(r);if(i>=0)reminders.splice(i,1);show('chat');})));return card;}
+ function chat(){
+  const settings=btn('Settings',()=>show('settings'),'chat-settings');root.querySelector('header').append(settings);
+  const log=el('div',undefined,'chat-log');log.setAttribute('role','log');log.setAttribute('aria-label','Conversation');
+  chatMessages.forEach(item=>{if(item.reminder){log.append(reminderCard(item.reminder));return;}log.append(el('div',item.text,'bubble'+(item.role==='user'?' user':'')));if(item.failed){const failed=el('div',undefined,'actions');failed.append(el('span','Not sent'),btn('Retry',()=>resolveMessage(item)));log.append(failed);}});
+  if(notificationTarget){log.append(reminderCard(notificationTarget));notificationTarget=null;}
+  main.append(log);
+  if(chatMessages.length===1){const starters=el('div',undefined,'stack');['I want to talk about my day','Let’s just hang out','Remind me to submit my assignment tomorrow at 6 PM'].forEach(text=>starters.append(btn(text,()=>{draft=text;input.value=text;send.disabled=false;input.focus();})));main.append(starters);}
+  if(reminders.length&&state.notifications==='Not asked'){main.append(el('p','Allow notifications to receive reminder alerts.'),actions(btn('Enable alerts',()=>modal('Allow notifications?',box=>{box.append(el('p','System permission prompt · simulated'),actions(btn('Don’t allow',()=>{state.notifications='Off';close();show('chat');}),btn('Allow',()=>{state.notifications='Enabled';close();show('chat');},'primary')));})),btn('Not now',()=>{state.notifications='Off';show('chat');})));}
+  if(reminders.length&&state.notifications==='Off')main.append(el('p','Notifications are off. Your reminder is saved, but you won’t receive an alert.','hint'));
+  const form=el('form',undefined,'compose'),input=el('textarea');input.rows=1;input.placeholder='Message Luni…';input.setAttribute('aria-label','Message Luni');input.value=draft;
+  const send=btn('Send',()=>{},'primary');send.type='submit';send.disabled=!draft.trim();input.oninput=()=>{draft=input.value;send.disabled=!draft.trim();};form.append(input,send);form.onsubmit=e=>{e.preventDefault();if(!draft.trim())return;const item={role:'user',text:draft.trim(),failed:state.message==='Failed'};chatMessages.push(item);draft='';if(item.failed)show('chat');else resolveMessage(item);};main.append(form,el('p','Preview: sample replies and reminder details. No messages or alerts leave this walkthrough.','hint'));
+ }
+ function show(next){page=next;main.replaceChildren();notice.hidden=true;root.querySelector('.chat-settings')?.remove();heading.textContent=({settings:'Settings',style:'Conversation style',onboardingStyle:'Conversation style',name:'Welcome',memory:'Memory',editMemory:'Edit memory',reminders:'Reminders',editReminder:'Edit reminder',account:'Account',deleteAccount:'Delete account',chat:'Luni',login:'Luni',email:'Sign in with email',checkEmail:'Check your email',loginError:'Sign-in failed',notification:'Notification preview'})[page];root.querySelector('.back').hidden=['login','chat','name','notification'].includes(page);
+ if(['memory','reminders'].includes(page)&&state.data!=='Loaded'){
+  if(state.data==='Loading'){main.append(el('p','Loading…','muted'));return;}
+  if(state.data==='Error'){main.append(el('p','Couldn’t load '+(page==='memory'?'your memory.':'your reminders.')),btn('Retry',()=>{state.data='Loaded';show(page);},'primary'));return;}
+  if(state.data==='Empty'){main.append(el('p',page==='memory'?'No saved memory yet.':'No upcoming reminders. Ask Luni to set one in chat.','muted'));return;}
+ }
+ if(page==='settings'){
+ main.append(el('div','YOU AND LUNI','group'),row('Preferred name',preferredName||'Not set',nameDialog),row('Conversation style',style,()=>show('style')),row('Memory','View and edit what Luni remembers',()=>show('memory')),el('div','REMINDERS AND ALERTS','group'),row('Reminders','View, edit, or cancel upcoming reminders',()=>show('reminders')),row('Notifications',state.notifications+' · Phone settings',()=>tell('Prototype: opens your phone’s notification settings for Luni.')),el('div','ACCOUNT','group'),row('Account','Sign out or delete your account',()=>show('account')));
+ }else if(page==='style'||page==='onboardingStyle'){
+ main.append(el('p','Choose how Luni talks with you.','muted'));let selected=style;
+ const samples={'Warm and balanced':'Nice work! How does it feel to have it finished?','Gentle and reassuring':'You got through it. I hope you get a chance to rest now.','Playful and casual':'Assignment defeated! What’s the plan for your well-earned freedom?','Direct and thoughtful':'Nice work getting it done. What helped you finish?'};
+ const preview=el('div',undefined,'sample'),reply=el('p',samples[selected]);preview.append(el('small','You: “I finished my assignment.”'),reply);
+ Object.keys(samples).filter(value=>page==='style'||value!=='Warm and balanced').forEach(value=>{const label=el('label',undefined,'choice'),radio=el('input');radio.type='radio';radio.name='settings-style';radio.checked=value===style;radio.onchange=()=>{selected=value;reply.textContent=samples[value];};label.append(radio,document.createTextNode(value));main.append(label);});main.append(preview,actions(btn(page==='style'?'Cancel':'Decide later',()=>page==='style'?show('settings'):enterChat()),btn(page==='style'?'Save style':'Start chatting',()=>{style=selected;if(page==='style')show('settings');else enterChat();},'primary')));
+ }else if(page==='memory'){
+ main.append(el('p','What Luni remembers about you from your chats.','muted'),el('p',memory||'No saved memory yet.',memory?'memory':'muted'));
+ if(memory)main.append(actions(btn('Edit memory',()=>show('editMemory'),'primary'),btn('Clear memory',()=>modal('Clear memory?',box=>{box.append(el('p','This clears the combined memory text. Your chat messages will remain.'),actions(btn('Keep memory',close),btn('Clear memory',()=>{memory='';close();show('memory');})));}))));
+ }else if(page==='editMemory'){
+ const form=el('form'),label=el('label','Your memory'),input=el('textarea');input.id='memory-editor';label.htmlFor=input.id;input.rows=11;input.value=memory;const save=btn('Save changes',()=>{},'primary');save.type='submit';form.append(label,input,actions(btn('Cancel',()=>show('memory')),save));form.onsubmit=e=>{e.preventDefault();if(!input.value.trim()){tell('Use Clear memory to remove the entire text.');return;}memory=input.value.trim();show('memory');};main.append(form);
+ }else if(page==='reminders'){
+ main.append(el('p','Upcoming reminders · India Standard Time','muted'));
+ if(!reminders.length)main.append(el('p','No upcoming reminders. Ask Luni to set one in chat.'));
+ reminders.forEach(item=>main.append(row(item.title,item.date+' · '+item.time,()=>{activeReminder=item;editReturn='reminders';show('editReminder');})));
+ }else if(page==='editReminder'){
+ const form=el('form'),title=field(form,'Reminder',activeReminder.title),date=field(form,'Date',activeReminder.date,'date'),time=field(form,'Time',activeReminder.time,'time');[title,date,time].forEach(input=>input.required=true);main.append(el('p','India Standard Time','muted'));
+ const save=btn('Save changes',()=>{},'primary');save.type='submit';form.append(actions(btn('Discard',()=>show(editReturn)),save));form.onsubmit=e=>{e.preventDefault();if(!title.value.trim())return;Object.assign(activeReminder,{title:title.value.trim(),date:date.value,time:time.value});show(editReturn);};main.append(form,btn('Cancel reminder',()=>modal('Cancel reminder?',box=>{box.append(el('p',activeReminder.title+' will no longer trigger an alert.'),actions(btn('Keep reminder',close),btn('Cancel reminder',()=>{activeReminder.cancelled=true;reminders.splice(reminders.indexOf(activeReminder),1);close();show(editReturn);})));})));
+ }else if(page==='account'){
+ main.append(el('p','Signed in as '+email,'muted'),row('Sign out','Keep your account and saved data',()=>modal('Sign out?',box=>box.append(el('p','You’ll need to sign in to return to your conversation.'),actions(btn('Stay signed in',close),btn('Sign out',()=>{close();show('login');},'primary'))))),row('Delete account','Review before deleting',()=>show('deleteAccount')));
+ }else if(page==='deleteAccount'){
+ main.append(el('p','Delete your Luni account?'),el('p','Proposed behavior: delete your account, conversation, memory, and reminders. This cannot be undone.','muted'),actions(btn('Keep account',()=>show('account')),btn('Delete account',()=>tell('Preview only. No account or data has been deleted.'))));
+ }else if(page==='chat'){chat();
+ }else if(page==='login'){
+  const hero=el('div',undefined,'hero');hero.append(el('h3','A little company. Room to be you.'),el('p','Your AI companion for everyday conversations, with a memory for what matters to you.','muted'));const buttons=el('div',undefined,'stack');buttons.append(btn('Continue with Google',signedIn,'primary'),btn('Continue with email',()=>show('email')));main.append(hero,buttons,el('p','Sign in or create an account to get started.','hint'),el('p','For ages 18+. By continuing, you agree to our Terms of Service and Privacy Policy.','hint'));
+ }else if(page==='email'){
+  const form=el('form'),input=field(form,'Email address','','email');input.required=true;input.autocomplete='email';const submit=btn('Send sign-in link',()=>{},'primary');submit.type='submit';form.append(actions(submit));form.onsubmit=e=>{e.preventDefault();email=input.value;show('checkEmail');};main.append(form);
+ }else if(page==='checkEmail'){main.append(el('p','We’ve sent a sign-in link to '+email+'.'),btn('Open sign-in link · preview',signedIn,'primary'),actions(btn('Resend link',()=>tell('Preview: sign-in link resent.')),btn('Change email',()=>show('email'))));
+ }else if(page==='loginError'){main.append(el('p','We couldn’t sign you in. Please try again.'),btn('Retry',()=>{state.login='Success';signedIn();},'primary'));
+ }else if(page==='name'){
+  main.append(el('h3','What should I call you?'),el('p','A first name or nickname is fine.','muted'));const form=el('form'),input=field(form,'Name or nickname',preferredName);const next=btn('Continue',()=>{},'primary');next.type='submit';next.disabled=!input.value.trim();input.oninput=()=>{next.disabled=!input.value.trim();};form.append(actions(btn('Skip for now',()=>{preferredName='';show('onboardingStyle');}),next));form.onsubmit=e=>{e.preventDefault();if(!input.value.trim())return;preferredName=input.value.trim();show('onboardingStyle');};main.append(form);
+ }else if(page==='notification'){
+  main.append(el('p','Tue, 22 Sep · 6:00 PM','muted'),row('Luni · Reminder','Submit my assignment',()=>{chatMessages.push({role:'assistant',reminder:deliveredReminder});show('chat');}),el('p','Tap the notification to open its reminder in your conversation.','hint'));
+ }
+ }
+ root.querySelector('.back').onclick=()=>show(({settings:'chat',editMemory:'memory',editReminder:editReturn,deleteAccount:'account',email:'login',checkEmail:'email',loginError:'login',onboardingStyle:'name'})[page]||'settings');
+ let previousEntry=state.entry;
+ function startScenario(){close();draft='';pendingReminder=null;notificationTarget=null;reminders.splice(0);if(state.entry==='New user'){onboarded=false;preferredName='';style='Warm and balanced';memory='';chatMessages=[];show('login');}else{onboarded=true;preferredName='Alex';memory=initialMemory;chatMessages=[{role:'assistant',text:'Hey Alex, how’s your day going?'},{role:'user',text:'Rough. I messed up my presentation at work.'},{role:'assistant',text:'That sounds rough. What happened?'}];if(state.entry!=='Reminder notification')reminders.push({title:'Submit my assignment',date:'2026-09-22',time:'18:00'});show(state.entry==='Reminder notification'?'notification':'chat');}}
+ startScenario();
+ if(globalThis.Tweak){const tweak=new Tweak({container:root,onChange:()=>{if(previousEntry!==state.entry){previousEntry=state.entry;startScenario();}else show(page);}});tweak.addSelect(state,'entry',{label:'Walkthrough start',options:['New user','Returning user','Reminder notification']});tweak.addSelect(state,'login',{label:'Next login attempt',options:['Success','Failed','Cancelled']});tweak.addSelect(state,'message',{label:'Next message attempt',options:['Success','Failed']});tweak.addSelect(state,'data',{label:'Memory / reminders state',options:['Loaded','Loading','Empty','Error']});tweak.addSelect(state,'notifications',{label:'Notification permission',options:['Not asked','Enabled','Off']});}
+})();
+</script>
+</div>

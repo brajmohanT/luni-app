@@ -1,0 +1,84 @@
+<details id="export-controls" style="font:14px Arial,sans-serif;max-width:420px;margin:0 auto 18px;padding:12px;border:1px solid light-dark(#aaa,#777);border-radius:8px"><summary>Preview controls</summary><div id="export-controls-fields"></div></details>
+<script>
+globalThis.Tweak=class {
+ constructor(config){this.config=config;this.supported=true;}
+ addSelect(state,key,options){
+  const label=document.createElement('label');label.style.cssText='display:grid;gap:6px;margin-top:12px';label.append(document.createTextNode(options.label||key));
+  const select=document.createElement('select');select.style.cssText='font:inherit;padding:8px;max-width:100%;color:light-dark(#222,#eee);background:light-dark(#fff,#292929)';
+  options.options.forEach(value=>{const option=document.createElement('option');option.value=typeof value==='string'?value:value.value;option.textContent=typeof value==='string'?value:value.label;select.append(option);});
+  select.value=state[key];select.onchange=()=>{state[key]=select.value;this.config.onChange();};label.append(select);document.getElementById('export-controls-fields').append(label);
+ }
+ addToggle(state,key,options){const label=document.createElement('label');label.style.cssText='display:flex;gap:8px;align-items:center;margin-top:12px';const input=document.createElement('input');input.type='checkbox';input.checked=state[key];input.onchange=()=>{state[key]=input.checked;this.config.onChange();};label.append(input,document.createTextNode(options.label||key));document.getElementById('export-controls-fields').append(label);}
+};
+</script>
+<div id="luni-memories" aria-label="Luni memories wireframe">
+<style>
+#luni-memories{font-family:Arial,sans-serif;color:light-dark(#242424,#eee);padding:12px}#luni-memories *{box-sizing:border-box}
+#luni-memories .phone{max-width:370px;margin:auto;border:1px solid light-dark(#aaa,#777);border-radius:28px;background:light-dark(#fafafa,#202020);padding:20px}
+#luni-memories .status{display:flex;justify-content:space-between;font-size:12px}#luni-memories header{display:flex;align-items:center;gap:8px;margin:22px 0}
+#luni-memories h2{font-size:24px;font-weight:500;margin:0}#luni-memories button{font:inherit;font-size:14px;min-height:44px;padding:10px 12px;border:1px solid light-dark(#aaa,#777);border-radius:8px;background:transparent;color:inherit;cursor:pointer}
+#luni-memories .back{border:0;padding:10px;display:grid;place-items:center;width:44px}
+#luni-memories p{font-size:14px;line-height:1.5;margin:0}#luni-memories .intro{color:light-dark(#666,#bbb);margin-bottom:24px}
+#luni-memories .entry{padding:18px 0;border-top:1px solid light-dark(#ddd,#555)}#luni-memories .date{font-size:12px;color:light-dark(#666,#bbb);margin-top:8px}
+#luni-memories .actions{display:flex;gap:8px;margin-top:12px}#luni-memories .actions button{flex:1}#luni-memories textarea{font:inherit;font-size:16px;line-height:1.5;width:100%;min-width:0;resize:vertical;padding:10px;border:1px solid light-dark(#999,#888);border-radius:8px;background:light-dark(#fff,#292929);color:inherit}
+#luni-memories label{display:block;font-size:12px;margin-bottom:8px}#luni-memories .primary{background:light-dark(#333,#ddd);color:light-dark(#fff,#222);border-color:transparent}
+#luni-memories .confirmation{border:1px solid light-dark(#999,#777);border-radius:10px;padding:14px;margin-top:12px}#luni-memories .confirmation p{font-size:13px}
+#luni-memories .empty{padding:44px 0;text-align:center}#luni-memories h3{font-size:18px;font-weight:500;margin:0 0 10px}#luni-memories .empty p{color:light-dark(#666,#bbb)}
+#luni-memories .feedback{font-size:13px;padding-top:16px;color:light-dark(#666,#bbb)}#luni-memories .home{height:4px;width:100px;border-radius:4px;background:light-dark(#666,#bbb);margin:28px auto 0}#luni-memories [hidden]{display:none}
+</style>
+<section class="phone" aria-label="Memories screen">
+ <div class="status" aria-hidden="true"><span>9:41</span><span>••• ▰</span></div>
+ <header><button class="back" type="button" aria-label="Back to settings"><i data-lucide="arrow-left" aria-hidden="true"></i></button><h2>Memories</h2></header>
+ <p class="intro">Details Luni remembers from your chats. You can correct or delete them here.</p>
+ <div class="list"></div>
+ <div class="empty" hidden><h3>No memories yet</h3><p>As you chat, Luni saves useful details to remember for future conversations.</p></div>
+ <p class="feedback" role="status" aria-live="polite" hidden></p>
+ <div class="home" aria-hidden="true"></div>
+</section>
+<script>
+(()=>{
+ const root=document.getElementById('luni-memories');
+ const list=root.querySelector('.list');
+ const feedback=root.querySelector('.feedback');
+ const memories=[
+  {id:1,text:'You prefer to be called Alex.',date:'21 Sep 2026'},
+  {id:2,text:'You’re studying computer science.',date:'21 Sep 2026'},
+  {id:3,text:'You enjoy taking a walk after work.',date:'20 Sep 2026'}
+ ];
+ const state={view:'Saved memories'};
+ function tell(text){feedback.textContent=text;feedback.hidden=false;}
+ function button(text,fn,primary=false){const b=document.createElement('button');b.type='button';b.textContent=text;if(primary)b.className='primary';b.onclick=fn;return b;}
+ function render(){
+  list.replaceChildren();
+  const shown=state.view==='Empty'?[]:memories;
+  root.querySelector('.empty').hidden=shown.length>0;
+  shown.forEach(memory=>{
+   const entry=document.createElement('section');entry.className='entry';entry.setAttribute('aria-label','Saved memory');
+   const text=document.createElement('p');text.textContent=memory.text;
+   const date=document.createElement('p');date.className='date';date.textContent='Saved '+memory.date;
+   const actions=document.createElement('div');actions.className='actions';
+   actions.append(button('Edit',()=>{
+    const form=document.createElement('form');
+    const label=document.createElement('label');label.textContent='Edit memory';label.htmlFor='memory-'+memory.id;
+    const input=document.createElement('textarea');input.id=label.htmlFor;input.rows=3;input.value=memory.text;input.required=true;
+    const controls=document.createElement('div');controls.className='actions';
+    const save=button('Save changes',()=>{},true);save.type='submit';
+    controls.append(save,button('Cancel',render));form.append(label,input,controls);
+    form.onsubmit=e=>{e.preventDefault();if(!input.value.trim())return;memory.text=input.value.trim();render();tell('Memory updated in this preview.');};
+    entry.replaceChildren(form);input.focus();
+   }),button('Delete',()=>{
+    const confirm=document.createElement('div');confirm.className='confirmation';
+    const copy=document.createElement('p');copy.textContent='Delete this saved memory? Your chat messages will remain.';
+    const controls=document.createElement('div');controls.className='actions';
+    controls.append(button('Keep memory',render),button('Delete memory',()=>{memories.splice(memories.indexOf(memory),1);render();tell('Memory deleted in this preview.');},true));
+    confirm.append(copy,controls);actions.replaceWith(confirm);
+   }));
+   entry.append(text,date,actions);list.append(entry);
+  });
+ }
+ root.querySelector('.back').onclick=()=>tell('Prototype: return to settings.');
+ render();
+ if(globalThis.Tweak){const tweak=new Tweak({container:root,onChange:()=>{feedback.hidden=true;render();}});tweak.addSelect(state,'view',{label:'Screen state',options:['Saved memories','Empty']});}
+})();
+</script>
+</div>

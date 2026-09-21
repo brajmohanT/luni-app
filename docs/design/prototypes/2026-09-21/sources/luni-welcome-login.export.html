@@ -1,0 +1,83 @@
+<details id="export-controls" style="font:14px Arial,sans-serif;max-width:420px;margin:0 auto 18px;padding:12px;border:1px solid light-dark(#aaa,#777);border-radius:8px"><summary>Preview controls</summary><div id="export-controls-fields"></div></details>
+<script>
+globalThis.Tweak=class {
+ constructor(config){this.config=config;this.supported=true;}
+ addSelect(state,key,options){
+  const label=document.createElement('label');label.style.cssText='display:grid;gap:6px;margin-top:12px';label.append(document.createTextNode(options.label||key));
+  const select=document.createElement('select');select.style.cssText='font:inherit;padding:8px;max-width:100%;color:light-dark(#222,#eee);background:light-dark(#fff,#292929)';
+  options.options.forEach(value=>{const option=document.createElement('option');option.value=typeof value==='string'?value:value.value;option.textContent=typeof value==='string'?value:value.label;select.append(option);});
+  select.value=state[key];select.onchange=()=>{state[key]=select.value;this.config.onChange();};label.append(select);document.getElementById('export-controls-fields').append(label);
+ }
+ addToggle(state,key,options){const label=document.createElement('label');label.style.cssText='display:flex;gap:8px;align-items:center;margin-top:12px';const input=document.createElement('input');input.type='checkbox';input.checked=state[key];input.onchange=()=>{state[key]=input.checked;this.config.onChange();};label.append(input,document.createTextNode(options.label||key));document.getElementById('export-controls-fields').append(label);}
+};
+</script>
+<div id="luni-login-wireframe" aria-label="Luni welcome and login wireframe">
+  <style>
+    #luni-login-wireframe {font-family:Arial,sans-serif;color:light-dark(#242424,#ededed);padding:12px;}
+    #luni-login-wireframe * {box-sizing:border-box;}
+    #luni-login-wireframe .phone {max-width:370px;margin:auto;border:1px solid light-dark(#a5a5a5,#686868);border-radius:28px;background:light-dark(#fafafa,#202020);padding:22px 24px 18px;}
+    #luni-login-wireframe .status {display:flex;justify-content:space-between;font-size:12px;}
+    #luni-login-wireframe .brand {margin:48px 0 28px;font-size:20px;font-weight:500;}
+    #luni-login-wireframe .placeholder {height:100px;width:100px;display:grid;place-content:center;border:1px dashed light-dark(#9a9a9a,#808080);border-radius:50%;margin-bottom:28px;color:light-dark(#616161,#bdbdbd);font-size:12px;}
+    #luni-login-wireframe h2 {font-size:30px;line-height:1.15;font-weight:500;margin:0 0 16px;letter-spacing:-.7px;}
+    #luni-login-wireframe p {font-size:15px;line-height:1.5;margin:0;}
+    #luni-login-wireframe .description {color:light-dark(#606060,#bebebe);max-width:285px;}
+    #luni-login-wireframe .actions {display:grid;gap:10px;margin-top:36px;}
+    #luni-login-wireframe button {font:inherit;font-size:15px;min-height:48px;padding:12px;border:1px solid light-dark(#a3a3a3,#747474);border-radius:9px;background:light-dark(#fafafa,#202020);color:inherit;cursor:pointer;width:100%;}
+    #luni-login-wireframe .primary {background:light-dark(#303030,#e0e0e0);color:light-dark(#fafafa,#202020);border-color:transparent;}
+    #luni-login-wireframe .note {font-size:12px;text-align:center;color:light-dark(#636363,#bcbcbc);margin-top:16px;}
+    #luni-login-wireframe .feedback {font-size:13px;padding:12px;border:1px solid light-dark(#9a9a9a,#777);border-radius:8px;margin-top:12px;}
+    #luni-login-wireframe .legal {font-size:12px;line-height:1.6;text-align:center;color:light-dark(#686868,#bcbcbc);margin-top:28px;}
+    #luni-login-wireframe .home {height:4px;width:100px;background:light-dark(#6a6a6a,#bdbdbd);border-radius:4px;margin:26px auto 0;}
+    #luni-login-wireframe [hidden] {display:none;}
+  </style>
+  <section class="phone" aria-label="Welcome screen">
+    <div class="status" aria-hidden="true"><span>9:41</span><span>••• ▰</span></div>
+    <div class="brand">luni</div>
+    <div class="placeholder" aria-label="Companion illustration placeholder">Illustration</div>
+    <h2>A little company.<br>Room to be you.</h2>
+    <p class="description">Your AI companion for everyday conversations, with a memory for what matters to you.</p>
+    <div class="actions">
+      <button class="primary" type="button" data-provider="Google">Continue with Google</button>
+      <button type="button" data-provider="Apple" id="luni-apple">Continue with Apple</button>
+      <button type="button" data-provider="email">Continue with email</button>
+    </div>
+    <p class="note">Sign in or create an account to get started.</p>
+    <p class="feedback" role="status" aria-live="polite" hidden></p>
+    <p class="legal">For ages 18+<br>By continuing, you agree to our<br><u>Terms of Service</u> and <u>Privacy Policy</u>.</p>
+    <div class="home" aria-hidden="true"></div>
+  </section>
+  <script>
+    (() => {
+      const root = document.getElementById('luni-login-wireframe');
+      const feedback = root.querySelector('.feedback');
+      const state = { platform: 'Android', screen: 'Default', illustration: true };
+      const messages = {
+        Default: '',
+        'Login failed': 'We couldn’t sign you in. Please try again.',
+        'Login cancelled': 'Sign-in cancelled. Choose an option to continue.'
+      };
+      function render() {
+        root.querySelector('#luni-apple').hidden = state.platform === 'Android';
+        root.querySelector('.placeholder').hidden = !state.illustration;
+        feedback.textContent = messages[state.screen];
+        feedback.hidden = state.screen === 'Default';
+      }
+      root.querySelectorAll('[data-provider]').forEach(button => {
+        button.addEventListener('click', () => {
+          feedback.hidden = false;
+          feedback.textContent = button.dataset.provider === 'email'
+            ? 'Prototype: next, enter your email to receive a sign-in link.'
+            : 'Prototype: open ' + button.dataset.provider + ' sign-in. After success, continue to name setup.';
+        });
+      });
+      render();
+      if (globalThis.Tweak) {
+        const tweak = new Tweak({container:root,onChange:render});
+        tweak.addSelect(state,'platform',{label:'Platform',options:['Android','iOS']});
+        tweak.addSelect(state,'screen',{label:'Login state',options:['Default','Login failed','Login cancelled']});
+        tweak.addToggle(state,'illustration',{label:'Illustration placeholder'});
+      }
+    })();
+  </script>
+</div>

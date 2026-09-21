@@ -1,0 +1,1529 @@
+<!doctype html>
+<html lang="en" data-visualize-standalone>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src 'unsafe-inline' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Complete app walkthrough</title>
+<style>:root{color-scheme:light dark;background:light-dark(rgb(255 255 255), rgb(24 24 24))}html,body{margin:0}body{box-sizing:border-box;padding:1rem;background:inherit}iframe{display:block;width:100%;height:calc(100vh - 2rem);margin:0 auto;border:0}</style>
+</head>
+<body>
+<iframe sandbox="allow-scripts" referrerpolicy="no-referrer" title="Complete app walkthrough" srcdoc="&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot; data-visualize-standalone&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+&lt;meta name=&quot;referrer&quot; content=&quot;no-referrer&quot;&gt;
+&lt;meta http-equiv=&quot;Content-Security-Policy&quot; content=&quot;default-src &#x27;none&#x27;; script-src &#x27;unsafe-inline&#x27; &#x27;unsafe-eval&#x27; &#x27;wasm-unsafe-eval&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src &#x27;unsafe-inline&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src &#x27;none&#x27;; object-src &#x27;none&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;&quot;&gt;
+&lt;title&gt;Complete app walkthrough&lt;/title&gt;
+&lt;style&gt;:root {
+  color-scheme: light dark;
+  background-color: var(
+    --background,
+    var(--color-background-primary, light-dark(rgb(255 255 255), rgb(24 24 24)))
+  ) !important;
+
+  /* Agent-facing contract; keep in sync with SKILL.md. */
+  --background: var(
+    --color-background-primary,
+    light-dark(rgb(255 255 255), rgb(24 24 24))
+  );
+  --foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --card: color-mix(in oklab, var(--foreground) 5%, var(--background));
+  --card-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --popover: var(
+    --color-background-secondary,
+    light-dark(rgb(255 255 255), rgb(45 45 45))
+  );
+  --popover-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --primary: var(
+    --color-text-info,
+    light-dark(rgb(51 156 255), rgb(131 195 255))
+  );
+  --primary-foreground: var(
+    --color-text-inverse,
+    light-dark(rgb(255 255 255), rgb(13 13 13))
+  );
+  --secondary: var(
+    --color-background-secondary,
+    light-dark(rgb(255 255 255 / 96%), rgb(54 54 54 / 96%))
+  );
+  --secondary-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --muted: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --muted-foreground: var(
+    --color-text-secondary,
+    light-dark(rgb(26 28 31 / 49.4%), rgb(255 255 255 / 49.8%))
+  );
+  --accent: var(
+    --color-background-info,
+    light-dark(rgb(229 242 255), rgb(13 39 63))
+  );
+  --accent-foreground: var(
+    --color-text-info,
+    light-dark(rgb(51 156 255), rgb(131 195 255))
+  );
+  --destructive: var(
+    --color-text-warning,
+    light-dark(rgb(226 85 7), rgb(255 133 73))
+  );
+  --border: var(
+    --color-border-secondary,
+    light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%))
+  );
+  --input: var(
+    --color-border-primary,
+    light-dark(
+      rgb(26 28 31 / 11.8%),
+      color-mix(in oklab, rgb(0 0 0) 10%, transparent)
+    )
+  );
+  --ring: var(
+    --color-ring-primary,
+    light-dark(rgb(51 156 255), rgb(131 195 255 / 76%))
+  );
+  --font-size-base: var(--font-text-md-size, 14px);
+  --blue: light-dark(rgb(51 156 255), rgb(51 156 255));
+  --orange: light-dark(rgb(226 85 7), rgb(251 106 34));
+  --green: light-dark(rgb(0 162 64), rgb(64 201 119));
+  --red: light-dark(rgb(224 46 42), rgb(255 103 100));
+  --purple: light-dark(rgb(146 79 247), rgb(173 123 249));
+  --yellow: light-dark(rgb(255 195 0), rgb(255 210 64));
+  --viz-series-1: var(--primary);
+  --viz-series-2: light-dark(rgb(243 136 59), rgb(245 154 86));
+  --viz-series-3: light-dark(rgb(93 201 119), rgb(116 213 139));
+  --viz-series-4: light-dark(rgb(235 119 177), rgb(240 143 192));
+  --viz-series-5: light-dark(rgb(155 121 236), rgb(170 145 239));
+  --viz-series-6: light-dark(rgb(58 185 177), rgb(90 203 194));
+
+  /* Internal implementation variables; not part of the agent contract. */
+  --font-sans: -apple-system, system-ui, &quot;Segoe UI&quot;, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, &quot;SF Mono&quot;, Menlo, Consolas, &quot;Liberation Mono&quot;,
+    monospace;
+  --font-size-normal: max(11px, var(--font-size-base));
+  --font-size-tooltip: calc(var(--font-size-base) - 1px);
+  --font-size-small: max(11px, calc(var(--font-size-base) - 2px));
+  --font-size-h1: calc(var(--font-size-normal) * 1.7142857143);
+  --font-size-h2: calc(var(--font-size-normal) * 1.4285714286);
+  --font-size-h3: calc(var(--font-size-normal) * 1.2857142857);
+  --font-weight-normal: 430;
+  --font-weight-medium: 500;
+  --icon-size: 16px;
+  --line-height-normal: calc(var(--font-size-normal) * 1.5);
+  --line-height-tooltip: calc(var(--font-size-tooltip) * 1.4285714286);
+  --line-height-small: calc(var(--font-size-small) + 4px);
+  --corner-shape: round;
+  --radius: var(--border-radius-lg, 10px);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-2xl: calc(var(--radius) * 1.6);
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px -1px rgb(0 0 0 / 8%);
+  --checkmark-image: url(&quot;data:image/svg+xml,%3Csvg xmlns=&#x27;http://www.w3.org/2000/svg&#x27; viewBox=&#x27;0 0 17 17&#x27;%3E%3Cpath d=&#x27;M12.8961 3.64101C13.1297 3.41418 13.4984 3.37523 13.7779 3.56581C14.0571 3.75635 14.1554 4.11331 14.0299 4.41347L13.9615 4.53847L7.71151 13.7045C7.59411 13.8767 7.4063 13.9877 7.19881 14.0072C6.99136 14.0267 6.78564 13.9533 6.63826 13.806L2.88826 10.056L2.79842 9.9457C2.6192 9.67407 2.64927 9.30496 2.88826 9.06581C3.12738 8.82669 3.49647 8.79676 3.76815 8.97597L3.8785 9.06581L7.03084 12.2182L12.8053 3.74941L12.8961 3.64101Z&#x27;/%3E%3C/svg%3E&quot;);
+
+  /* Legacy aliases; not part of the current agent contract. */
+  --viz-bg: transparent;
+  --viz-panel: var(--card);
+  --viz-border: var(--border);
+  --viz-text: var(--foreground);
+  --viz-muted: var(--muted-foreground);
+  --viz-accent: var(--primary);
+  --viz-accent-text: var(--primary-foreground);
+  --viz-accent-bg: var(--accent);
+  --viz-font-size: var(--font-size-base);
+  --viz-warning: var(--destructive);
+}
+
+:root[data-theme=&quot;light&quot;] {
+  color-scheme: light;
+}
+
+:root[data-theme=&quot;dark&quot;] {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html &gt; body {
+  /* Preserve MCP aliases for older inline renderers without creating :root cycles. */
+  --color-background-primary: var(
+    --background,
+    light-dark(rgb(255 255 255), rgb(24 24 24))
+  );
+  --color-text-primary: var(
+    --foreground,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --color-border-secondary: var(
+    --border,
+    light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%))
+  );
+
+  margin: 0;
+  padding: var(--visualize-paint-gutter, 0px);
+  color: var(--foreground);
+  background: transparent !important;
+  font-family: var(--font-sans) !important;
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+}
+
+a {
+  color: color-mix(in srgb, var(--viz-accent) 80%, var(--viz-text) 20%);
+  cursor: pointer;
+  font-weight: var(--font-weight-medium, 500);
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+
+a:is(:hover, :focus-visible) {
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-thickness: 0.5px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin-block: 0;
+}
+
+h1 {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.3;
+}
+
+b,
+strong,
+th {
+  font-weight: var(--font-weight-medium);
+}
+
+code:not(pre code) {
+  display: inline;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  corner-shape: var(--corner-shape);
+  background: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  word-break: break-word;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--foreground);
+  font: inherit;
+  text-align: start;
+}
+
+.table :is(th, td) {
+  padding-block: 10px;
+  padding-inline: 0 24px;
+  overflow-wrap: anywhere;
+  border-bottom: 1px solid var(--border);
+  text-align: start;
+  vertical-align: top;
+}
+
+.table-responsive &gt; .table :is(th, td) {
+  overflow-wrap: break-word;
+}
+
+.table :is(th, td):last-child {
+  padding-inline-end: 0;
+}
+
+.table :is(caption, thead th) {
+  font-weight: 600;
+}
+
+.table thead th {
+  padding-block: 8px;
+  border-bottom-color: color-mix(in srgb, var(--foreground) 16%, transparent);
+}
+
+.table tbody tr:last-child :is(th, td) {
+  border-bottom: 0;
+}
+
+.table.table-sm :is(th, td) {
+  padding-block: 6px;
+}
+
+.table.table-sm :is(th, td):not(:last-child) {
+  padding-inline-end: 16px;
+}
+
+.table :is(.text-end, [align=&quot;right&quot;]) {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.table :is(.text-center, [align=&quot;center&quot;]) {
+  text-align: center;
+}
+
+.table .text-nowrap {
+  white-space: nowrap;
+}
+
+#widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  background: transparent !important;
+}
+
+.card {
+  min-width: 0;
+  padding: 12px;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  border-radius: var(--radius-2xl);
+  corner-shape: var(--corner-shape);
+  color: var(--card-foreground);
+  background: var(--card);
+}
+
+#widget &gt; :not(.card, .progress) {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  left: 0;
+  width: max-content;
+  max-width: min(
+    20rem,
+    var(--tooltip-available-width, calc(100vw - 10px)),
+    calc(100vw - 10px)
+  );
+  max-height: min(
+    var(--tooltip-available-height, calc(100vh - 10px)),
+    calc(100vh - 10px)
+  );
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  corner-shape: var(--corner-shape);
+  color: var(--popover-foreground);
+  background: var(--popover);
+  box-shadow: none;
+  font-size: var(--font-size-tooltip);
+  line-height: var(--line-height-tooltip);
+  overflow-wrap: break-word;
+  white-space: normal;
+  pointer-events: none;
+  user-select: none;
+}
+
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(180px, 24%), 1fr));
+  gap: 10px;
+}
+
+.viz-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.viz-stat-value {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.viz-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+hr {
+  width: 100%;
+  height: 1px;
+  margin-block: 6px;
+  border: 0;
+  background: var(--border);
+}
+
+.nav {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+.progress {
+  display: flex;
+  height: 8px;
+  margin-block: calc((var(--line-height-normal, 1.5em) - 8px) / 2);
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+}
+
+.progress-bar:only-child {
+  border-radius: var(--radius-full);
+}
+
+.progress-bar {
+  height: 100%;
+  flex-shrink: 0;
+  border: 0;
+  background: var(--viz-series-1);
+}
+
+.viz-badge {
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  color: var(--accent-foreground);
+  background: var(--accent);
+  font-weight: var(--font-weight-medium);
+}
+
+small,
+.text-small,
+.viz-badge {
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+}
+
+.text-muted {
+  color: var(--muted-foreground);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.viz-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.viz-controls &gt; .form-label {
+  display: grid;
+  min-width: min(100%, 260px);
+  flex: 1 1 280px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 2px 12px;
+  margin-bottom: 0;
+}
+
+.viz-controls &gt; .form-label &gt; :is(.form-control, .form-range, .form-select) {
+  grid-column: 1 / -1;
+}
+
+.btn,
+.nav-link,
+.form-check-input,
+.form-control,
+.form-range,
+.form-select {
+  font: inherit;
+}
+
+.btn,
+.nav-link {
+  appearance: button;
+  display: inline-flex;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0 8px;
+  -webkit-app-region: no-drag;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: var(--corner-shape);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: var(--cursor-interaction, pointer);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn:is(.btn-block, .viz-tile) {
+  inline-size: 100%;
+}
+
+.btn.viz-tile {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+a.btn {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn:not(:disabled):hover,
+.nav-link:not(:disabled):not([aria-disabled=&quot;true&quot;]):hover {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn-primary {
+  border-color: transparent;
+  color: var(--primary-foreground);
+  background: var(--foreground);
+  background-clip: padding-box;
+}
+
+.btn-primary .text-muted {
+  color: color-mix(in srgb, var(--primary-foreground) 50%, transparent);
+}
+
+.btn-primary:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 80%, transparent);
+  background-clip: padding-box;
+}
+
+.btn-ghost {
+  border-color: transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.btn-ghost:not(:disabled):hover {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.nav-pills .nav-link {
+  min-width: 0;
+  border-color: transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.nav-justified .nav-link {
+  flex: 1 1 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.nav-pills .nav-link.active {
+  color: var(--foreground);
+  background: var(--muted);
+}
+
+.btn:disabled,
+.nav-link:disabled,
+.nav-link[aria-disabled=&quot;true&quot;] {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+[data-lucide] {
+  stroke-width: 1.6;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--foreground);
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  padding: 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: var(--corner-shape);
+  color: var(--foreground);
+  background: var(--secondary);
+}
+
+.form-control::placeholder {
+  color: var(--muted-foreground);
+}
+
+.form-control[type=&quot;file&quot;] {
+  padding: 0;
+  overflow: hidden;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control[type=&quot;file&quot;]::file-selector-button {
+  min-height: 26px;
+  margin-right: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-right: 1px solid var(--input);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: inherit;
+  font: inherit;
+}
+
+.form-control[type=&quot;file&quot;]:not(:disabled):hover::file-selector-button {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-control-color[type=&quot;color&quot;] {
+  width: 40px;
+  height: 28px;
+  padding: 3px;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch {
+  border: 0;
+  border-radius: calc(var(--radius-lg) - 4px);
+  corner-shape: var(--corner-shape);
+}
+
+textarea.form-control {
+  height: auto;
+  min-height: 72px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.form-control:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-control:disabled,
+.form-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.form-select {
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  margin: 0;
+  padding: 0 32px 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: var(--corner-shape);
+  color: var(--foreground);
+  background-color: var(--secondary);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%),
+    linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 50%,
+    calc(100% - 10px) 50%;
+  background-repeat: no-repeat;
+  background-size: 4px 4px;
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-select:not(:disabled):hover {
+  background-color: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-select:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-check {
+  display: flex;
+  min-height: 20px;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-check-input {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  margin: 0;
+  border: 1px solid var(--input);
+  color: var(--primary-foreground);
+  background-color: transparent;
+  cursor: var(--cursor-interaction, default);
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    box-shadow 150ms;
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;] {
+  border-color: var(--input);
+  border-radius: var(--radius-sm);
+  corner-shape: var(--corner-shape);
+  background-color: var(--secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input:not(:disabled):not(:checked):hover {
+  background-color: var(--card);
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;]:checked {
+  border-color: var(--primary);
+  background-color: var(--primary);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input[type=&quot;checkbox&quot;]:checked::before {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--primary-foreground);
+  content: &quot;&quot;;
+  mask: var(--checkmark-image) center / 12px 12px no-repeat;
+}
+
+.form-check-input[type=&quot;radio&quot;] {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+}
+
+.form-check-input[type=&quot;radio&quot;]:checked {
+  border: 2px solid var(--primary);
+  background:
+    radial-gradient(circle, var(--primary-foreground) 0 2.5px, transparent 3px),
+    var(--primary);
+}
+
+.form-check:not(.form-switch) .form-check-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+}
+
+.form-switch .form-check-input:disabled,
+.form-switch .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-check-label {
+  color: var(--foreground);
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-switch .form-check-input {
+  position: relative;
+  width: 32px;
+  height: 20px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+  box-shadow: none;
+  transition: background-color 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1px solid light-dark(var(--primary-foreground), var(--foreground));
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+  box-shadow: var(--shadow-sm);
+  content: &quot;&quot;;
+  transform: translate(2px, -50%);
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input:checked {
+  background: var(--primary);
+}
+
+.form-switch .form-check-input:checked::before {
+  transform: translate(14px, -50%);
+}
+
+.form-switch .form-check-input:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.form-range {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 28px;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  outline: none;
+  border: 0;
+  accent-color: var(--primary);
+  background: linear-gradient(
+      color-mix(in srgb, var(--foreground) 7%, transparent),
+      color-mix(in srgb, var(--foreground) 7%, transparent)
+    )
+    center / 100% 2px no-repeat;
+}
+
+.form-range::-webkit-slider-runnable-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-webkit-slider-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range::-moz-range-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-moz-range-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.btn:not(.btn-primary, .viz-tile):is(
+  [aria-pressed=&quot;true&quot;],
+  [aria-selected=&quot;true&quot;],
+  .is-selected
+) {
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+.btn.viz-tile:is([aria-pressed=&quot;true&quot;], [aria-selected=&quot;true&quot;], .is-selected) {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.btn:focus-visible,
+.nav-link:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  .btn,
+  .nav-link,
+  .form-control,
+  .form-select {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Keep small-screen WebKit from zooming when a text field receives focus. */
+  .form-control,
+  .form-select {
+    font-size: max(16px, var(--font-size-normal));
+  }
+
+  .form-control[type=&quot;file&quot;]::file-selector-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .form-control-color[type=&quot;color&quot;] {
+    width: 44px;
+    height: 44px;
+  }
+
+  .form-control:is(
+    [type=&quot;date&quot;],
+    [type=&quot;datetime-local&quot;],
+    [type=&quot;month&quot;],
+    [type=&quot;time&quot;],
+    [type=&quot;week&quot;]
+  ) {
+    min-width: 0;
+    max-width: 100%;
+    padding-block: 8px;
+  }
+
+  .form-check {
+    min-height: 44px;
+    padding-inline: 15px;
+  }
+
+  .form-check-input {
+    position: relative;
+  }
+
+  .form-check-input::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    content: &quot;&quot;;
+    transform: translate(-50%, -50%);
+  }
+
+  .form-check-label {
+    display: inline-flex;
+    min-width: 44px;
+    min-height: 44px;
+    align-items: center;
+  }
+
+  .form-range {
+    height: 44px;
+    touch-action: pan-y;
+  }
+
+  .form-range::-webkit-slider-runnable-track {
+    height: 44px;
+  }
+
+  .form-range::-moz-range-track {
+    height: 44px;
+  }
+
+  .form-range::-webkit-slider-thumb {
+    margin-top: 12px;
+  }
+}
+
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+#widget &gt; svg {
+  width: 100%;
+}
+
+/* Model-authored chart rules can otherwise stretch icons after these styles load. */
+svg.lucide {
+  display: block;
+  width: var(--icon-size) !important;
+  height: var(--icon-size) !important;
+  flex: none;
+  margin: 0 !important;
+  stroke-width: 1.6;
+}
+
+.text-warning,
+.text-destructive {
+  color: var(--destructive);
+}
+
+html&gt;body{padding:0}&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;details id=&quot;export-controls&quot; style=&quot;font:14px Arial,sans-serif;max-width:420px;margin:0 auto 18px;padding:12px;border:1px solid light-dark(#aaa,#777);border-radius:8px&quot;&gt;&lt;summary&gt;Preview controls&lt;/summary&gt;&lt;div id=&quot;export-controls-fields&quot;&gt;&lt;/div&gt;&lt;/details&gt;
+&lt;script&gt;
+globalThis.Tweak=class {
+ constructor(config){this.config=config;this.supported=true;}
+ addSelect(state,key,options){
+  const label=document.createElement(&#x27;label&#x27;);label.style.cssText=&#x27;display:grid;gap:6px;margin-top:12px&#x27;;label.append(document.createTextNode(options.label||key));
+  const select=document.createElement(&#x27;select&#x27;);select.style.cssText=&#x27;font:inherit;padding:8px;max-width:100%;color:light-dark(#222,#eee);background:light-dark(#fff,#292929)&#x27;;
+  options.options.forEach(value=&gt;{const option=document.createElement(&#x27;option&#x27;);option.value=typeof value===&#x27;string&#x27;?value:value.value;option.textContent=typeof value===&#x27;string&#x27;?value:value.label;select.append(option);});
+  select.value=state[key];select.onchange=()=&gt;{state[key]=select.value;this.config.onChange();};label.append(select);document.getElementById(&#x27;export-controls-fields&#x27;).append(label);
+ }
+ addToggle(state,key,options){const label=document.createElement(&#x27;label&#x27;);label.style.cssText=&#x27;display:flex;gap:8px;align-items:center;margin-top:12px&#x27;;const input=document.createElement(&#x27;input&#x27;);input.type=&#x27;checkbox&#x27;;input.checked=state[key];input.onchange=()=&gt;{state[key]=input.checked;this.config.onChange();};label.append(input,document.createTextNode(options.label||key));document.getElementById(&#x27;export-controls-fields&#x27;).append(label);}
+};
+&lt;/script&gt;
+&lt;div id=&quot;luni-settings-flow&quot; aria-label=&quot;Luni connected app walkthrough&quot;&gt;
+&lt;style&gt;
+#luni-settings-flow{font-family:Arial,sans-serif;color:light-dark(#242424,#eee);padding:12px}#luni-settings-flow *{box-sizing:border-box}
+#luni-settings-flow .phone{position:relative;max-width:370px;min-height:660px;margin:auto;border:1px solid light-dark(#aaa,#777);border-radius:28px;background:light-dark(#fafafa,#202020);padding:20px;display:flex;flex-direction:column}
+#luni-settings-flow .status{display:flex;justify-content:space-between;font-size:12px}#luni-settings-flow header{display:flex;align-items:center;gap:8px;margin:22px 0}
+#luni-settings-flow h2{font-size:23px;font-weight:500;margin:0}#luni-settings-flow h3{font-size:16px;font-weight:500;margin:0 0 12px}
+#luni-settings-flow button{font:inherit;font-size:14px;color:inherit;cursor:pointer;background:transparent;min-height:44px;padding:10px 12px;border:1px solid light-dark(#aaa,#777);border-radius:8px}
+#luni-settings-flow .back{border:0;padding:10px;width:44px;flex-shrink:0}#luni-settings-flow p{font-size:14px;line-height:1.6;margin:0 0 18px}#luni-settings-flow .muted{color:light-dark(#666,#bbb)}
+#luni-settings-flow .group{font-size:12px;color:light-dark(#666,#bbb);margin:24px 0 6px}#luni-settings-flow .row{width:100%;display:flex;align-items:center;gap:10px;text-align:left;border:0;border-bottom:1px solid light-dark(#ddd,#555);border-radius:0;padding:16px 0;min-height:68px}
+#luni-settings-flow .row span:first-child{flex:1}#luni-settings-flow .row small{display:block;font-size:12px;line-height:1.5;color:light-dark(#666,#bbb);margin-top:5px}
+#luni-settings-flow .actions{display:flex;gap:8px;margin:18px 0}#luni-settings-flow .actions button{flex:1}#luni-settings-flow .primary{background:light-dark(#333,#ddd);color:light-dark(#fff,#222);border-color:transparent}
+#luni-settings-flow label{display:block;font-size:13px;margin:14px 0 8px}#luni-settings-flow input:not([type=radio]),#luni-settings-flow textarea{font:inherit;font-size:16px;line-height:1.5;width:100%;min-width:0;padding:12px;border:1px solid light-dark(#999,#888);border-radius:8px;background:light-dark(#fff,#292929);color:inherit}
+#luni-settings-flow textarea{resize:vertical}#luni-settings-flow .choice{display:flex;align-items:center;gap:12px;border:1px solid light-dark(#aaa,#777);border-radius:9px;padding:15px 12px;min-height:50px;font-size:14px}#luni-settings-flow .choice:has(:checked){background:light-dark(#e9e9e9,#353535)}
+#luni-settings-flow input[type=radio]{accent-color:light-dark(#333,#ddd)}#luni-settings-flow .memory{white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid light-dark(#aaa,#777);border-radius:10px;padding:16px}
+#luni-settings-flow .sample{border-left:2px solid light-dark(#aaa,#777);padding-left:14px;margin-top:24px}#luni-settings-flow .sample small{font-size:12px;display:block;margin-bottom:8px}
+#luni-settings-flow .home{height:4px;width:100px;border-radius:4px;background:light-dark(#666,#bbb);margin:28px auto 0}#luni-settings-flow main{flex:1}#luni-settings-flow .notice{font-size:12px;margin:14px 0 0;color:light-dark(#666,#bbb)}
+#luni-settings-flow .overlay{position:absolute;inset:0;z-index:2;border-radius:28px;background:light-dark(#0006,#0009);display:flex;align-items:center;padding:22px}#luni-settings-flow .dialog{width:100%;background:light-dark(#fafafa,#292929);border:1px solid light-dark(#aaa,#777);border-radius:14px;padding:20px}#luni-settings-flow .dialog p{font-size:13px}
+#luni-settings-flow [hidden]{display:none}
+#luni-settings-flow .stack{display:grid;gap:10px;margin:24px 0}#luni-settings-flow .chat-log{display:flex;flex-direction:column;gap:14px;padding:12px 0 24px;min-height:240px}#luni-settings-flow .bubble{padding:12px 14px;max-width:90%;font-size:14px;line-height:1.5;border-radius:14px 14px 14px 4px;background:light-dark(#eaeaea,#363636);overflow-wrap:anywhere}#luni-settings-flow .user{align-self:flex-end;background:light-dark(#333,#ddd);color:light-dark(#fff,#222);border-radius:14px 14px 4px 14px}#luni-settings-flow .compose{display:flex;gap:8px;align-items:end}#luni-settings-flow .compose textarea{flex:1;width:0}#luni-settings-flow button:disabled{opacity:.5;cursor:default}#luni-settings-flow .chat-settings{margin-left:auto}#luni-settings-flow .hero{padding-top:28px}#luni-settings-flow .hero h3{font-size:28px;line-height:1.2}#luni-settings-flow .event{border:1px solid light-dark(#999,#777);padding:16px;border-radius:12px;width:100%}#luni-settings-flow .event p{margin-bottom:8px}#luni-settings-flow .hint{font-size:12px;color:light-dark(#666,#bbb)}
+&lt;/style&gt;
+&lt;section class=&quot;phone&quot;&gt;
+ &lt;div class=&quot;status&quot; aria-hidden=&quot;true&quot;&gt;&lt;span&gt;9:41&lt;/span&gt;&lt;span&gt;••• ▰&lt;/span&gt;&lt;/div&gt;
+ &lt;header&gt;&lt;button class=&quot;back&quot; type=&quot;button&quot; aria-label=&quot;Back&quot;&gt;←&lt;/button&gt;&lt;h2&gt;Settings&lt;/h2&gt;&lt;/header&gt;
+ &lt;main&gt;&lt;/main&gt;
+ &lt;p class=&quot;notice&quot; role=&quot;status&quot; aria-live=&quot;polite&quot; hidden&gt;&lt;/p&gt;
+ &lt;div class=&quot;home&quot; aria-hidden=&quot;true&quot;&gt;&lt;/div&gt;
+ &lt;div class=&quot;overlay&quot; hidden&gt;&lt;section class=&quot;dialog&quot; role=&quot;dialog&quot; aria-modal=&quot;true&quot; aria-labelledby=&quot;luni-dialog-title&quot;&gt;&lt;/section&gt;&lt;/div&gt;
+&lt;/section&gt;
+&lt;script&gt;
+(()=&gt;{
+ const root=document.getElementById(&#x27;luni-settings-flow&#x27;),main=root.querySelector(&#x27;main&#x27;),heading=root.querySelector(&#x27;h2&#x27;),notice=root.querySelector(&#x27;.notice&#x27;),overlay=root.querySelector(&#x27;.overlay&#x27;),dialog=root.querySelector(&#x27;.dialog&#x27;);
+ const state={notifications:&#x27;Not asked&#x27;,entry:&#x27;New user&#x27;,login:&#x27;Success&#x27;,message:&#x27;Success&#x27;,data:&#x27;Loaded&#x27;};
+ let onboarded=false,draft=&#x27;&#x27;,email=&#x27;alex@example.com&#x27;,chatMessages=[],pendingReminder=null,editReturn=&#x27;reminders&#x27;;
+ const deliveredReminder={title:&#x27;Submit my assignment&#x27;,date:&#x27;2026-09-22&#x27;,time:&#x27;18:00&#x27;,delivered:true};
+ let notificationTarget=null;
+ let page=&#x27;settings&#x27;,preferredName=&#x27;Alex&#x27;,style=&#x27;Gentle and reassuring&#x27;,memory=&#x27;You prefer to be called Alex. You’re studying computer science and enjoy taking a walk after work. When you talk about a difficult day, you prefer someone to listen before offering advice.&#x27;,activeReminder=null,lastFocus=null;
+ const reminders=[];
+ const initialMemory=memory;memory=&#x27;&#x27;;preferredName=&#x27;&#x27;;style=&#x27;Warm and balanced&#x27;;
+ function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
+ function btn(text,fn,cls){const n=el(&#x27;button&#x27;,text,cls);n.type=&#x27;button&#x27;;n.onclick=fn;return n;}
+ function tell(text){notice.textContent=text;notice.hidden=false;}
+ function actions(...buttons){const n=el(&#x27;div&#x27;,undefined,&#x27;actions&#x27;);n.append(...buttons);return n;}
+ function row(title,detail,fn){const n=btn(&#x27;&#x27;,fn,&#x27;row&#x27;),s=el(&#x27;span&#x27;,title);if(detail)s.append(el(&#x27;small&#x27;,detail));n.append(s,el(&#x27;span&#x27;,&#x27;›&#x27;));return n;}
+ function field(form,title,value,type=&#x27;text&#x27;){const label=el(&#x27;label&#x27;,title),input=el(&#x27;input&#x27;);input.id=&#x27;field-&#x27;+title.replace(/\W/g,&#x27;&#x27;);label.htmlFor=input.id;input.type=type;input.value=value;form.append(label,input);return input;}
+ function close(){overlay.hidden=true;root.querySelector(&#x27;header&#x27;).inert=false;main.inert=false;if(lastFocus&amp;&amp;lastFocus.isConnected)lastFocus.focus();}
+ function modal(title,build){lastFocus=document.activeElement;dialog.replaceChildren();const h=el(&#x27;h3&#x27;,title);h.id=&#x27;luni-dialog-title&#x27;;dialog.append(h);build(dialog);overlay.hidden=false;root.querySelector(&#x27;header&#x27;).inert=true;main.inert=true;dialog.querySelector(&#x27;input,button&#x27;)?.focus();}
+ overlay.addEventListener(&#x27;keydown&#x27;,e=&gt;{if(e.key===&#x27;Escape&#x27;){e.preventDefault();close();}if(e.key===&#x27;Tab&#x27;){const items=[...dialog.querySelectorAll(&#x27;input,button&#x27;)];if(e.shiftKey&amp;&amp;document.activeElement===items[0]){e.preventDefault();items.at(-1).focus();}else if(!e.shiftKey&amp;&amp;document.activeElement===items.at(-1)){e.preventDefault();items[0].focus();}}});
+ function nameDialog(){modal(&#x27;Preferred name&#x27;,box=&gt;{const form=el(&#x27;form&#x27;),input=field(form,&#x27;Name or nickname&#x27;,preferredName);const save=btn(&#x27;Save&#x27;,()=&gt;{},&#x27;primary&#x27;);save.type=&#x27;submit&#x27;;form.append(actions(btn(&#x27;Cancel&#x27;,close),save));form.onsubmit=e=&gt;{e.preventDefault();preferredName=input.value.trim();close();show(&#x27;settings&#x27;);};box.append(form);});}
+ function enterChat(){onboarded=true;if(!chatMessages.length)chatMessages.push({role:&#x27;assistant&#x27;,text:preferredName?&#x27;Hey &#x27;+preferredName+&#x27;, how’s your day going?&#x27;:&#x27;Hey, how’s your day going?&#x27;});show(&#x27;chat&#x27;);}
+ function signedIn(){if(state.login===&#x27;Failed&#x27;){show(&#x27;loginError&#x27;);return;}if(state.login===&#x27;Cancelled&#x27;){show(&#x27;login&#x27;);tell(&#x27;Sign-in cancelled. Choose an option to continue.&#x27;);return;}if(onboarded)enterChat();else show(&#x27;name&#x27;);}
+ function resolveMessage(item){
+  item.failed=false;
+  if(item.text.toLowerCase().includes(&#x27;remind&#x27;)){
+   if(/tomorrow at 6\s*p/i.test(item.text))saveReminder();
+   else {pendingReminder=true;chatMessages.push({role:&#x27;assistant&#x27;,text:&#x27;What should I remind you about, and when?&#x27;});}
+  }else if(pendingReminder){saveReminder();}
+  else chatMessages.push({role:&#x27;assistant&#x27;,text:item.text.toLowerCase().includes(&#x27;hang out&#x27;)?&#x27;I’m here. What have you been up to today?&#x27;:&#x27;That sounds like a rough day. What happened?&#x27;});
+  show(&#x27;chat&#x27;);
+ }
+ function saveReminder(){const r={title:&#x27;Submit my assignment&#x27;,date:&#x27;2026-09-22&#x27;,time:&#x27;18:00&#x27;};reminders.push(r);chatMessages.push({role:&#x27;assistant&#x27;,reminder:r});pendingReminder=null;}
+ function reminderCard(r){const card=el(&#x27;section&#x27;,undefined,&#x27;event&#x27;);card.append(el(&#x27;p&#x27;,r.cancelled?&#x27;Reminder cancelled&#x27;:r.delivered?&#x27;Reminder · time to act&#x27;:&#x27;✓ Reminder saved&#x27;,&#x27;hint&#x27;),el(&#x27;h3&#x27;,r.title),el(&#x27;p&#x27;,r.date+&#x27; · &#x27;+r.time),el(&#x27;p&#x27;,&#x27;India Standard Time&#x27;,&#x27;hint&#x27;));if(!r.cancelled&amp;&amp;!r.delivered)card.append(actions(btn(&#x27;Edit&#x27;,()=&gt;{activeReminder=r;editReturn=&#x27;chat&#x27;;show(&#x27;editReminder&#x27;);}),btn(&#x27;Cancel reminder&#x27;,()=&gt;{r.cancelled=true;const i=reminders.indexOf(r);if(i&gt;=0)reminders.splice(i,1);show(&#x27;chat&#x27;);})));return card;}
+ function chat(){
+  const settings=btn(&#x27;Settings&#x27;,()=&gt;show(&#x27;settings&#x27;),&#x27;chat-settings&#x27;);root.querySelector(&#x27;header&#x27;).append(settings);
+  const log=el(&#x27;div&#x27;,undefined,&#x27;chat-log&#x27;);log.setAttribute(&#x27;role&#x27;,&#x27;log&#x27;);log.setAttribute(&#x27;aria-label&#x27;,&#x27;Conversation&#x27;);
+  chatMessages.forEach(item=&gt;{if(item.reminder){log.append(reminderCard(item.reminder));return;}log.append(el(&#x27;div&#x27;,item.text,&#x27;bubble&#x27;+(item.role===&#x27;user&#x27;?&#x27; user&#x27;:&#x27;&#x27;)));if(item.failed){const failed=el(&#x27;div&#x27;,undefined,&#x27;actions&#x27;);failed.append(el(&#x27;span&#x27;,&#x27;Not sent&#x27;),btn(&#x27;Retry&#x27;,()=&gt;resolveMessage(item)));log.append(failed);}});
+  if(notificationTarget){log.append(reminderCard(notificationTarget));notificationTarget=null;}
+  main.append(log);
+  if(chatMessages.length===1){const starters=el(&#x27;div&#x27;,undefined,&#x27;stack&#x27;);[&#x27;I want to talk about my day&#x27;,&#x27;Let’s just hang out&#x27;,&#x27;Remind me to submit my assignment tomorrow at 6 PM&#x27;].forEach(text=&gt;starters.append(btn(text,()=&gt;{draft=text;input.value=text;send.disabled=false;input.focus();})));main.append(starters);}
+  if(reminders.length&amp;&amp;state.notifications===&#x27;Not asked&#x27;){main.append(el(&#x27;p&#x27;,&#x27;Allow notifications to receive reminder alerts.&#x27;),actions(btn(&#x27;Enable alerts&#x27;,()=&gt;modal(&#x27;Allow notifications?&#x27;,box=&gt;{box.append(el(&#x27;p&#x27;,&#x27;System permission prompt · simulated&#x27;),actions(btn(&#x27;Don’t allow&#x27;,()=&gt;{state.notifications=&#x27;Off&#x27;;close();show(&#x27;chat&#x27;);}),btn(&#x27;Allow&#x27;,()=&gt;{state.notifications=&#x27;Enabled&#x27;;close();show(&#x27;chat&#x27;);},&#x27;primary&#x27;)));})),btn(&#x27;Not now&#x27;,()=&gt;{state.notifications=&#x27;Off&#x27;;show(&#x27;chat&#x27;);})));}
+  if(reminders.length&amp;&amp;state.notifications===&#x27;Off&#x27;)main.append(el(&#x27;p&#x27;,&#x27;Notifications are off. Your reminder is saved, but you won’t receive an alert.&#x27;,&#x27;hint&#x27;));
+  const form=el(&#x27;form&#x27;,undefined,&#x27;compose&#x27;),input=el(&#x27;textarea&#x27;);input.rows=1;input.placeholder=&#x27;Message Luni…&#x27;;input.setAttribute(&#x27;aria-label&#x27;,&#x27;Message Luni&#x27;);input.value=draft;
+  const send=btn(&#x27;Send&#x27;,()=&gt;{},&#x27;primary&#x27;);send.type=&#x27;submit&#x27;;send.disabled=!draft.trim();input.oninput=()=&gt;{draft=input.value;send.disabled=!draft.trim();};form.append(input,send);form.onsubmit=e=&gt;{e.preventDefault();if(!draft.trim())return;const item={role:&#x27;user&#x27;,text:draft.trim(),failed:state.message===&#x27;Failed&#x27;};chatMessages.push(item);draft=&#x27;&#x27;;if(item.failed)show(&#x27;chat&#x27;);else resolveMessage(item);};main.append(form,el(&#x27;p&#x27;,&#x27;Preview: sample replies and reminder details. No messages or alerts leave this walkthrough.&#x27;,&#x27;hint&#x27;));
+ }
+ function show(next){page=next;main.replaceChildren();notice.hidden=true;root.querySelector(&#x27;.chat-settings&#x27;)?.remove();heading.textContent=({settings:&#x27;Settings&#x27;,style:&#x27;Conversation style&#x27;,onboardingStyle:&#x27;Conversation style&#x27;,name:&#x27;Welcome&#x27;,memory:&#x27;Memory&#x27;,editMemory:&#x27;Edit memory&#x27;,reminders:&#x27;Reminders&#x27;,editReminder:&#x27;Edit reminder&#x27;,account:&#x27;Account&#x27;,deleteAccount:&#x27;Delete account&#x27;,chat:&#x27;Luni&#x27;,login:&#x27;Luni&#x27;,email:&#x27;Sign in with email&#x27;,checkEmail:&#x27;Check your email&#x27;,loginError:&#x27;Sign-in failed&#x27;,notification:&#x27;Notification preview&#x27;})[page];root.querySelector(&#x27;.back&#x27;).hidden=[&#x27;login&#x27;,&#x27;chat&#x27;,&#x27;name&#x27;,&#x27;notification&#x27;].includes(page);
+ if([&#x27;memory&#x27;,&#x27;reminders&#x27;].includes(page)&amp;&amp;state.data!==&#x27;Loaded&#x27;){
+  if(state.data===&#x27;Loading&#x27;){main.append(el(&#x27;p&#x27;,&#x27;Loading…&#x27;,&#x27;muted&#x27;));return;}
+  if(state.data===&#x27;Error&#x27;){main.append(el(&#x27;p&#x27;,&#x27;Couldn’t load &#x27;+(page===&#x27;memory&#x27;?&#x27;your memory.&#x27;:&#x27;your reminders.&#x27;)),btn(&#x27;Retry&#x27;,()=&gt;{state.data=&#x27;Loaded&#x27;;show(page);},&#x27;primary&#x27;));return;}
+  if(state.data===&#x27;Empty&#x27;){main.append(el(&#x27;p&#x27;,page===&#x27;memory&#x27;?&#x27;No saved memory yet.&#x27;:&#x27;No upcoming reminders. Ask Luni to set one in chat.&#x27;,&#x27;muted&#x27;));return;}
+ }
+ if(page===&#x27;settings&#x27;){
+ main.append(el(&#x27;div&#x27;,&#x27;YOU AND LUNI&#x27;,&#x27;group&#x27;),row(&#x27;Preferred name&#x27;,preferredName||&#x27;Not set&#x27;,nameDialog),row(&#x27;Conversation style&#x27;,style,()=&gt;show(&#x27;style&#x27;)),row(&#x27;Memory&#x27;,&#x27;View and edit what Luni remembers&#x27;,()=&gt;show(&#x27;memory&#x27;)),el(&#x27;div&#x27;,&#x27;REMINDERS AND ALERTS&#x27;,&#x27;group&#x27;),row(&#x27;Reminders&#x27;,&#x27;View, edit, or cancel upcoming reminders&#x27;,()=&gt;show(&#x27;reminders&#x27;)),row(&#x27;Notifications&#x27;,state.notifications+&#x27; · Phone settings&#x27;,()=&gt;tell(&#x27;Prototype: opens your phone’s notification settings for Luni.&#x27;)),el(&#x27;div&#x27;,&#x27;ACCOUNT&#x27;,&#x27;group&#x27;),row(&#x27;Account&#x27;,&#x27;Sign out or delete your account&#x27;,()=&gt;show(&#x27;account&#x27;)));
+ }else if(page===&#x27;style&#x27;||page===&#x27;onboardingStyle&#x27;){
+ main.append(el(&#x27;p&#x27;,&#x27;Choose how Luni talks with you.&#x27;,&#x27;muted&#x27;));let selected=style;
+ const samples={&#x27;Warm and balanced&#x27;:&#x27;Nice work! How does it feel to have it finished?&#x27;,&#x27;Gentle and reassuring&#x27;:&#x27;You got through it. I hope you get a chance to rest now.&#x27;,&#x27;Playful and casual&#x27;:&#x27;Assignment defeated! What’s the plan for your well-earned freedom?&#x27;,&#x27;Direct and thoughtful&#x27;:&#x27;Nice work getting it done. What helped you finish?&#x27;};
+ const preview=el(&#x27;div&#x27;,undefined,&#x27;sample&#x27;),reply=el(&#x27;p&#x27;,samples[selected]);preview.append(el(&#x27;small&#x27;,&#x27;You: “I finished my assignment.”&#x27;),reply);
+ Object.keys(samples).filter(value=&gt;page===&#x27;style&#x27;||value!==&#x27;Warm and balanced&#x27;).forEach(value=&gt;{const label=el(&#x27;label&#x27;,undefined,&#x27;choice&#x27;),radio=el(&#x27;input&#x27;);radio.type=&#x27;radio&#x27;;radio.name=&#x27;settings-style&#x27;;radio.checked=value===style;radio.onchange=()=&gt;{selected=value;reply.textContent=samples[value];};label.append(radio,document.createTextNode(value));main.append(label);});main.append(preview,actions(btn(page===&#x27;style&#x27;?&#x27;Cancel&#x27;:&#x27;Decide later&#x27;,()=&gt;page===&#x27;style&#x27;?show(&#x27;settings&#x27;):enterChat()),btn(page===&#x27;style&#x27;?&#x27;Save style&#x27;:&#x27;Start chatting&#x27;,()=&gt;{style=selected;if(page===&#x27;style&#x27;)show(&#x27;settings&#x27;);else enterChat();},&#x27;primary&#x27;)));
+ }else if(page===&#x27;memory&#x27;){
+ main.append(el(&#x27;p&#x27;,&#x27;What Luni remembers about you from your chats.&#x27;,&#x27;muted&#x27;),el(&#x27;p&#x27;,memory||&#x27;No saved memory yet.&#x27;,memory?&#x27;memory&#x27;:&#x27;muted&#x27;));
+ if(memory)main.append(actions(btn(&#x27;Edit memory&#x27;,()=&gt;show(&#x27;editMemory&#x27;),&#x27;primary&#x27;),btn(&#x27;Clear memory&#x27;,()=&gt;modal(&#x27;Clear memory?&#x27;,box=&gt;{box.append(el(&#x27;p&#x27;,&#x27;This clears the combined memory text. Your chat messages will remain.&#x27;),actions(btn(&#x27;Keep memory&#x27;,close),btn(&#x27;Clear memory&#x27;,()=&gt;{memory=&#x27;&#x27;;close();show(&#x27;memory&#x27;);})));}))));
+ }else if(page===&#x27;editMemory&#x27;){
+ const form=el(&#x27;form&#x27;),label=el(&#x27;label&#x27;,&#x27;Your memory&#x27;),input=el(&#x27;textarea&#x27;);input.id=&#x27;memory-editor&#x27;;label.htmlFor=input.id;input.rows=11;input.value=memory;const save=btn(&#x27;Save changes&#x27;,()=&gt;{},&#x27;primary&#x27;);save.type=&#x27;submit&#x27;;form.append(label,input,actions(btn(&#x27;Cancel&#x27;,()=&gt;show(&#x27;memory&#x27;)),save));form.onsubmit=e=&gt;{e.preventDefault();if(!input.value.trim()){tell(&#x27;Use Clear memory to remove the entire text.&#x27;);return;}memory=input.value.trim();show(&#x27;memory&#x27;);};main.append(form);
+ }else if(page===&#x27;reminders&#x27;){
+ main.append(el(&#x27;p&#x27;,&#x27;Upcoming reminders · India Standard Time&#x27;,&#x27;muted&#x27;));
+ if(!reminders.length)main.append(el(&#x27;p&#x27;,&#x27;No upcoming reminders. Ask Luni to set one in chat.&#x27;));
+ reminders.forEach(item=&gt;main.append(row(item.title,item.date+&#x27; · &#x27;+item.time,()=&gt;{activeReminder=item;editReturn=&#x27;reminders&#x27;;show(&#x27;editReminder&#x27;);})));
+ }else if(page===&#x27;editReminder&#x27;){
+ const form=el(&#x27;form&#x27;),title=field(form,&#x27;Reminder&#x27;,activeReminder.title),date=field(form,&#x27;Date&#x27;,activeReminder.date,&#x27;date&#x27;),time=field(form,&#x27;Time&#x27;,activeReminder.time,&#x27;time&#x27;);[title,date,time].forEach(input=&gt;input.required=true);main.append(el(&#x27;p&#x27;,&#x27;India Standard Time&#x27;,&#x27;muted&#x27;));
+ const save=btn(&#x27;Save changes&#x27;,()=&gt;{},&#x27;primary&#x27;);save.type=&#x27;submit&#x27;;form.append(actions(btn(&#x27;Discard&#x27;,()=&gt;show(editReturn)),save));form.onsubmit=e=&gt;{e.preventDefault();if(!title.value.trim())return;Object.assign(activeReminder,{title:title.value.trim(),date:date.value,time:time.value});show(editReturn);};main.append(form,btn(&#x27;Cancel reminder&#x27;,()=&gt;modal(&#x27;Cancel reminder?&#x27;,box=&gt;{box.append(el(&#x27;p&#x27;,activeReminder.title+&#x27; will no longer trigger an alert.&#x27;),actions(btn(&#x27;Keep reminder&#x27;,close),btn(&#x27;Cancel reminder&#x27;,()=&gt;{activeReminder.cancelled=true;reminders.splice(reminders.indexOf(activeReminder),1);close();show(editReturn);})));})));
+ }else if(page===&#x27;account&#x27;){
+ main.append(el(&#x27;p&#x27;,&#x27;Signed in as &#x27;+email,&#x27;muted&#x27;),row(&#x27;Sign out&#x27;,&#x27;Keep your account and saved data&#x27;,()=&gt;modal(&#x27;Sign out?&#x27;,box=&gt;box.append(el(&#x27;p&#x27;,&#x27;You’ll need to sign in to return to your conversation.&#x27;),actions(btn(&#x27;Stay signed in&#x27;,close),btn(&#x27;Sign out&#x27;,()=&gt;{close();show(&#x27;login&#x27;);},&#x27;primary&#x27;))))),row(&#x27;Delete account&#x27;,&#x27;Review before deleting&#x27;,()=&gt;show(&#x27;deleteAccount&#x27;)));
+ }else if(page===&#x27;deleteAccount&#x27;){
+ main.append(el(&#x27;p&#x27;,&#x27;Delete your Luni account?&#x27;),el(&#x27;p&#x27;,&#x27;Proposed behavior: delete your account, conversation, memory, and reminders. This cannot be undone.&#x27;,&#x27;muted&#x27;),actions(btn(&#x27;Keep account&#x27;,()=&gt;show(&#x27;account&#x27;)),btn(&#x27;Delete account&#x27;,()=&gt;tell(&#x27;Preview only. No account or data has been deleted.&#x27;))));
+ }else if(page===&#x27;chat&#x27;){chat();
+ }else if(page===&#x27;login&#x27;){
+  const hero=el(&#x27;div&#x27;,undefined,&#x27;hero&#x27;);hero.append(el(&#x27;h3&#x27;,&#x27;A little company. Room to be you.&#x27;),el(&#x27;p&#x27;,&#x27;Your AI companion for everyday conversations, with a memory for what matters to you.&#x27;,&#x27;muted&#x27;));const buttons=el(&#x27;div&#x27;,undefined,&#x27;stack&#x27;);buttons.append(btn(&#x27;Continue with Google&#x27;,signedIn,&#x27;primary&#x27;),btn(&#x27;Continue with email&#x27;,()=&gt;show(&#x27;email&#x27;)));main.append(hero,buttons,el(&#x27;p&#x27;,&#x27;Sign in or create an account to get started.&#x27;,&#x27;hint&#x27;),el(&#x27;p&#x27;,&#x27;For ages 18+. By continuing, you agree to our Terms of Service and Privacy Policy.&#x27;,&#x27;hint&#x27;));
+ }else if(page===&#x27;email&#x27;){
+  const form=el(&#x27;form&#x27;),input=field(form,&#x27;Email address&#x27;,&#x27;&#x27;,&#x27;email&#x27;);input.required=true;input.autocomplete=&#x27;email&#x27;;const submit=btn(&#x27;Send sign-in link&#x27;,()=&gt;{},&#x27;primary&#x27;);submit.type=&#x27;submit&#x27;;form.append(actions(submit));form.onsubmit=e=&gt;{e.preventDefault();email=input.value;show(&#x27;checkEmail&#x27;);};main.append(form);
+ }else if(page===&#x27;checkEmail&#x27;){main.append(el(&#x27;p&#x27;,&#x27;We’ve sent a sign-in link to &#x27;+email+&#x27;.&#x27;),btn(&#x27;Open sign-in link · preview&#x27;,signedIn,&#x27;primary&#x27;),actions(btn(&#x27;Resend link&#x27;,()=&gt;tell(&#x27;Preview: sign-in link resent.&#x27;)),btn(&#x27;Change email&#x27;,()=&gt;show(&#x27;email&#x27;))));
+ }else if(page===&#x27;loginError&#x27;){main.append(el(&#x27;p&#x27;,&#x27;We couldn’t sign you in. Please try again.&#x27;),btn(&#x27;Retry&#x27;,()=&gt;{state.login=&#x27;Success&#x27;;signedIn();},&#x27;primary&#x27;));
+ }else if(page===&#x27;name&#x27;){
+  main.append(el(&#x27;h3&#x27;,&#x27;What should I call you?&#x27;),el(&#x27;p&#x27;,&#x27;A first name or nickname is fine.&#x27;,&#x27;muted&#x27;));const form=el(&#x27;form&#x27;),input=field(form,&#x27;Name or nickname&#x27;,preferredName);const next=btn(&#x27;Continue&#x27;,()=&gt;{},&#x27;primary&#x27;);next.type=&#x27;submit&#x27;;next.disabled=!input.value.trim();input.oninput=()=&gt;{next.disabled=!input.value.trim();};form.append(actions(btn(&#x27;Skip for now&#x27;,()=&gt;{preferredName=&#x27;&#x27;;show(&#x27;onboardingStyle&#x27;);}),next));form.onsubmit=e=&gt;{e.preventDefault();if(!input.value.trim())return;preferredName=input.value.trim();show(&#x27;onboardingStyle&#x27;);};main.append(form);
+ }else if(page===&#x27;notification&#x27;){
+  main.append(el(&#x27;p&#x27;,&#x27;Tue, 22 Sep · 6:00 PM&#x27;,&#x27;muted&#x27;),row(&#x27;Luni · Reminder&#x27;,&#x27;Submit my assignment&#x27;,()=&gt;{chatMessages.push({role:&#x27;assistant&#x27;,reminder:deliveredReminder});show(&#x27;chat&#x27;);}),el(&#x27;p&#x27;,&#x27;Tap the notification to open its reminder in your conversation.&#x27;,&#x27;hint&#x27;));
+ }
+ }
+ root.querySelector(&#x27;.back&#x27;).onclick=()=&gt;show(({settings:&#x27;chat&#x27;,editMemory:&#x27;memory&#x27;,editReminder:editReturn,deleteAccount:&#x27;account&#x27;,email:&#x27;login&#x27;,checkEmail:&#x27;email&#x27;,loginError:&#x27;login&#x27;,onboardingStyle:&#x27;name&#x27;})[page]||&#x27;settings&#x27;);
+ let previousEntry=state.entry;
+ function startScenario(){close();draft=&#x27;&#x27;;pendingReminder=null;notificationTarget=null;reminders.splice(0);if(state.entry===&#x27;New user&#x27;){onboarded=false;preferredName=&#x27;&#x27;;style=&#x27;Warm and balanced&#x27;;memory=&#x27;&#x27;;chatMessages=[];show(&#x27;login&#x27;);}else{onboarded=true;preferredName=&#x27;Alex&#x27;;memory=initialMemory;chatMessages=[{role:&#x27;assistant&#x27;,text:&#x27;Hey Alex, how’s your day going?&#x27;},{role:&#x27;user&#x27;,text:&#x27;Rough. I messed up my presentation at work.&#x27;},{role:&#x27;assistant&#x27;,text:&#x27;That sounds rough. What happened?&#x27;}];if(state.entry!==&#x27;Reminder notification&#x27;)reminders.push({title:&#x27;Submit my assignment&#x27;,date:&#x27;2026-09-22&#x27;,time:&#x27;18:00&#x27;});show(state.entry===&#x27;Reminder notification&#x27;?&#x27;notification&#x27;:&#x27;chat&#x27;);}}
+ startScenario();
+ if(globalThis.Tweak){const tweak=new Tweak({container:root,onChange:()=&gt;{if(previousEntry!==state.entry){previousEntry=state.entry;startScenario();}else show(page);}});tweak.addSelect(state,&#x27;entry&#x27;,{label:&#x27;Walkthrough start&#x27;,options:[&#x27;New user&#x27;,&#x27;Returning user&#x27;,&#x27;Reminder notification&#x27;]});tweak.addSelect(state,&#x27;login&#x27;,{label:&#x27;Next login attempt&#x27;,options:[&#x27;Success&#x27;,&#x27;Failed&#x27;,&#x27;Cancelled&#x27;]});tweak.addSelect(state,&#x27;message&#x27;,{label:&#x27;Next message attempt&#x27;,options:[&#x27;Success&#x27;,&#x27;Failed&#x27;]});tweak.addSelect(state,&#x27;data&#x27;,{label:&#x27;Memory / reminders state&#x27;,options:[&#x27;Loaded&#x27;,&#x27;Loading&#x27;,&#x27;Empty&#x27;,&#x27;Error&#x27;]});tweak.addSelect(state,&#x27;notifications&#x27;,{label:&#x27;Notification permission&#x27;,options:[&#x27;Not asked&#x27;,&#x27;Enabled&#x27;,&#x27;Off&#x27;]});}
+})();
+&lt;/script&gt;
+&lt;/div&gt;
+
+&lt;script src=&quot;https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  if (window.FloatingUIDOM == null) {
+    return;
+  }
+  const { autoUpdate, computePosition, flip, offset, shift, size } =
+    window.FloatingUIDOM;
+  const tooltipPlacements = new Set([&quot;top&quot;, &quot;right&quot;, &quot;bottom&quot;, &quot;left&quot;]);
+  const tooltipId = `codex-visualization-tooltip-${
+    window.crypto?.randomUUID?.() ?? Date.now().toString(36)
+  }`;
+  const tooltipGap = 5;
+  const hoverDelay = 700;
+  const skipDelay = 300;
+  let activeTrigger = null;
+  let pendingTrigger = null;
+  let tooltip = null;
+  let openTimeout = null;
+  let autoUpdateCleanup = null;
+  let positionRequest = 0;
+  let skipDelayUntil = 0;
+  let lastPointerWasTouch = false;
+  let pinnedByTouch = false;
+
+  const getTrigger = (target) =&gt;
+    target?.nodeType === Node.ELEMENT_NODE
+      ? target.closest(&quot;[data-tooltip]&quot;)
+      : null;
+  const containsTarget = (trigger, target) =&gt;
+    target?.nodeType != null &amp;&amp; trigger.contains(target);
+  const getContent = (trigger) =&gt;
+    trigger.getAttribute(&quot;data-tooltip&quot;)?.trim() ?? &quot;&quot;;
+  const getPlacement = (trigger) =&gt; {
+    const placement = trigger.getAttribute(&quot;data-tooltip-placement&quot;);
+    return tooltipPlacements.has(placement) ? placement : &quot;top&quot;;
+  };
+  const getTooltip = () =&gt; {
+    if (tooltip == null) {
+      tooltip = document.createElement(&quot;div&quot;);
+      tooltip.id = tooltipId;
+      tooltip.className = &quot;tooltip&quot;;
+      tooltip.setAttribute(&quot;role&quot;, &quot;tooltip&quot;);
+    }
+    return tooltip;
+  };
+  const setDescribedBy = (trigger, described) =&gt; {
+    const ids = new Set(
+      (trigger.getAttribute(&quot;aria-describedby&quot;) ?? &quot;&quot;)
+        .split(/\s+/)
+        .filter(Boolean),
+    );
+    if (described) {
+      ids.add(tooltipId);
+    } else {
+      ids.delete(tooltipId);
+    }
+    if (ids.size === 0) {
+      trigger.removeAttribute(&quot;aria-describedby&quot;);
+    } else {
+      trigger.setAttribute(&quot;aria-describedby&quot;, [...ids].join(&quot; &quot;));
+    }
+  };
+  const clearOpenTimeout = () =&gt; {
+    if (openTimeout != null) {
+      window.clearTimeout(openTimeout);
+      openTimeout = null;
+    }
+    pendingTrigger = null;
+  };
+  const closeTooltip = (activateSkipDelay = true) =&gt; {
+    clearOpenTimeout();
+    pinnedByTouch = false;
+    positionRequest += 1;
+    autoUpdateCleanup?.();
+    autoUpdateCleanup = null;
+    if (activeTrigger == null) {
+      return;
+    }
+    setDescribedBy(activeTrigger, false);
+    activeTrigger = null;
+    tooltip?.remove();
+    if (activateSkipDelay) {
+      skipDelayUntil = Date.now() + skipDelay;
+    }
+  };
+  const updatePosition = (trigger, floating) =&gt; {
+    const request = ++positionRequest;
+    void computePosition(trigger, floating, {
+      middleware: [
+        offset(tooltipGap),
+        flip({ padding: tooltipGap }),
+        shift({ padding: tooltipGap }),
+        size({
+          padding: tooltipGap,
+          apply({ availableHeight, availableWidth, elements }) {
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-width&quot;,
+              `${Math.max(0, availableWidth)}px`,
+            );
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-height&quot;,
+              `${Math.max(0, availableHeight)}px`,
+            );
+          },
+        }),
+      ],
+      placement: getPlacement(trigger),
+      strategy: &quot;fixed&quot;,
+    })
+      .then(({ x, y }) =&gt; {
+        if (activeTrigger !== trigger || request !== positionRequest) {
+          return;
+        }
+        const scale = window.devicePixelRatio || 1;
+        floating.style.transform = `translate(${Math.round(x * scale) / scale}px, ${Math.round(y * scale) / scale}px)`;
+        floating.style.visibility = &quot;visible&quot;;
+      })
+      .catch(() =&gt; {
+        if (activeTrigger === trigger &amp;&amp; request === positionRequest) {
+          closeTooltip(false);
+        }
+      });
+  };
+  const openTooltip = (trigger) =&gt; {
+    const content = getContent(trigger);
+    if (!trigger.isConnected || content.length === 0) {
+      return;
+    }
+    clearOpenTimeout();
+    if (activeTrigger === trigger) {
+      return;
+    }
+    closeTooltip();
+    const floating = getTooltip();
+    floating.textContent = content;
+    floating.style.visibility = &quot;hidden&quot;;
+    floating.style.transform = &quot;translate(0, 0)&quot;;
+    document.body.appendChild(floating);
+    activeTrigger = trigger;
+    setDescribedBy(trigger, true);
+    autoUpdateCleanup = autoUpdate(trigger, floating, () =&gt; {
+      updatePosition(trigger, floating);
+    });
+  };
+  const requestOpen = (trigger, immediate = false) =&gt; {
+    if (
+      getContent(trigger).length === 0 ||
+      activeTrigger === trigger ||
+      pendingTrigger === trigger
+    ) {
+      return;
+    }
+    clearOpenTimeout();
+    pendingTrigger = trigger;
+    const delay =
+      immediate || activeTrigger != null || Date.now() &lt; skipDelayUntil
+        ? 0
+        : hoverDelay;
+    if (delay === 0) {
+      openTooltip(trigger);
+      return;
+    }
+    openTimeout = window.setTimeout(() =&gt; {
+      openTimeout = null;
+      pendingTrigger = null;
+      openTooltip(trigger);
+    }, delay);
+  };
+  const handlePointerOpen = (event) =&gt; {
+    if (event.pointerType === &quot;touch&quot;) {
+      return;
+    }
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    requestOpen(trigger);
+  };
+  const handlePointer = (event) =&gt; {
+    lastPointerWasTouch =
+      event.type === &quot;pointerdown&quot; &amp;&amp; event.pointerType === &quot;touch&quot;;
+  };
+  const handleTouchClick = (event) =&gt; {
+    const isTouch = event.pointerType === &quot;touch&quot; || lastPointerWasTouch;
+    lastPointerWasTouch = false;
+    if (!isTouch || event.detail === 0) {
+      return;
+    }
+    const trigger = getTrigger(event.target);
+    if (
+      trigger == null ||
+      !trigger.isConnected ||
+      getContent(trigger).length === 0 ||
+      (pinnedByTouch &amp;&amp; activeTrigger === trigger)
+    ) {
+      if (pinnedByTouch) {
+        closeTooltip();
+      }
+      return;
+    }
+    openTooltip(trigger);
+    pinnedByTouch = activeTrigger === trigger;
+    window.setTimeout(() =&gt; {
+      if (activeTrigger === trigger &amp;&amp; !trigger.isConnected) {
+        closeTooltip(false);
+      }
+    }, 0);
+  };
+  const handleLeave = (event) =&gt; {
+    if (pinnedByTouch) {
+      return;
+    }
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const handleFocusIn = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (trigger?.matches(&quot;:focus-visible&quot;)) {
+      requestOpen(trigger, true);
+    }
+  };
+  const handleKeyDown = (event) =&gt; {
+    if (event.key === &quot;Escape&quot;) {
+      closeTooltip();
+    }
+  };
+  const handleContextMenu = (event) =&gt; {
+    lastPointerWasTouch = false;
+    const trigger = getTrigger(event.target);
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const destroy = () =&gt; {
+    closeTooltip(false);
+    lastPointerWasTouch = false;
+    document.removeEventListener(&quot;pointerover&quot;, handlePointerOpen);
+    document.removeEventListener(&quot;pointerdown&quot;, handlePointer);
+    document.removeEventListener(&quot;pointercancel&quot;, handlePointer);
+    document.removeEventListener(&quot;click&quot;, handleTouchClick);
+    document.removeEventListener(&quot;pointerout&quot;, handleLeave);
+    document.removeEventListener(&quot;focusin&quot;, handleFocusIn);
+    document.removeEventListener(&quot;focusout&quot;, handleLeave);
+    document.removeEventListener(&quot;keydown&quot;, handleKeyDown);
+    document.removeEventListener(&quot;contextmenu&quot;, handleContextMenu);
+    tooltip = null;
+  };
+
+  document.addEventListener(&quot;pointerover&quot;, handlePointerOpen);
+  document.addEventListener(&quot;pointerdown&quot;, handlePointer);
+  document.addEventListener(&quot;pointercancel&quot;, handlePointer);
+  document.addEventListener(&quot;click&quot;, handleTouchClick);
+  document.addEventListener(&quot;pointerout&quot;, handleLeave);
+  document.addEventListener(&quot;focusin&quot;, handleFocusIn);
+  document.addEventListener(&quot;focusout&quot;, handleLeave);
+  document.addEventListener(&quot;keydown&quot;, handleKeyDown);
+  document.addEventListener(&quot;contextmenu&quot;, handleContextMenu);
+  window.addEventListener(&quot;pagehide&quot;, destroy, { once: true });
+})();
+&lt;/script&gt;
+&lt;script id=&quot;codex-visualization-tabs&quot;&gt;
+(() =&gt; {
+  const selector = &#x27;.nav[role=&quot;tablist&quot;] [role=&quot;tab&quot;]&#x27;;
+  const disabled = &#x27;:disabled,[aria-disabled=&quot;true&quot;]&#x27;;
+  const selectTab = (selected) =&gt; {
+    const panelId = selected.getAttribute(&quot;aria-controls&quot;);
+    for (const tab of selected.closest(&#x27;[role=&quot;tablist&quot;]&#x27;).querySelectorAll(&#x27;[role=&quot;tab&quot;]&#x27;)) {
+      const active = tab === selected;
+      tab.classList.toggle(&quot;active&quot;, active);
+      tab.setAttribute(&quot;aria-selected&quot;, String(active));
+      const id = tab.getAttribute(&quot;aria-controls&quot;);
+      const panel = id &amp;&amp; document.getElementById(id);
+      if (panel != null) {
+        panel.hidden = id !== panelId;
+        if (!panel.hidden &amp;&amp; selected.id) {
+          panel.setAttribute(&quot;aria-labelledby&quot;, selected.id);
+        }
+      }
+    }
+  };
+  const interact = (event) =&gt; {
+    const tab = event.target?.closest?.(selector);
+    if (event.defaultPrevented || tab == null || tab.matches(disabled)) {
+      return;
+    }
+    if (event.type === &quot;click&quot;) {
+      selectTab(tab);
+      return;
+    }
+    const tabs = Array.from(
+      tab.closest(&#x27;[role=&quot;tablist&quot;]&#x27;).querySelectorAll(&#x27;[role=&quot;tab&quot;]&#x27;),
+    ).filter((candidate) =&gt; !candidate.matches(disabled));
+    const current = tabs.indexOf(tab);
+    let next;
+    if (event.key === &quot;ArrowRight&quot; || event.key === &quot;ArrowDown&quot;) {
+      next = (current + 1) % tabs.length;
+    } else if (event.key === &quot;ArrowLeft&quot; || event.key === &quot;ArrowUp&quot;) {
+      next = (current + tabs.length - 1) % tabs.length;
+    } else if (event.key === &quot;Home&quot;) {
+      next = 0;
+    } else if (event.key === &quot;End&quot;) {
+      next = tabs.length - 1;
+    } else {
+      return;
+    }
+    event.preventDefault();
+    tabs[next].focus();
+    selectTab(tabs[next]);
+  };
+
+  for (const list of document.querySelectorAll(&#x27;.nav[role=&quot;tablist&quot;]&#x27;)) {
+    const selected =
+      list.querySelector(&#x27;[role=&quot;tab&quot;][aria-selected=&quot;true&quot;]&#x27;) ??
+      list.querySelector(&#x27;[role=&quot;tab&quot;].active&#x27;) ??
+      list.querySelector(&#x27;[role=&quot;tab&quot;]&#x27;);
+    if (selected != null) {
+      selectTab(selected);
+    }
+  }
+  document.addEventListener(&quot;click&quot;, interact);
+  document.addEventListener(&quot;keydown&quot;, interact);
+  window.addEventListener(&quot;pagehide&quot;, () =&gt; {
+    document.removeEventListener(&quot;click&quot;, interact);
+    document.removeEventListener(&quot;keydown&quot;, interact);
+  }, { once: true });
+})();
+&lt;/script&gt;
+&lt;script id=&quot;codex-visualization-lucide&quot; async src=&quot;https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  const initialize = () =&gt; {
+    globalThis.lucide?.createIcons({ attrs: { width: 16, height: 16 } });
+  };
+  if (globalThis.lucide != null) {
+    initialize();
+    return;
+  }
+  document
+    .getElementById(&quot;codex-visualization-lucide&quot;)
+    ?.addEventListener(&quot;load&quot;, initialize, { once: true });
+})();
+&lt;/script&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+</body>
+</html>

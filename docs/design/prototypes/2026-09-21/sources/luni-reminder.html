@@ -1,0 +1,82 @@
+<div id="luni-reminder" aria-label="Reminder flow wireframe">
+<style>
+#luni-reminder{font-family:Arial,sans-serif;color:light-dark(#242424,#eee);padding:12px}#luni-reminder *{box-sizing:border-box}
+#luni-reminder .phone{max-width:370px;margin:auto;border:1px solid light-dark(#aaa,#777);border-radius:28px;background:light-dark(#fafafa,#202020);padding:20px}
+#luni-reminder .status{display:flex;justify-content:space-between;font-size:12px}#luni-reminder header{padding:24px 0 18px;border-bottom:1px solid light-dark(#ddd,#555)}
+#luni-reminder h2{font-size:20px;font-weight:500;margin:0 0 4px}#luni-reminder .sub{font-size:12px;color:light-dark(#666,#bbb)}
+#luni-reminder .messages{display:flex;flex-direction:column;gap:16px;padding:24px 0}#luni-reminder .bubble{font-size:14px;line-height:1.5;padding:12px 14px;border-radius:14px 14px 14px 4px;background:light-dark(#ececec,#353535);max-width:92%}
+#luni-reminder .user{align-self:flex-end;background:light-dark(#333,#ddd);color:light-dark(#fff,#222);border-radius:14px 14px 4px 14px}
+#luni-reminder .reminder{border:1px solid light-dark(#999,#777);border-radius:12px;padding:16px}#luni-reminder .saved{font-size:12px;margin-bottom:12px}#luni-reminder h3{font-size:17px;font-weight:500;margin:0 0 10px}#luni-reminder p{font-size:14px;line-height:1.5;margin:0}
+#luni-reminder .row{display:flex;gap:8px;margin-top:16px}#luni-reminder button{font:inherit;font-size:14px;min-height:44px;padding:10px 12px;border:1px solid light-dark(#aaa,#777);border-radius:8px;background:transparent;color:inherit;cursor:pointer}
+#luni-reminder .row button{flex:1}#luni-reminder .primary{background:light-dark(#333,#ddd);color:light-dark(#fff,#222);border-color:transparent}
+#luni-reminder .permission{padding:16px;border:1px dashed light-dark(#999,#777);border-radius:12px;margin-top:16px}#luni-reminder .permission h3{font-size:16px}#luni-reminder .permission p{font-size:13px;color:light-dark(#666,#bbb)}
+#luni-reminder .notice{font-size:12px;margin-top:12px;color:light-dark(#666,#bbb)}#luni-reminder label{display:block;font-size:12px;margin:12px 0 6px}#luni-reminder input{width:100%;min-width:0;font:inherit;font-size:16px;padding:10px;border:1px solid light-dark(#999,#777);border-radius:7px;background:light-dark(#fff,#292929);color:inherit}
+#luni-reminder .composer{border:1px solid light-dark(#999,#777);border-radius:14px;padding:16px;color:light-dark(#777,#bbb);font-size:15px;margin-top:26px}
+#luni-reminder .home{height:4px;width:100px;border-radius:4px;background:light-dark(#666,#bbb);margin:24px auto 0}#luni-reminder [hidden]{display:none}
+</style>
+<section class="phone" aria-label="Reminder in chat">
+ <div class="status" aria-hidden="true"><span>9:41</span><span>••• ▰</span></div>
+ <header><h2>Luni</h2><div class="sub">Your AI companion</div></header>
+ <div class="messages">
+  <div class="bubble user">Remind me to submit my assignment tomorrow at 6 PM.</div>
+  <div class="bubble">I’ve saved your reminder for tomorrow at 6 PM.</div>
+ </div>
+ <section class="reminder" aria-label="Saved reminder">
+  <div class="saved" role="status">✓ Reminder saved</div>
+  <div class="details"><h3>Submit my assignment</h3><p class="when">Tue, 22 Sep 2026 · 6:00 PM</p><p class="sub">India Standard Time</p></div>
+  <form class="editor" hidden>
+   <label for="reminder-task">Reminder</label><input id="reminder-task" value="Submit my assignment" required>
+   <label for="reminder-date">Date</label><input id="reminder-date" type="date" value="2026-09-22" required>
+   <label for="reminder-time">Time · India Standard Time</label><input id="reminder-time" type="time" value="18:00" required>
+   <div class="row"><button class="primary" type="submit">Save changes</button><button class="discard" type="button">Discard</button></div>
+  </form>
+  <div class="row controls"><button class="edit" type="button">Edit</button><button class="cancel" type="button">Cancel reminder</button></div>
+  <div class="row undo-row" hidden><button class="undo" type="button">Undo cancellation</button></div>
+ </section>
+ <section class="permission" aria-label="Notification permission explanation">
+  <h3>Get your reminder on time</h3><p>Allow notifications so Luni can alert you, even when the app is closed.</p>
+  <div class="row"><button class="primary allow" type="button">Enable alerts</button><button class="later" type="button">Not now</button></div>
+ </section>
+ <p class="notice" role="status" aria-live="polite" hidden></p>
+ <div class="composer" aria-label="Message input placeholder">Message Luni…</div>
+ <div class="home" aria-hidden="true"></div>
+</section>
+<script>
+(()=>{
+ const root=document.getElementById('luni-reminder');
+ const editor=root.querySelector('.editor');
+ const notice=root.querySelector('.notice');
+ const state={permission:'Not asked'};
+ let cancelled=false;
+ function notify(text){notice.textContent=text;notice.hidden=false;}
+ function render(){
+  root.querySelector('.saved').textContent=cancelled?'Reminder cancelled':'✓ Reminder saved';
+  root.querySelector('.controls').hidden=cancelled||!editor.hidden;
+  root.querySelector('.undo-row').hidden=!cancelled;
+  root.querySelector('.permission').hidden=cancelled||state.permission!=='Not asked';
+  notice.hidden=true;
+  if(cancelled)notify('You won’t receive an alert for this reminder.');
+  else if(state.permission==='Denied')notify('Reminder saved. Notifications are off, so you won’t receive an alert. Enable them in your phone’s settings.');
+  else if(state.permission==='Allowed')notify('Notifications enabled. Luni will alert you at the scheduled time.');
+ }
+ root.querySelector('.edit').onclick=()=>{editor.hidden=false;root.querySelector('.details').hidden=true;render();};
+ function close(){editor.hidden=true;root.querySelector('.details').hidden=false;render();}
+ root.querySelector('.discard').onclick=close;
+ editor.onsubmit=e=>{
+  e.preventDefault();
+  const task=root.querySelector('#reminder-task').value.trim();if(!task)return;
+  root.querySelector('.details h3').textContent=task;
+  const date=root.querySelector('#reminder-date').value;
+  const time=root.querySelector('#reminder-time').value;
+  root.querySelector('.when').textContent=new Intl.DateTimeFormat('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}).format(new Date(date+'T12:00:00'))+' · '+time;
+  close();
+ };
+ root.querySelector('.cancel').onclick=()=>{cancelled=true;render();};
+ root.querySelector('.undo').onclick=()=>{cancelled=false;render();};
+ root.querySelector('.allow').onclick=()=>notify('Prototype: open the phone’s notification permission prompt. Preview Allowed or Denied using the notification state control.');
+ root.querySelector('.later').onclick=()=>{state.permission='Denied';render();};
+ render();
+ if(globalThis.Tweak){const tweak=new Tweak({container:root,onChange:render});tweak.addSelect(state,'permission',{label:'Notification state',options:['Not asked','Allowed','Denied']});}
+})();
+</script>
+</div>

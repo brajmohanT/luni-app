@@ -1,0 +1,81 @@
+<details id="export-controls" style="font:14px Arial,sans-serif;max-width:420px;margin:0 auto 18px;padding:12px;border:1px solid light-dark(#aaa,#777);border-radius:8px"><summary>Preview controls</summary><div id="export-controls-fields"></div></details>
+<script>
+globalThis.Tweak=class {
+ constructor(config){this.config=config;this.supported=true;}
+ addSelect(state,key,options){
+  const label=document.createElement('label');label.style.cssText='display:grid;gap:6px;margin-top:12px';label.append(document.createTextNode(options.label||key));
+  const select=document.createElement('select');select.style.cssText='font:inherit;padding:8px;max-width:100%;color:light-dark(#222,#eee);background:light-dark(#fff,#292929)';
+  options.options.forEach(value=>{const option=document.createElement('option');option.value=typeof value==='string'?value:value.value;option.textContent=typeof value==='string'?value:value.label;select.append(option);});
+  select.value=state[key];select.onchange=()=>{state[key]=select.value;this.config.onChange();};label.append(select);document.getElementById('export-controls-fields').append(label);
+ }
+ addToggle(state,key,options){const label=document.createElement('label');label.style.cssText='display:flex;gap:8px;align-items:center;margin-top:12px';const input=document.createElement('input');input.type='checkbox';input.checked=state[key];input.onchange=()=>{state[key]=input.checked;this.config.onChange();};label.append(input,document.createTextNode(options.label||key));document.getElementById('export-controls-fields').append(label);}
+};
+</script>
+<div id="luni-settings" aria-label="Luni settings wireframe">
+<style>
+#luni-settings{font-family:Arial,sans-serif;color:light-dark(#242424,#eee);padding:12px}#luni-settings *{box-sizing:border-box}
+#luni-settings .phone{max-width:370px;margin:auto;border:1px solid light-dark(#aaa,#777);border-radius:28px;background:light-dark(#fafafa,#202020);padding:20px}
+#luni-settings .status{display:flex;justify-content:space-between;font-size:12px}#luni-settings header{display:flex;align-items:center;gap:8px;margin:22px 0 28px}
+#luni-settings h2{font-size:24px;font-weight:500;margin:0}#luni-settings button{font:inherit;color:inherit;cursor:pointer;background:transparent}
+#luni-settings .back{border:0;width:44px;min-height:44px;display:grid;place-items:center}
+#luni-settings h3{font-size:12px;font-weight:400;color:light-dark(#666,#bbb);margin:26px 0 8px}
+#luni-settings .row{display:flex;align-items:center;gap:12px;text-align:left;width:100%;min-height:70px;padding:14px 0;border:0;border-bottom:1px solid light-dark(#ddd,#555)}
+#luni-settings .row>span{flex:1;min-width:0}#luni-settings .label{display:block;font-size:15px}#luni-settings .detail{display:block;font-size:12px;line-height:1.5;color:light-dark(#666,#bbb);margin-top:5px}
+#luni-settings .panel{margin-top:22px;padding:16px;border:1px solid light-dark(#aaa,#777);border-radius:10px}#luni-settings .panel h3{font-size:16px;color:inherit;margin:0 0 12px}
+#luni-settings .panel p{font-size:13px;line-height:1.5;margin:0;color:light-dark(#666,#bbb)}#luni-settings label{font-size:13px;display:block;margin-bottom:8px}
+#luni-settings input,#luni-settings select{font:inherit;font-size:16px;width:100%;min-width:0;padding:12px;border:1px solid light-dark(#999,#888);border-radius:8px;background:light-dark(#fff,#292929);color:inherit}
+#luni-settings .actions{display:flex;gap:8px;margin-top:14px}#luni-settings .actions button{flex:1;min-height:44px;padding:10px;border:1px solid light-dark(#999,#888);border-radius:8px;font-size:14px}
+#luni-settings .primary{background:light-dark(#333,#ddd)!important;color:light-dark(#fff,#222)!important;border-color:transparent!important}
+#luni-settings .feedback{font-size:12px;line-height:1.5;margin:16px 0 0;color:light-dark(#666,#bbb)}#luni-settings .home{height:4px;width:100px;border-radius:4px;background:light-dark(#666,#bbb);margin:28px auto 0}#luni-settings [hidden]{display:none}
+</style>
+<section class="phone" aria-label="Settings screen">
+ <div class="status" aria-hidden="true"><span>9:41</span><span>••• ▰</span></div>
+ <header><button class="back" type="button" aria-label="Back to chat"><i data-lucide="arrow-left" aria-hidden="true"></i></button><h2>Settings</h2></header>
+ <h3>YOU AND LUNI</h3>
+ <button class="row" type="button" data-page="name"><span><span class="label">Preferred name</span><span class="detail name-value">Alex</span></span><i data-lucide="chevron-right" aria-hidden="true"></i></button>
+ <button class="row" type="button" data-page="style"><span><span class="label">Conversation style</span><span class="detail style-value">Gentle and reassuring</span></span><i data-lucide="chevron-right" aria-hidden="true"></i></button>
+ <button class="row" type="button" data-page="memory"><span><span class="label">Memory</span><span class="detail">View and edit what Luni remembers</span></span><i data-lucide="chevron-right" aria-hidden="true"></i></button>
+ <h3>REMINDERS AND ALERTS</h3>
+ <button class="row" type="button" data-page="reminders"><span><span class="label">Reminders</span><span class="detail">View, edit, or cancel upcoming reminders</span></span><i data-lucide="chevron-right" aria-hidden="true"></i></button>
+ <button class="row" type="button" data-page="notifications"><span><span class="label">Notifications</span><span class="detail notification-value">Enabled · Manage in phone settings</span></span><i data-lucide="chevron-right" aria-hidden="true"></i></button>
+ <h3>ACCOUNT</h3>
+ <button class="row" type="button" data-page="account"><span><span class="label">Account</span><span class="detail">Sign out or delete your account</span></span><i data-lucide="chevron-right" aria-hidden="true"></i></button>
+ <section class="panel" hidden aria-label="Selected setting"></section>
+ <p class="feedback" role="status" aria-live="polite" hidden></p>
+ <div class="home" aria-hidden="true"></div>
+</section>
+<script>
+(()=>{
+ const root=document.getElementById('luni-settings');
+ const panel=root.querySelector('.panel');
+ const feedback=root.querySelector('.feedback');
+ const state={notifications:'Enabled'};
+ let name='Alex',style='Gentle and reassuring';
+ function tell(message){feedback.textContent=message;feedback.hidden=false;}
+ function button(text,fn,primary=false){const b=document.createElement('button');b.type='button';b.textContent=text;b.onclick=fn;if(primary)b.className='primary';return b;}
+ function open(page){
+  panel.replaceChildren();panel.hidden=false;feedback.hidden=true;
+  const title=document.createElement('h3');
+  const actions=document.createElement('div');actions.className='actions';
+  if(page==='name'||page==='style'){
+   const form=document.createElement('form');
+   const label=document.createElement('label');label.htmlFor='luni-setting-input';label.textContent=page==='name'?'Preferred name':'Conversation style';
+   const input=document.createElement(page==='name'?'input':'select');input.id=label.htmlFor;
+   if(page==='name'){input.value=name;input.autocomplete='given-name';}
+   else{['Warm and balanced','Gentle and reassuring','Playful and casual','Direct and thoughtful'].forEach(value=>{const option=document.createElement('option');option.value=value;option.textContent=value;input.append(option);});input.value=style;}
+   const save=button('Save',()=>{},true);save.type='submit';actions.append(save,button('Cancel',()=>{panel.hidden=true;}));
+   form.append(label,input,actions);form.onsubmit=e=>{e.preventDefault();if(page==='name'){name=input.value.trim();root.querySelector('.name-value').textContent=name||'Not set';}else{style=input.value;root.querySelector('.style-value').textContent=style;}panel.hidden=true;tell('Updated in this preview.');};panel.append(form);input.focus();return;
+  }
+  const copy=document.createElement('p');
+  if(page==='memory'){title.textContent='Memory';copy.textContent='Prototype: opens the combined memory text with Edit memory and Clear memory.';}
+  if(page==='reminders'){title.textContent='Reminders';copy.textContent='Prototype: opens your upcoming reminders, with options to edit or cancel.';}
+  if(page==='notifications'){title.textContent='Notifications';copy.textContent=state.notifications==='Enabled'?'Notifications are enabled. Manage Luni’s notification permission in your phone’s settings.':'Notifications are off. Enable them in your phone’s settings to receive reminder alerts.';actions.append(button('Open phone settings',()=>tell('Prototype: opens Luni’s notification settings on your phone.'),true));}
+  if(page==='account'){title.textContent='Account';copy.textContent='Prototype: account management opens here.';actions.append(button('Sign out',()=>tell('Prototype: signing out returns you to login.')),button('Delete account',()=>tell('Prototype: opens a separate account deletion review. No account is deleted here.')));}
+  actions.append(button('Close',()=>{panel.hidden=true;}));panel.append(title,copy,actions);
+ }
+ root.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>open(b.dataset.page));
+ root.querySelector('.back').onclick=()=>{panel.hidden=true;tell('Prototype: return to your conversation.');};
+ if(globalThis.Tweak){const tweak=new Tweak({container:root,onChange:()=>{root.querySelector('.notification-value').textContent=state.notifications+' · Manage in phone settings';panel.hidden=true;}});tweak.addSelect(state,'notifications',{label:'Notification permission',options:['Enabled','Off']});}
+})();
+</script>
+</div>

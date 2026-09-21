@@ -1,0 +1,68 @@
+<div id="luni-name-setup" aria-label="Luni name setup wireframe">
+  <style>
+    #luni-name-setup {font-family:Arial,sans-serif;color:light-dark(#242424,#ededed);padding:12px;}
+    #luni-name-setup * {box-sizing:border-box;}
+    #luni-name-setup .phone {max-width:370px;margin:auto;border:1px solid light-dark(#a5a5a5,#686868);border-radius:28px;background:light-dark(#fafafa,#202020);padding:22px 24px 18px;}
+    #luni-name-setup .status {display:flex;justify-content:space-between;font-size:12px;}
+    #luni-name-setup .brand {margin:48px 0 64px;font-size:20px;font-weight:500;}
+    #luni-name-setup h2 {font-size:30px;line-height:1.15;font-weight:500;margin:0 0 16px;letter-spacing:-.7px;}
+    #luni-name-setup p {font-size:15px;line-height:1.5;margin:0;color:light-dark(#606060,#bebebe);}
+    #luni-name-setup form {margin-top:32px;}
+    #luni-name-setup label {display:block;font-size:13px;margin-bottom:9px;}
+    #luni-name-setup input {width:100%;min-width:0;font:inherit;font-size:16px;padding:15px;border:1px solid light-dark(#969696,#858585);border-radius:9px;background:light-dark(#fff,#292929);color:inherit;}
+    #luni-name-setup input::placeholder {color:light-dark(#777,#aaa);}
+    #luni-name-setup .hint {font-size:12px;margin-top:10px;}
+    #luni-name-setup .actions {display:grid;gap:8px;margin-top:100px;}
+    #luni-name-setup button {font:inherit;font-size:15px;min-height:48px;padding:12px;border:1px solid transparent;border-radius:9px;background:transparent;color:inherit;cursor:pointer;width:100%;}
+    #luni-name-setup .primary {background:light-dark(#303030,#e0e0e0);color:light-dark(#fafafa,#202020);}
+    #luni-name-setup .primary:disabled {background:light-dark(#dedede,#3b3b3b);color:light-dark(#727272,#a0a0a0);cursor:default;}
+    #luni-name-setup .feedback {font-size:13px;padding:12px;border:1px solid light-dark(#9a9a9a,#777);border-radius:8px;margin-top:12px;}
+    #luni-name-setup .home {height:4px;width:100px;background:light-dark(#6a6a6a,#bdbdbd);border-radius:4px;margin:26px auto 0;}
+    #luni-name-setup [hidden] {display:none;}
+  </style>
+  <section class="phone" aria-label="Name setup screen">
+    <div class="status" aria-hidden="true"><span>9:41</span><span>••• ▰</span></div>
+    <div class="brand">luni</div>
+    <h2>What should<br>I call you?</h2>
+    <p>A first name or nickname is fine.</p>
+    <form>
+      <label for="luni-preferred-name">Your name</label>
+      <input id="luni-preferred-name" name="preferred-name" type="text" autocomplete="given-name" placeholder="Name or nickname" aria-describedby="luni-name-hint">
+      <p class="hint" id="luni-name-hint">You can change this in settings.</p>
+      <div class="actions">
+        <button class="primary" type="submit" disabled>Continue</button>
+        <button class="skip" type="button">Skip for now</button>
+      </div>
+    </form>
+    <p class="feedback" role="status" aria-live="polite" hidden></p>
+    <div class="home" aria-hidden="true"></div>
+  </section>
+  <script>
+    (() => {
+      const root = document.getElementById('luni-name-setup');
+      const input = root.querySelector('input');
+      const next = root.querySelector('.primary');
+      const feedback = root.querySelector('.feedback');
+      const state = {prefill:false};
+      function update() {
+        next.disabled = !input.value.trim();
+        feedback.hidden = true;
+      }
+      input.addEventListener('input',update);
+      root.querySelector('form').addEventListener('submit',event => {
+        event.preventDefault();
+        if (!input.value.trim()) return;
+        feedback.textContent = 'Prototype: continue to optional conversation style. Preferred name: ' + input.value.trim() + '.';
+        feedback.hidden = false;
+      });
+      root.querySelector('.skip').addEventListener('click',() => {
+        feedback.textContent = 'Prototype: continue to optional conversation style without a preferred name.';
+        feedback.hidden = false;
+      });
+      if (globalThis.Tweak) {
+        const tweak = new Tweak({container:root,onChange:() => {input.value = state.prefill ? 'Alex' : '';update();}});
+        tweak.addToggle(state,'prefill',{label:'Prefill name from login'});
+      }
+    })();
+  </script>
+</div>

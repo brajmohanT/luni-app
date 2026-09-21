@@ -1,0 +1,98 @@
+<div id="luni-first-chat" aria-label="Luni first conversation wireframe">
+ <style>
+ #luni-first-chat {font-family:Arial,sans-serif;color:light-dark(#242424,#ededed);padding:12px;}
+ #luni-first-chat * {box-sizing:border-box;}
+ #luni-first-chat .phone {max-width:370px;margin:auto;border:1px solid light-dark(#a5a5a5,#686868);border-radius:28px;background:light-dark(#fafafa,#202020);padding:22px 20px 18px;}
+ #luni-first-chat .status {display:flex;justify-content:space-between;font-size:12px;}
+ #luni-first-chat header {display:flex;align-items:center;gap:12px;padding:25px 0 18px;border-bottom:1px solid light-dark(#ddd,#494949);}
+ #luni-first-chat .avatar {width:40px;height:40px;border:1px dashed light-dark(#999,#888);border-radius:50%;display:grid;place-items:center;font-size:17px;}
+ #luni-first-chat h2 {font-size:20px;font-weight:500;margin:0 0 3px;}
+ #luni-first-chat .subtitle {font-size:12px;color:light-dark(#666,#bcbcbc);}
+ #luni-first-chat button {font:inherit;color:inherit;cursor:pointer;background:transparent;}
+ #luni-first-chat .settings {margin-left:auto;border:0;min-width:44px;min-height:44px;display:grid;place-items:center;}
+ #luni-first-chat .messages {min-height:305px;padding:24px 0;display:flex;flex-direction:column;gap:14px;}
+ #luni-first-chat .day {text-align:center;font-size:12px;color:light-dark(#777,#bcbcbc);margin-bottom:8px;}
+ #luni-first-chat .bubble {max-width:89%;padding:13px 15px;font-size:15px;line-height:1.5;background:light-dark(#ececec,#353535);border-radius:14px 14px 14px 4px;overflow-wrap:anywhere;}
+ #luni-first-chat .user {align-self:flex-end;background:light-dark(#343434,#ddd);color:light-dark(#fff,#222);border-radius:14px 14px 4px 14px;}
+ #luni-first-chat .starters {display:grid;gap:8px;margin-bottom:20px;}
+ #luni-first-chat .starters button {text-align:left;padding:12px 14px;border:1px solid light-dark(#aaa,#777);border-radius:9px;font-size:14px;min-height:44px;}
+ #luni-first-chat .starter-label {font-size:12px;margin:0 0 2px;color:light-dark(#666,#bbb);}
+ #luni-first-chat form {display:flex;gap:8px;align-items:flex-end;padding:8px;border:1px solid light-dark(#999,#777);border-radius:16px;background:light-dark(#fff,#292929);}
+ #luni-first-chat textarea {resize:none;min-width:0;flex:1;font:inherit;font-size:16px;line-height:1.4;border:0;background:transparent;color:inherit;padding:10px 5px;}
+ #luni-first-chat textarea::placeholder {color:light-dark(#777,#aaa);}
+ #luni-first-chat .send {min-width:44px;min-height:44px;border:0;border-radius:10px;background:light-dark(#303030,#ddd);color:light-dark(#fff,#222);display:grid;place-items:center;}
+ #luni-first-chat .send:disabled {opacity:.4;cursor:default;}
+ #luni-first-chat .feedback {font-size:12px;line-height:1.5;margin:12px 0 0;color:light-dark(#666,#bbb);}
+ #luni-first-chat .home {height:4px;width:100px;background:light-dark(#6a6a6a,#bdbdbd);border-radius:4px;margin:24px auto 0;}
+ #luni-first-chat [hidden] {display:none;}
+ </style>
+ <section class="phone" aria-label="First chat screen">
+   <div class="status" aria-hidden="true"><span>9:41</span><span>••• ▰</span></div>
+   <header>
+     <div class="avatar" aria-hidden="true">L</div>
+     <div><h2>Luni</h2><div class="subtitle">Your AI companion</div></div>
+     <button class="settings" type="button" aria-label="Open settings"><i data-lucide="settings" aria-hidden="true"></i></button>
+   </header>
+   <div class="messages" role="log" aria-label="Conversation" aria-live="polite">
+     <div class="day">Today</div>
+     <div class="bubble greeting">Hey Alex, how’s your day going?</div>
+   </div>
+   <div class="starters">
+     <p class="starter-label">Start here, or say what’s on your mind</p>
+     <button type="button">I want to talk about my day</button>
+     <button type="button">Let’s just hang out</button>
+     <button type="button">Help me set a reminder</button>
+   </div>
+   <form aria-label="Send a message">
+     <textarea rows="1" placeholder="Message Luni…" aria-label="Message Luni"></textarea>
+     <button class="send" type="submit" aria-label="Send message" disabled><i data-lucide="arrow-up" aria-hidden="true"></i></button>
+   </form>
+   <p class="feedback" role="status" hidden></p>
+   <div class="home" aria-hidden="true"></div>
+ </section>
+ <script>
+ (() => {
+   const root = document.getElementById('luni-first-chat');
+   const input = root.querySelector('textarea');
+   const send = root.querySelector('.send');
+   const feedback = root.querySelector('.feedback');
+   const state = {named:true,starters:true};
+   let sent = false;
+   function render() {
+     root.querySelector('.greeting').textContent = state.named ? 'Hey Alex, how’s your day going?' : 'Hey, how’s your day going?';
+     root.querySelector('.starters').hidden = sent || !state.starters;
+   }
+   input.addEventListener('input',() => {send.disabled = !input.value.trim();});
+   root.querySelectorAll('.starters button').forEach(button => button.addEventListener('click',() => {
+     input.value = button.textContent;
+     send.disabled = false;
+     input.focus();
+   }));
+   root.querySelector('form').addEventListener('submit',event => {
+     event.preventDefault();
+     const message = input.value.trim();
+     if (!message) return;
+     const bubble = document.createElement('div');
+     bubble.className = 'bubble user';
+     bubble.textContent = message;
+     root.querySelector('.messages').appendChild(bubble);
+     input.value = '';
+     send.disabled = true;
+     sent = true;
+     render();
+     feedback.textContent = 'Wireframe preview: message shown locally. No AI response is generated.';
+     feedback.hidden = false;
+   });
+   root.querySelector('.settings').addEventListener('click',() => {
+     feedback.textContent = 'Settings preview: preferred name, conversation style, memories, reminders, and account.';
+     feedback.hidden = false;
+   });
+   render();
+   if (globalThis.Tweak) {
+     const tweak = new Tweak({container:root,onChange:render});
+     tweak.addToggle(state,'named',{label:'User provided a name'});
+     tweak.addToggle(state,'starters',{label:'Show conversation starters'});
+   }
+ })();
+ </script>
+</div>
