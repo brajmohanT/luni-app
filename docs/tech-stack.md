@@ -18,13 +18,14 @@ Luni is a mobile AI companion. The first release is native-feeling text chat wit
 | Navigation | Expo Router | File-based routes, deep-link support, and a conventional Expo structure. |
 | Builds and updates | EAS Build and EAS Update | Managed Android/iOS builds and controlled over-the-air JavaScript updates. |
 | Server data | TanStack Query | Fetching, caching, retries, loading states, and cache invalidation for conversations, profiles, and memories. |
-| Local UI state | Zustand | Small, explicit stores for ephemeral UI state. Do not put server data here. |
+| Local UI state | React state/context currently; Zustand deferred | Current component, preview, and theme state use React. Zustand is not installed; adopt it when shared UI state needs it. Keep server data in TanStack Query. |
 | Forms and validation | React Hook Form + Zod + `@hookform/resolvers` | Typed, efficient mobile forms. The resolver connects the Zod schema to React Hook Form. Used for the implemented email/password authentication forms. |
 | Auth token storage | expo-secure-store | Stores session credentials in platform secure storage. |
 | Local database | expo-sqlite, before external beta | Store drafts, pending messages, and a recent-chat cache. The server remains the source of truth. |
-| Chat rendering | FlashList, when the chat UI is implemented | Designed for efficient long, scrolling message lists. |
+| Chat rendering | React Native lists currently; FlashList after profiling | Keep current conversation rendering until profiling shows a need for FlashList. |
 | Motion and gestures | react-native-reanimated + react-native-gesture-handler | Native-feeling transitions and interactions. Use them selectively. |
-| Visual system | Custom Luni components built from React Native primitives | Luni needs an ownable companion identity; avoid letting a generic UI kit define the product. |
+| Visual system | Custom Luni components, React Native StyleSheet, and theme context | Tokens and shared controls are implemented; migrate screens using the approved design library. |
+| Brand vectors and gradients | react-native-svg 15.15.4 | Renders the supplied logo paths and layered identity/welcome gradients. The identity background also uses the extracted grain asset. |
 | Notifications | expo-notifications, later | Add after notification consent, retention rules, and user benefit are designed. |
 | Crash reporting | Sentry, before public beta | Error reporting and release health. Do not attach private conversation content. |
 | Product analytics | PostHog, before public beta | Privacy-conscious product events; never record raw messages, memories, or authentication data. |
@@ -51,7 +52,7 @@ This keeps API keys, memory extraction, memory retrieval, safety policies, billi
 Expo mobile app
   ├── Expo Router screens
   ├── TanStack Query: API data and cache
-  ├── Zustand: temporary UI state
+  ├── React state/context: temporary UI state and theme
   └── Secure Store: auth session credentials
              │ HTTPS + bearer token
              ▼
@@ -61,13 +62,21 @@ Existing Luni API
   └── Postgres, OpenAI, safety controls
 ```
 
+## Design-system implementation
+
+The implementation lives under `src/design-system/`: `tokens/` defines shared values, `theme/` resolves light/dark/system preference, and `components/` holds reusable controls. Feature behavior remains under `src/features/`. Theme preference is in memory; saved appearance settings remain pending.
+
+Implemented components: BrandBackground, LuniLogo, Button, IconButton, TextField, SettingsRow, and Switch. The development-only `/design-system` screen demonstrates their states without changing account data. Existing product screens still need migration.
+
+Use the [approved design library](design/index.html) and [implementation guide](../src/design-system/README.md). Keep the font family provisional and use React Native StyleSheet for component styles. Do not reintroduce removed visual explorations.
+
 ## Local Android build constraint
 
 Windows CMake builds can exceed their object-path limit when pnpm's isolated layout adds long `.pnpm` package paths to native dependencies such as `react-native-worklets`. Keep the repository at a short local path and retain `nodeLinker: hoisted` in `pnpm-workspace.yaml`. After changing that setting, reinstall dependencies and clear generated Android build artifacts before rebuilding.
 
 ## Deliberately not choosing yet
 
-- Redux Toolkit: Zustand plus TanStack Query is sufficient for the MVP.
+- Redux Toolkit: current React state/context and TanStack Query cover implemented state needs.
 - GraphQL: the current API is simple and workflow-oriented.
 - Firebase or Convex: the existing Node, Supabase, and Postgres architecture fits server-owned memory and safety work better.
 - MMKV: measure a real local-storage performance problem before adding it.

@@ -44,3 +44,11 @@ flowchart TD
 - `src/app/(auth)/_layout.tsx` redirects authenticated users to `/(app)`.
 - `AuthProvider` listens for Supabase auth-state changes, so route guards react after sign-in, sign-up with a session, or sign-out.
 - Supabase stores the session through the SecureStore adapter in `src/lib/auth/secure-storage.ts`.
+
+## Development preview exception
+
+The root layout exposes `/design-system` through `Stack.Protected` with a `__DEV__` guard. The screen also redirects to `/` outside development. It sits outside the auth/app route groups, so developers can open it before or after sign-in using **Open Design System · Dev**.
+
+The preview uses local sample data and an isolated ThemeProvider. It does not grant access to authenticated feature screens or change session state. Close it to return to the previous screen. Production builds have no preview launcher or route access.
+
+The approved onboarding flow has not yet replaced the current email/password screens. Name, conversation style, and onboarding-completion persistence are the next UI integration work.

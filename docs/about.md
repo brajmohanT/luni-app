@@ -12,6 +12,16 @@ Android is the first test platform, followed by iOS.
 
 This `luni-app` directory contains an initialized Expo application and project documentation. The app has TypeScript, Expo Router, TanStack Query, SecureStore, a versioned SQLite persistence foundation, and a Supabase session provider with protected auth and app route groups. Email/password sign-in and sign-up forms use React Hook Form and Zod, and persist Supabase sessions in SecureStore. The first local Android development build has installed and launched on a connected device, where the login and sign-up screens render correctly. A typed Luni API client sends authenticated requests, correlation IDs, and app metadata. The protected conversation-list screen loads and refreshes the authenticated user's conversations. A conversation-detail screen loads chronological messages with refresh and recovery states. A shared composer serves new and existing conversations. It sends messages with idempotency keys and supports explicit retry; local drafts and cached chat remain unimplemented. EAS development builds and mobile deep-link completion flows are not configured yet.
 
+## UI delivery status
+
+As of 2026-09-23, the shared design-system foundation is implemented and the user has reviewed its development preview on Android. It includes tokens, light/dark/system theming, the supplied logo, identity/welcome backgrounds, Button, IconButton, TextField, SettingsRow, and Switch.
+
+The approved source is [docs/design/index.html](design/index.html), including its system specimen and current onboarding/chat/settings prototypes. Preserve chat blue `#0054FD`, dark incoming bubbles `#282A30`, supplied logo and profile photos, and filled blue reactions. Font family remains provisional.
+
+`/design-system` is a development-only preview with a launcher above regular screens. It uses local sample state and a nested theme provider. It does not save account settings or schedule notifications. The user approved its appearance; full accessibility and device coverage remain pending.
+
+Existing auth and conversation screens have not yet migrated to the approved UI. Next: onboarding, then chat, then settings and persisted theme preference. See [design-system usage](../src/design-system/README.md).
+
 ## Architecture
 
 The mobile client will use Expo, React Native, and TypeScript. It will call the existing Luni API over HTTPS with a bearer token. The mobile client must not call OpenAI or the database directly.
@@ -26,7 +36,7 @@ The backend owns authentication, conversations, AI generation, memory extraction
 
 - Expo development builds, Expo Router, EAS Build, and EAS Update
 - TanStack Query for server data
-- Zustand for temporary UI state
+- React state/context for current temporary UI state and theme; Zustand remains a planned option and is not installed
 - React Hook Form and Zod for forms and validation
 - `expo-secure-store` for session credentials
 - `expo-sqlite` for drafts, pending messages, and recent chat before external beta
@@ -34,8 +44,8 @@ The backend owns authentication, conversations, AI generation, memory extraction
 ## Delivery priorities
 
 1. Maintain API contracts and backend test coverage in the backend repository.
-2. Connect the Expo app to the Luni API.
-3. Build reliable non-streaming chat with idempotency, retries, drafts, and app-restart recovery. Add streaming in a later contract revision.
+2. Migrate onboarding, chat, and settings to the approved UI using the shared design system. Preserve existing authentication and API integration.
+3. Add drafts and app-restart recovery to the implemented non-streaming chat and explicit retry flow. Add streaming in a later contract revision.
 4. Add memory review, correction, deletion, disable, export, and account-deletion flows.
 5. Add release controls, privacy-safe monitoring, analytics, and test coverage before external beta.
 
