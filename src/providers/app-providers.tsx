@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SQLiteProvider } from 'expo-sqlite';
 import { type PropsWithChildren, useState } from 'react';
 
+import { ThemeProvider } from '@/design-system/theme';
 import { DATABASE_NAME } from '@/lib/database/database';
 import { migrateDatabase } from '@/lib/database/migrations';
 import { AuthProvider } from '@/providers/auth-provider';
@@ -12,7 +13,9 @@ export function AppProviders({ children }: PropsWithChildren) {
   return (
     <QueryClientProvider client={queryClient}>
       <SQLiteProvider databaseName={DATABASE_NAME} onInit={migrateDatabase}>
-        <AuthProvider>{children}</AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </ThemeProvider>
       </SQLiteProvider>
     </QueryClientProvider>
   );

@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Luni — A study in blue</title>
+<style>
+:root{--black:#000;--white:#fff;--ice-white:#f6fafe;--deep:#284550;--blue:#3163c5;--chat-blue:#0054FD;--mid:#386dce;--sky:#75aeea;--ice:#add0f2;--canvas-light:#f9fbfd;--bubble-light:#eceef2;--composer-light:#f1f3f6;--border-light:#e0e2e8;--canvas-dark:#060709;--bubble-dark:#282A30;--composer-dark:#141619;--border-dark:#1f2128;--text-light:#111318;--text-dark:#f7f8fa;--muted-light:#596171;--muted-dark:#adb3be}
+*{box-sizing:border-box}html{background:#dfe2e5;scroll-behavior:smooth}body{margin:0;color:#111318;font:15px/1.5 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}button{font:inherit}::selection{background:var(--blue);color:white}button:focus-visible,a:focus-visible{outline:3px solid var(--sky);outline-offset:5px}button{cursor:pointer}header.toolbar{max-width:1440px;margin:auto;display:flex;justify-content:space-between;align-items:center;padding:18px 28px;font-size:12px;gap:16px}.toolbar button{border:1px solid #a9afb6;border-radius:40px;background:transparent;padding:8px 18px}.toolbar button:hover{background:white}.sheet{max-width:1440px;margin:0 auto 40px;background:#fff}.hero{display:grid;grid-template-columns:1.04fr 1fr;min-height:520px}.art{position:relative;overflow:hidden;background:radial-gradient(ellipse at 98% 95%,#f6fafe 0%,#add0f2 21%,transparent 49%),radial-gradient(ellipse at 70% 20%,#3163c5 0%,#386dce 25%,transparent 66%),linear-gradient(125deg,#14292f,#284550 26%,#75aeea 90%);color:white;display:flex;align-items:center;justify-content:center}.art canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.13;mix-blend-mode:soft-light;pointer-events:none}.ring{position:absolute;border:48px solid rgba(255,255,255,.9);width:300px;height:300px;border-radius:50%;left:-165px;bottom:-100px}.ring.two{width:240px;height:240px;left:auto;bottom:auto;right:-125px;top:-120px;border-width:40px}.monogram{width:155px;height:155px;position:relative;z-index:1}.art-caption span{background:#14292f;padding:4px 8px}.art-caption{position:absolute;bottom:28px;left:32px;right:32px;display:flex;justify-content:space-between;font-size:11px;color:#fff}.hero-copy{padding:56px 52px;display:flex;flex-direction:column;justify-content:space-between}.brand{font-family:"Century Gothic","Segoe UI",sans-serif;font-size:32px;font-weight:600;letter-spacing:-.035em}.hero h1{font-family:"Century Gothic","Segoe UI",sans-serif;font-weight:400;font-size:clamp(46px,5.3vw,76px);line-height:1.02;letter-spacing:-.04em;margin:44px 0 25px;max-width:9ch}.hero p{font-size:16px;max-width:35ch;margin:0;color:#596171}.hero-foot{display:flex;justify-content:space-between;margin-top:35px;font-size:11px}.section{padding:40px 44px;border-top:1px solid #e0e2e8}.section-title{display:flex;justify-content:space-between;align-items:baseline;gap:20px;margin-bottom:26px}.section h2{font-size:25px;letter-spacing:-.025em;font-weight:500;margin:0}.section-title p{font-size:12px;color:#596171;margin:0;max-width:52ch}.palette{display:grid;grid-template-columns:repeat(9,1fr)}.swatch{border:0;border-radius:0;padding:18px 16px;min-height:156px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;text-align:left;color:var(--ink);background:var(--swatch);transition:transform .15s}.swatch:hover{transform:translateY(-5px)}.swatch span{font-size:11px}.swatch strong{font-size:13px;font-weight:500;font-variant-numeric:tabular-nums}.swatch small{font-size:10px;opacity:.85}.palette-note{display:flex;justify-content:space-between;margin-top:13px;gap:20px;font-size:11px;color:#596171}.type-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:60px}.type-display{font:400 clamp(46px,6vw,86px)/1.1 "Century Gothic","Segoe UI",sans-serif;letter-spacing:-.04em}.alphabet{font:400 22px/1.7 "Century Gothic","Segoe UI",sans-serif;overflow-wrap:anywhere;max-width:29ch;margin-top:22px}.type-note{font-size:12px;color:#596171;max-width:53ch;margin-top:25px}.type-row{display:grid;grid-template-columns:1fr 115px;gap:14px;align-items:baseline;border-bottom:1px solid #e0e2e8;padding:15px 0}.type-row small{font-size:11px;color:#596171;text-align:right}.type-row:first-child{padding-top:0}.themes{display:grid;grid-template-columns:1fr 1fr}.theme{padding:38px 44px;background:var(--canvas);color:var(--text);--canvas:var(--canvas-light);--surface:var(--bubble-light);--composer:var(--composer-light);--line:var(--border-light);--text:var(--text-light);--muted:var(--muted-light)}.theme.dark{--canvas:var(--canvas-dark);--surface:var(--bubble-dark);--composer:var(--composer-dark);--line:var(--border-dark);--text:var(--text-dark);--muted:var(--muted-dark)}.theme h3{font-size:23px;font-weight:500;margin:0}.theme-label{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:18px}.theme-label span{font-size:11px;color:var(--muted)}.chat{padding-top:25px}.person{font-weight:600;font-size:14px;line-height:20px;margin-bottom:8px}.person time{font-weight:400;color:var(--muted);font-size:12px;line-height:16px;margin-left:8px}.bubble{background:var(--surface);padding:10px 12px;border-radius:12px;width:fit-content;max-width:88%;font-size:16px;line-height:1.375}.reaction{margin-top:8px;padding:3px 11px;border-radius:99px;color:var(--text);border:1px solid var(--line);background:transparent;font-size:12px;display:flex;gap:8px;align-items:center}.reaction svg{width:14px;fill:var(--chat-blue)}.reaction[aria-pressed=true]{border-color:var(--chat-blue);background:var(--surface)}.outgoing{display:flex;align-items:flex-end;flex-direction:column;margin-top:24px}.outgoing .bubble{position:relative;background:var(--chat-blue);color:#fff}.outgoing .bubble::after{content:"";position:absolute;right:-7px;bottom:0;width:17px;height:19px;background:var(--chat-blue);clip-path:path("M 0 0 Q 5 13 17 19 Q 6 18 0 14 Z")}.quote{border-left:1px solid var(--muted);padding-left:10px;color:var(--muted);font-size:12px;margin-bottom:10px}.composer{margin-top:30px;display:flex;align-items:center;gap:15px;background:var(--composer);border:1px solid var(--line);border-radius:99px;padding:10px 12px 10px 18px;color:var(--muted);font-size:13px}.send{background:var(--text);color:var(--canvas);width:34px;height:34px;margin-left:auto;border-radius:50%;display:grid;place-items:center}.send svg{width:17px;fill:currentColor}.surface-stack{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:30px}.surface{font-size:9px;color:var(--muted)}.surface i{display:block;height:28px;background:var(--sample);border:1px solid var(--line);margin-bottom:6px;border-radius:3px}.surface code{display:block;font:10px/1.7 "Segoe UI",sans-serif;color:var(--text)}.rules{display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px}.rules h3{font-size:16px;font-weight:600;margin:0 0 12px}.rules p{font-size:13px;color:#596171;max-width:34ch}.geometry{height:76px;display:flex;align-items:center;gap:15px;margin-bottom:20px}.geometry .circle{width:66px;height:66px;border:12px solid var(--blue);border-radius:50%}.geometry .arc{width:66px;height:66px;border:12px solid #000;border-right-color:transparent;border-bottom-color:transparent;border-radius:50%;transform:rotate(-45deg)}.corners{width:95px;height:58px;background:#eceef2;border-radius:14px}.pill{border:1px solid #adb3be;border-radius:30px;width:70px;height:30px}.space-bars{display:flex;gap:8px;align-items:flex-end;height:76px;margin-bottom:20px}.space-bars i{background:#3163c5;width:22px;height:var(--h)}footer{padding:24px 44px;border-top:1px solid #e0e2e8;display:flex;justify-content:space-between;gap:30px;font-size:11px;color:#596171}.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111318;color:white;padding:12px 20px;border-radius:30px;font-size:13px;z-index:9}.toast:empty{display:none}@media(max-width:760px){header.toolbar{padding:15px 18px}.hero{grid-template-columns:1fr}.art{min-height:330px}.hero-copy{padding:32px}.hero h1{max-width:none;margin:24px 0}.section{padding:30px 22px}.section-title{display:block}.section-title p{margin-top:8px}.palette{grid-template-columns:repeat(4,1fr)}.swatch{min-height:130px;padding:12px}.type-grid,.themes,.rules{grid-template-columns:1fr}.type-grid{gap:32px}.theme{padding:30px 22px}.rules{gap:28px}footer{padding:22px;display:block}footer span{display:block;margin-bottom:8px}.palette-note{display:block}.sheet{margin-bottom:0}}@media print{html{background:white}.toolbar,.toast{display:none!important}.sheet{margin:0;max-width:none}.hero{min-height:400px}.section,.theme{break-inside:avoid}*{print-color-adjust:exact;-webkit-print-color-adjust:exact}body{font-size:12px}@page{size:A3 portrait;margin:10mm}}
+.geometry .monogram{width:100%;height:100%}.monogram{max-width:100%}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.swatch{transition:none}}/* Luni chat component library. Values are CSS pixels in this web specimen. */
+.library{--radius-message:12px;--message-gap:24px;--error:#b42318;--focus:#0054fd;min-width:0}
+.library.dark{--error:#ffb4ab;--focus:#75aeea}
+.library *{min-width:0}
+.library h4{font-size:16px;line-height:22px;font-weight:600;margin:0 0 16px}
+.specimen{padding:28px 0;border-bottom:1px solid var(--line)}
+.specimen:last-child{border-bottom:0}
+.spec-note,.message-meta{font-size:12px;line-height:16px;color:var(--muted)}
+.spec-note{margin:12px 0 0;max-width:54ch}
+.library .bubble{border-radius:var(--radius-message);overflow-wrap:anywhere;white-space:pre-wrap}
+.library .outgoing{margin-top:var(--message-gap);padding-right:8px}
+.library .quote{white-space:normal;margin:0 0 8px;font-size:14px;line-height:20px}
+.library .reaction{min-height:44px;min-width:44px;font-size:14px;padding:8px 12px}
+.library .reaction[aria-pressed=true]{background:var(--surface);border-color:var(--focus)}
+.library .reaction svg{fill:var(--focus)}
+.library button:focus-visible,.library textarea:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+.library button:disabled{cursor:not-allowed;background:var(--surface);color:var(--muted)}
+.message-meta{display:block;margin-top:8px}
+.typing{display:flex;align-items:center;gap:5px;min-height:42px;padding:14px 16px}
+.typing i{display:block;width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.composer-demo{margin-top:16px}
+.composer-demo:first-of-type{margin-top:0}
+.state-name{display:block;font-size:12px;line-height:16px;color:var(--muted);margin-bottom:8px}
+.library .composer{margin-top:0;gap:8px;padding:8px 8px 8px 16px;border-radius:28px;align-items:flex-end}
+.library .composer:focus-within{border-color:var(--focus)}
+.library textarea{display:block;flex:1;width:100%;resize:none;border:0;outline:none;background:transparent;color:var(--text);font:400 16px/22px -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;padding:11px 0;min-height:44px;max-height:132px;caret-color:var(--focus)}
+.library textarea::placeholder{color:var(--muted);opacity:1}
+.library .send{border:0;width:44px;height:44px;min-width:44px;padding:12px;flex-shrink:0}
+.library .send svg{width:20px;height:20px}
+.library .send:not(:disabled):hover{opacity:.85}
+.delivery-line{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px;color:var(--error);font-size:12px;line-height:16px;flex-wrap:wrap}
+.text-action{border:1px solid var(--line);border-radius:99px;min-height:44px;padding:8px 16px;background:transparent;color:var(--text);font-size:14px}
+.text-action:hover{background:var(--surface)}
+.demo-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:16px 0;font-size:12px;color:var(--muted)}
+.demo-controls label{display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer}
+.demo-controls input{width:18px;height:18px;accent-color:var(--focus)}
+.live-messages{max-height:300px;overflow:auto;scrollbar-color:var(--muted) var(--canvas);padding:4px 8px 16px 4px}
+.live-status{min-height:20px;margin:8px 0 0;color:var(--muted);font-size:12px;line-height:20px}
+.library-intro p{max-width:70ch;color:var(--muted-light)}
+.library-rules{padding-left:20px;font-size:14px;line-height:22px;max-width:76ch}
+.library-rules li+li{margin-top:8px}
+@media(max-width:760px){.library{padding:28px 20px}.library .bubble{max-width:90%}}
+@media print{.specimen{break-inside:avoid}.live-messages{max-height:none}}
+
+.controls{--danger:#b42318;--control-border:#858b96;color-scheme:light}
+.controls.dark{--danger:#ffb4ab;--control-border:#767d89;color-scheme:dark}
+.control-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.ui-button{min-height:44px;border:1px solid var(--control-border);border-radius:99px;padding:10px 20px;background:transparent;color:var(--text);font-size:14px;line-height:22px;font-weight:600}
+.ui-button.primary{background:var(--chat-blue);color:#fff;border-color:var(--chat-blue)}
+.ui-button.danger{color:var(--danger);border-color:var(--danger)}
+.ui-button.icon-only{padding:10px;width:44px;display:inline-grid;place-items:center}
+.ui-icon{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.ui-button:hover:not(:disabled){filter:brightness(.92)}
+.controls button:focus-visible,.controls input:focus-visible,.controls summary:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+.field{display:block;margin:20px 0 0;font-size:14px;line-height:20px;font-weight:600}
+.field input{display:block;width:100%;margin-top:8px;padding:12px 14px;min-height:48px;border:1px solid var(--control-border);border-radius:12px;background:var(--composer);color:var(--text);font:400 16px/22px -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;caret-color:var(--focus)}
+.field input::placeholder{color:var(--muted);opacity:1}
+.field input:disabled{color:var(--muted);cursor:not-allowed}
+.field input[aria-invalid=true]{border-color:var(--danger)}
+.field-help{display:block;margin-top:8px;color:var(--muted);font-size:12px;line-height:18px;font-weight:400}
+.field-help.error{color:var(--danger)}
+.settings-screen{max-width:390px;margin:24px auto 0;border:1px solid var(--line);border-radius:28px;padding:24px 20px;background:var(--canvas)}
+.settings-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:24px}
+.settings-heading h4{font-size:28px;line-height:32px;margin:0}
+.settings-screen h5{font-size:12px;font-weight:500;color:var(--muted);margin:28px 0 8px}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:60px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;color:var(--text);width:100%;padding:12px 0;text-align:left;font-size:16px;line-height:22px}
+button.setting-row:hover{background:var(--composer)}
+.setting-value{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:14px;text-align:right}
+.setting-row small{display:block;color:var(--muted);font-size:12px;line-height:18px;margin-top:4px}
+.switch{position:relative;display:flex;align-items:center;min-height:44px;cursor:pointer;flex-shrink:0}
+.switch input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.switch-track{display:block;width:48px;height:28px;border-radius:99px;background:var(--control-border);pointer-events:none}
+.switch-track:after{content:"";display:block;width:22px;height:22px;margin:3px;background:#fff;border-radius:50%;transform:translateX(0)}
+.switch input:checked+.switch-track{background:var(--chat-blue)}
+.switch input:checked+.switch-track:after{transform:translateX(20px)}
+.switch input:focus-visible+.switch-track{outline:2px solid var(--focus);outline-offset:4px}
+.ui-dialog{width:min(420px,calc(100% - 32px));max-height:85dvh;overflow:auto;border:1px solid var(--line);border-radius:20px;padding:24px;background:var(--canvas);color:var(--text);font:16px/22px -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
+.ui-dialog::backdrop{background:rgb(0 0 0 / .6)}
+.ui-dialog.sheet{margin:auto auto 16px;max-width:480px;border-radius:24px;padding:24px}
+.ui-dialog h4{font-size:22px;line-height:28px;margin:0 0 12px}
+.ui-dialog p{font-size:14px;line-height:22px;color:var(--muted)}
+.dialog-actions{display:flex;justify-content:flex-end;gap:12px;flex-wrap:wrap;margin-top:24px}
+.choice{display:flex;align-items:center;gap:12px;min-height:48px;font-size:16px;cursor:pointer}
+.choice input{width:20px;height:20px;accent-color:var(--chat-blue)}
+.settings-status{min-height:40px;margin:20px 0 0;font-size:12px;line-height:18px;color:var(--muted)}
+.settings-screen details{border-bottom:1px solid var(--line);padding:16px 0;font-size:14px}
+.settings-screen summary{cursor:pointer;min-height:28px}
+@media(max-width:420px){.settings-screen{padding:20px 14px}.ui-button{padding:10px 16px}}
+
+</style>
+</head><body>
+<header class="toolbar"><span>Luni / Visual system study · <a href="#component-library">Chat components</a> · <a href="#shared-library">Shared controls</a></span><button onclick="window.print()">Print / Save PDF</button></header>
+<main class="sheet">
+<section class="hero"><div class="art"><canvas aria-hidden="true" id="grain"></canvas><svg xmlns="http://www.w3.org/2000/svg" class="monogram" viewBox="400 420 450 440" role="img" aria-label="Luni logo">
+  <g fill="#FFFFFF">
+    <path d="M 828 493 L 815 479 L 792 468 L 770 467 L 753 471 L 740 477 L 701 505 L 564 615 L 548 623 L 526 629 L 468 630 L 445 637 L 425 654 L 414 675 L 412 705 L 421 729 L 437 746 L 458 756 L 481 758 L 502 753 L 524 740 L 694 604 L 732 589 L 785 585 L 807 577 L 825 561 L 835 541 L 836 513 Z"/>
+    <path d="M 808 659 L 793 646 L 779 640 L 768 638 L 746 640 L 722 651 L 574 762 L 565 776 L 562 787 L 563 806 L 571 822 L 586 835 L 597 840 L 613 843 L 635 841 L 647 837 L 668 825 L 791 737 L 804 726 L 811 717 L 818 698 L 817 677 Z"/>
+    <path d="M 514 435 L 498 439 L 486 445 L 474 454 L 463 467 L 455 482 L 452 492 L 451 505 L 450 506 L 451 521 L 455 535 L 461 547 L 470 559 L 482 569 L 495 576 L 508 580 L 512 580 L 513 581 L 533 581 L 534 580 L 546 578 L 561 571 L 571 564 L 581 554 L 589 542 L 595 527 L 595 523 L 597 517 L 597 497 L 593 481 L 587 469 L 578 457 L 565 446 L 554 440 L 541 436 L 537 436 L 536 435 Z"/>
+  </g>
+</svg><div class="art-caption"><span>Deep blue → ice light</span><span>Brand atmosphere</span></div></div><div class="hero-copy"><div class="brand">luni</div><h1>A study<br>in blue.</h1><p>Black. White. A full spectrum of blue.<br>A visual language for good company.</p><div class="hero-foot"><span>Grace-inspired / Mini design system</span><span>Light + dark</span></div></div></section>
+<section class="section"><div class="section-title"><h2>The blue spectrum</h2><p>Deep, mineral shadows meet icy light. Click a shade to copy its hex value.</p></div><div class="palette" id="palette"></div><div class="palette-note"><span>Grace reference → sampled shades, normalized into usable tokens.</span><span>Chat bubbles and reactions: #0054FD. Muted blues remain in brand artwork.</span></div></section>
+<section class="section"><div class="section-title"><h2>Type with room to breathe</h2><p>Circular branding. Straightforward conversation.</p></div><div class="type-grid"><div><div class="type-display">good people.<br>brighter days.</div><div class="alphabet">abcdefghijklmnopqrstuvwxyz<br>ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>0123456789 &amp; ? !</div><p class="type-note">Chat type: system sans on Apple devices, then Helvetica Neue or Arial. Body 16/22 regular; names 14/20 semibold; metadata 12/16 regular. Provisional match to the screenshots; exact reference font unverified. Century Gothic remains a display specimen only. Logo: supplied Luni SVG.</p></div><div><div class="type-row"><span style="font-size:28px;line-height:32px;font-weight:600">Luni</span><small>Title · 28 / 32 · 600</small></div><div class="type-row"><span style="font-size:16px;line-height:22px">Made it to the coast.<br>This place is unreal.</span><small>Body · 16 / 22 · 400</small></div><div class="type-row"><span style="font-size:14px;font-weight:600">Alex</span><small>Name · 14 / 20 · 600</small></div><div class="type-row"><span style="font-size:12px;color:#596171">Replying to Alex · 9:12 AM</span><small>Detail · 12 / 16 · 400</small></div><div class="type-row"><span style="font-size:10px;letter-spacing:.12em;font-weight:500">GOOD PEOPLE</span><small>Caption · 10 / 14 · 500</small></div><p class="type-note">Keep tracking natural in messages. Reserve spaced capitals for brief brand captions. Use the wordmark as artwork, not as the body font.</p></div></div></section>
+<section class="themes" aria-label="Light and dark component comparison" id="themes"></section>
+<section class="section"><div class="section-title"><h2>The supporting details</h2><p>Repeat the same few decisions everywhere.</p></div><div class="rules"><div><div class="geometry" style="background:#0054FD;width:76px;border-radius:18px;padding:14px"><svg xmlns="http://www.w3.org/2000/svg" class="monogram" viewBox="400 420 450 440" role="img" aria-label="Luni logo">
+  <g fill="#FFFFFF">
+    <path d="M 828 493 L 815 479 L 792 468 L 770 467 L 753 471 L 740 477 L 701 505 L 564 615 L 548 623 L 526 629 L 468 630 L 445 637 L 425 654 L 414 675 L 412 705 L 421 729 L 437 746 L 458 756 L 481 758 L 502 753 L 524 740 L 694 604 L 732 589 L 785 585 L 807 577 L 825 561 L 835 541 L 836 513 Z"/>
+    <path d="M 808 659 L 793 646 L 779 640 L 768 638 L 746 640 L 722 651 L 574 762 L 565 776 L 562 787 L 563 806 L 571 822 L 586 835 L 597 840 L 613 843 L 635 841 L 647 837 L 668 825 L 791 737 L 804 726 L 811 717 L 818 698 L 817 677 Z"/>
+    <path d="M 514 435 L 498 439 L 486 445 L 474 454 L 463 467 L 455 482 L 452 492 L 451 505 L 450 506 L 451 521 L 455 535 L 461 547 L 470 559 L 482 569 L 495 576 L 508 580 L 512 580 L 513 581 L 533 581 L 534 580 L 546 578 L 561 571 L 571 564 L 581 554 L 589 542 L 595 527 L 595 523 L 597 517 L 597 497 L 593 481 L 587 469 L 578 457 L 565 446 L 554 440 L 541 436 L 537 436 L 536 435 Z"/>
+  </g>
+</svg></div><h3>The Luni mark.</h3><p>Use the supplied logo artwork. Preserve its proportions and white fill on blue or dark surfaces. Reserve blue texture for brand artwork.</p></div><div><div class="geometry"><div class="corners"></div><div class="pill"></div></div><h3>Shape follows the content.</h3><p>Reference-matched proposal: 12 px corners, 10 × 12 px padding, and a curved lower-right tail on outgoing messages. Incoming bubbles have no tail. Circular avatars; pill reactions and composer.</p></div><div><div class="space-bars"><i style="--h:8px"></i><i style="--h:16px"></i><i style="--h:24px"></i><i style="--h:32px"></i><i style="--h:48px"></i><i style="--h:64px"></i></div><h3>A rhythm of 4.</h3><p>4, 8, 12, 16, 24, 32 px. Keep the name, message, and reactions close. Give different speakers more separation.</p></div></div></section>
+<section class="section library-intro" id="component-library"><div class="section-title"><h2>Chat component library</h2><p>First pass · light and dark</p></div><p>Electric-blue outgoing messages, quiet incoming surfaces, and the supplied Luni identity. Review the component states below before applying them to app screens.</p><ul class="library-rules"><li>Message body: 16/22 regular. Names: 14/20 semibold. Metadata: 12/16 regular. Font family remains provisional.</li><li>Bubbles: 12 px corners, 10 × 12 px padding, up to 88% width. Only the last outgoing bubble in a group gets a tail.</li><li>Controls: at least 44 × 44 px. Composer grows to six lines, then scrolls. Keep messages readable when text size increases.</li><li>Sending and retry must preserve the original message. Distinguish “Sent” from “Read”; this demo makes no read-receipt claim.</li><li>Typing and streaming examples are static. Keep typing motion optional and respect reduced-motion preferences.</li></ul></section><section class="themes" id="chat-library" aria-label="Chat component library in light and dark"></section>
+<section class="section library-intro" id="shared-library"><div class="section-title"><h2>Shared controls & settings</h2><p>Light and dark · interactive examples</p></div><p>Use the same typography, blue accent, and surface tokens across chat and settings. All interactions below are local demonstrations.</p><ul class="library-rules"><li>Use a filled blue button for the main action, an outlined button for alternatives, and a labeled destructive button for resets or removal.</li><li>Inputs keep visible labels. Show errors in text as well as color, and preserve entered values.</li><li>Rows with chevrons open another choice or view. Switches apply immediately; state changes are announced.</li><li>Dialogs keep keyboard focus inside while open. Escape cancels; closing returns focus to the trigger.</li></ul></section><section class="themes" id="shared-controls" aria-label="Shared controls and settings examples"></section>
+<footer><span>Luni — Grace-inspired system study / September 2026</span><span>Approved chat blue and supplied Luni logo. Provisional type and bubble measurements. Not an official Grace brand guide.</span></footer>
+</main><div class="toast" role="status" aria-live="polite" id="toast"></div>
+<script>
+const colors=[['Black','#000000','#fff'],['White','#FFFFFF','#111318'],['Deep blue-teal','#284550','#fff'],['Chat blue','#0054FD','#fff'],['Rich blue','#3163C5','#fff'],['Mid blue','#386DCE','#fff'],['Sky blue','#75AEEA','#111318'],['Ice blue','#ADD0F2','#111318'],['Ice white','#F6FAFE','#111318']];
+document.getElementById('palette').innerHTML=colors.map(([n,c,t])=>`<button class="swatch" style="--swatch:${c};--ink:${t}" data-color="${c}" aria-label="Copy ${n} ${c}"><span>${n}</span><strong>${c}</strong><small>${n==='Chat blue'?'Outgoing bubbles + reactions':'Brand palette'}</small></button>`).join('');
+let toastTimer;function notify(t){const e=document.getElementById('toast');e.textContent=t;clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.textContent='',2600)}document.querySelectorAll('[data-color]').forEach(b=>b.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(b.dataset.color);notify('Copied '+b.dataset.color)}catch{notify('Shade: '+b.dataset.color)}}));
+const heart='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21S2 15 2 8a5 5 0 0 1 10-1A5 5 0 0 1 22 8c0 7-10 13-10 13Z"/></svg>';
+const sets=[['light','Light','A cool-white foundation.',['#F9FBFD','#ECEEF2','#F1F3F6','#E0E2E8']],['dark','Dark','Near-black, never navy.',['#060709','#282A30','#141619','#1F2128']]];
+document.getElementById('themes').innerHTML=sets.map(([mode,name,desc,shades])=>`<article class="theme ${mode}"><div class="theme-label"><h3>${name}</h3><span>${desc}</span></div><div class="chat"><div class="person">Alex <time>9:12 AM</time></div><div class="bubble">Made it to the coast!<br>This place is unreal.</div><button class="reaction" aria-label="Like Alex’s message in ${name} preview" aria-pressed="false">${heart}<span>4</span></button><div class="outgoing"><div class="person">Taylor <time>9:18 AM</time></div><div class="bubble">Need to plan a trip together.<br>ASAP.</div></div><div style="margin-top:24px"><div class="person">Jordan <time>9:20 AM</time></div><div class="bubble"><div class="quote">Replying to Alex<br>Made it to the coast!</div>Where is this? Looks amazing.</div></div><div class="composer"><span>Type a message…</span><span class="send" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3 2 19 10L3 22l3-9 10-1-10-1Z"/></svg></span></div></div><div class="surface-stack">${shades.map((c,i)=>`<div class="surface"><i style="--sample:${c}"></i>${['Canvas','Bubble','Composer','Border'][i]}<code>${c}</code></div>`).join('')}</div></article>`).join('');
+document.querySelectorAll('.reaction').forEach(b=>b.addEventListener('click',()=>{const on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',String(on));b.querySelector('span').textContent=on?'5':'4'}));
+const canvas=document.getElementById('grain'),ctx=canvas.getContext('2d');canvas.width=600;canvas.height=600;const img=ctx.createImageData(600,600);let seed=13;for(let i=0;i<img.data.length;i+=4){seed=(seed*16807)%2147483647;let n=seed%256;img.data[i]=img.data[i+1]=img.data[i+2]=n;img.data[i+3]=200}ctx.putImageData(img,0,0);
+</script><script>
+// Local specimen interactions only. No messages leave this page.
+(() => {
+  const arrow = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 2 19 10L3 22l3-9 10-1-10-1Z"/></svg>';
+  const heartIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21S2 15 2 8a5 5 0 0 1 10-1A5 5 0 0 1 22 8c0 7-10 13-10 13Z"/></svg>';
+  const composer = (id, label, value = '', rows = 1, disabled = false) => `<div class="composer-demo"><label class="state-name" for="${id}">${label}</label><div class="composer"><textarea id="${id}" rows="${rows}" placeholder="Type a message…" readonly>${value}</textarea><button type="button" class="send" disabled aria-label="${disabled ? 'Send unavailable' : 'Static send example'}">${arrow}</button></div></div>`;
+  document.getElementById('chat-library').innerHTML = ['light', 'dark'].map(mode => `<article class="theme library ${mode}" aria-label="${mode} chat component library">
+    <div class="theme-label"><h3>${mode === 'light' ? 'Light' : 'Dark'} components</h3><span>Chat + composer</span></div>
+    <section class="specimen"><h4>Messages, replies & reactions</h4>
+      <div class="person">Luni <time>9:12 AM</time></div><div class="bubble">How did your day go?</div>
+      <button class="reaction library-reaction" type="button" aria-label="Like Luni’s message" aria-pressed="false">${heartIcon}<span>Like</span></button>
+      <div class="outgoing"><div class="person">You <time>9:14 AM</time></div><div class="bubble">A lot happened today.<br>I’m glad I have a moment to talk.</div><span class="message-meta">Sent · 9:14 AM</span></div>
+      <div style="margin-top:24px"><div class="person">Luni <time>9:14 AM</time></div><div class="bubble"><div class="quote">You<br>A lot happened today.</div>What part is on your mind?</div></div>
+      <p class="spec-note">Group messages from one speaker with an 8 px gap. Show the name once per group and the outgoing tail on its last bubble.</p>
+    </section>
+    <section class="specimen"><h4>Waiting & receiving</h4><div class="person">Luni</div><div class="bubble typing" role="img" aria-label="Luni is typing"><i></i><i></i><i></i></div><p class="spec-note">Typing: show before the first response text arrives.</p><div class="bubble" style="margin-top:16px">That sounds like a lot to carry.</div><span class="message-meta">Receiving response…</span><p class="spec-note">Streaming: append text inside the same bubble. Announce completion once; avoid reading each token aloud.</p></section>
+    <section class="specimen"><h4>Composer states</h4>
+      ${composer(mode+'-empty','Empty · send disabled','',1,true)}
+      ${composer(mode+'-draft','Draft · ready to send','Can we talk for a bit?')}
+      ${composer(mode+'-multiline','Multiline · grows to six lines','I finally finished that project.\nI’m relieved, but also exhausted.',2)}
+      ${composer(mode+'-sending','Sending · preserve the message','Can we talk for a bit?',1,true)}
+      <p class="spec-note">Static examples above. Try sending, failure, and retry below. Enter sends; Shift + Enter adds a line. On touch keyboards, use the send button.</p>
+    </section>
+    <section class="specimen"><h4>Try the composer</h4><p class="spec-note">Local interaction demo. No AI response or network request.</p>
+      <div class="demo-controls"><label><input type="checkbox" class="fail-next"> Fail next send</label><button type="button" class="text-action reset-demo">Reset</button></div>
+      <div class="live-messages" aria-label="Sent message examples"></div>
+      <form class="live-form"><label class="state-name" for="${mode}-live">Message</label><div class="composer"><textarea id="${mode}-live" rows="1" maxlength="4000" placeholder="Type a message…" aria-describedby="${mode}-status"></textarea><button type="submit" class="send" disabled aria-label="Send message">${arrow}</button></div></form>
+      <p class="live-status" id="${mode}-status" role="status" aria-live="polite">Write a message to try it.</p>
+    </section>
+  </article>`).join('');
+
+  // Static enabled appearances remain real buttons: explain their purpose on activation.
+  document.querySelectorAll('.composer-demo').forEach(sample => {
+    const name = sample.querySelector('label').textContent;
+    if (name.startsWith('Draft') || name.startsWith('Multiline')) {
+      const button = sample.querySelector('button');
+      button.disabled = false;
+      button.setAttribute('aria-label', 'Preview send; use the interactive composer below');
+      button.addEventListener('click', () => {
+        const live = sample.closest('.library').querySelector('.live-form textarea');
+        live.value = sample.querySelector('textarea').value;
+        live.dispatchEvent(new Event('input'));
+        live.focus();
+      });
+    }
+    if (name.startsWith('Sending')) sample.querySelector('button').setAttribute('aria-label','Sending message');
+  });
+  document.querySelectorAll('.library-reaction').forEach(button => button.addEventListener('click', () => {
+    const liked = button.getAttribute('aria-pressed') !== 'true';
+    button.setAttribute('aria-pressed', String(liked));
+    button.querySelector('span').textContent = liked ? 'Liked' : 'Like';
+  }));
+  document.querySelectorAll('.library').forEach(root => {
+    const form = root.querySelector('form');
+    const input = form.querySelector('textarea');
+    const send = form.querySelector('button');
+    const status = root.querySelector('.live-status');
+    const list = root.querySelector('.live-messages');
+    const fail = root.querySelector('.fail-next');
+    let busy = false, timer;
+    const resize = () => {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 132) + 'px';
+      send.disabled = busy || !input.value.trim();
+    };
+    input.addEventListener('input', resize);
+    input.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && !event.shiftKey && !event.isComposing && matchMedia('(pointer:fine)').matches) {
+        event.preventDefault();
+        if (!send.disabled) form.requestSubmit();
+      }
+    });
+    function deliver(row, shouldFail) {
+      busy = true;
+      input.readOnly = true;
+      form.setAttribute('aria-busy','true');
+      send.setAttribute('aria-label','Sending message');
+      resize();
+      const meta = row.querySelector('.message-meta');
+      meta.textContent = 'Sending…';
+      status.textContent = 'Sending message…';
+      timer = setTimeout(() => {
+        busy = false;
+        input.readOnly = false;
+        form.setAttribute('aria-busy','false');
+        send.setAttribute('aria-label','Send message');
+        if (shouldFail) {
+          meta.textContent = 'Not sent';
+          const recovery = document.createElement('div');
+          recovery.className = 'delivery-line';
+          const explanation = document.createElement('span');
+          explanation.textContent = 'Couldn’t send. Try again.';
+          const retry = document.createElement('button');
+          retry.type = 'button'; retry.className = 'text-action'; retry.textContent = 'Retry';
+          retry.addEventListener('click', () => {
+            if (busy) return;
+            recovery.remove();
+            deliver(row, false);
+            input.focus();
+          });
+          recovery.append(explanation, retry); row.append(recovery);
+          status.textContent = 'Message not sent. Your text is saved above. Retry when ready.';
+        } else {
+          meta.textContent = 'Sent · ' + new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+          status.textContent = 'Message sent in this local demo.';
+        }
+        resize();
+      }, 900);
+    }
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      const text = input.value.trim();
+      if (!text || busy) return;
+      const row = document.createElement('div'); row.className = 'outgoing';
+      const bubble = document.createElement('div'); bubble.className = 'bubble'; bubble.textContent = text;
+      const meta = document.createElement('span'); meta.className = 'message-meta';
+      row.append(bubble, meta); list.append(row);
+      const shouldFail = fail.checked; fail.checked = false;
+      input.value = ''; deliver(row, shouldFail); list.scrollTop = list.scrollHeight;
+    });
+    root.querySelector('.reset-demo').addEventListener('click', () => {
+      clearTimeout(timer); busy = false; input.readOnly = false; input.value = ''; fail.checked = false;
+      form.setAttribute('aria-busy','false');send.setAttribute('aria-label','Send message');list.replaceChildren();
+      status.textContent = 'Write a message to try it.';resize();input.focus();
+    });
+  });
+})();
+
+</script><script>
+(() => {
+ const icon = path => `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"/></svg>`;
+ const chevron = icon('m9 5 7 7-7 7');
+ document.getElementById('shared-controls').innerHTML = ['light','dark'].map(mode => `<article class="theme library controls ${mode}" aria-label="${mode} shared controls">
+ <div class="theme-label"><h3>${mode==='light'?'Light':'Dark'} controls</h3><span>Shared library</span></div>
+ <section class="specimen"><h4>Buttons</h4><div class="control-row"><button class="ui-button primary sample-save">Save changes</button><button class="ui-button sample-secondary">Secondary</button><button class="ui-button danger open-reset">Reset demo</button><button class="ui-button icon-only open-appearance" aria-label="Choose appearance">${icon('M12 3v18M3 12h18')}</button><button class="ui-button" disabled>Unavailable</button><button class="ui-button" disabled aria-busy="true">Saving…</button></div><p class="spec-note">Use one primary action per task. Keep destructive actions separate. Tab through controls to inspect focus.</p><p class="button-feedback live-status" role="status"></p></section>
+ <section class="specimen"><h4>Inputs</h4><label class="field">Default<input placeholder="Your name" autocomplete="off"><span class="field-help">Tap or tab into this field to see focus.</span></label><label class="field">Filled<input value="Alex" autocomplete="off"></label><label class="field">Error<input aria-invalid="true" aria-describedby="${mode}-field-error" value="" placeholder="Your name"><span id="${mode}-field-error" class="field-help error">Enter a name to continue.</span></label><label class="field">Disabled<input value="Unavailable" disabled></label></section>
+ <section class="specimen"><h4>Settings screen</h4><p class="spec-note">Proposed screen composition. Changes stay in this page and reset on reload.</p>
+ <div class="settings-screen"><div class="settings-heading"><h4>Settings</h4><span class="spec-note">Preview</span></div>
+ <h5>Profile</h5><button class="setting-row open-profile"><span>Your name</span><span class="setting-value"><span class="profile-value">Alex</span>${chevron}</span></button>
+ <h5>Preferences</h5><button class="setting-row open-appearance"><span>Appearance</span><span class="setting-value"><span class="appearance-value">${mode==='light'?'Light':'Dark'}</span>${chevron}</span></button>
+ <div class="setting-row"><span id="${mode}-reminders-label">Reminders<small>Allow a reminder to check in.</small></span><label class="switch"><input class="reminder-toggle" type="checkbox" role="switch" aria-labelledby="${mode}-reminders-label"><span class="switch-track"></span></label></div>
+ <div class="setting-row"><span id="${mode}-haptics-label">Haptics<small>Feedback when you use controls.</small></span><label class="switch"><input class="haptics-toggle" type="checkbox" role="switch" checked aria-labelledby="${mode}-haptics-label"><span class="switch-track"></span></label></div>
+ <h5>About this preview</h5><details><summary>What these settings do</summary><p>Try editing your name, choosing an appearance, and switching preferences. This preview does not schedule reminders or change your device settings.</p></details>
+ <button class="setting-row open-reset" style="color:var(--danger)"><span>Reset preview settings</span>${chevron}</button><p class="settings-status" role="status">Your preferences apply only to this preview.</p></div></section>
+ <section class="specimen"><h4>Sheets & confirmation</h4><div class="control-row"><button class="ui-button open-appearance">Open bottom sheet</button><button class="ui-button open-reset">Open confirmation</button></div><p class="spec-note">Use a sheet for short choices. Confirm destructive actions with their scope and consequence. Escape or Cancel dismisses without changes.</p></section>
+ <dialog class="ui-dialog sheet" data-kind="appearance" aria-labelledby="${mode}-appearance-title"><h4 id="${mode}-appearance-title">Appearance</h4><p>Choose the theme for this settings preview.</p><form method="dialog"><label class="choice"><input type="radio" name="appearance" value="Light">Light</label><label class="choice"><input type="radio" name="appearance" value="Dark">Dark</label><div class="dialog-actions"><button class="ui-button" value="cancel" autofocus>Cancel</button><button class="ui-button primary" value="apply">Apply</button></div></form></dialog>
+ <dialog class="ui-dialog" data-kind="profile" aria-labelledby="${mode}-profile-title"><h4 id="${mode}-profile-title">Your name</h4><form class="profile-form" novalidate><label class="field">Name<input class="profile-input" maxlength="40" autocomplete="off" aria-describedby="${mode}-profile-error"></label><p id="${mode}-profile-error" class="field-help error" role="alert"></p><div class="dialog-actions"><button class="ui-button cancel-profile" type="button">Cancel</button><button class="ui-button primary" type="submit">Save</button></div></form></dialog>
+ <dialog class="ui-dialog" data-kind="reset" aria-labelledby="${mode}-reset-title" aria-describedby="${mode}-reset-description"><h4 id="${mode}-reset-title">Reset preview settings?</h4><p id="${mode}-reset-description">This resets the sample name, theme, and switches in this preview. It does not change your account or conversations.</p><form method="dialog"><div class="dialog-actions"><button class="ui-button" value="cancel" autofocus>Cancel</button><button class="ui-button danger" value="reset">Reset preview</button></div></form></dialog>
+ </article>`).join('');
+ document.querySelectorAll('.controls').forEach(root => {
+  const screen = root.querySelector('.settings-screen');
+  const status = root.querySelector('.settings-status');
+  const initialTheme = root.classList.contains('dark') ? 'Dark' : 'Light';
+  let appearance = initialTheme;
+  const dialogs = Object.fromEntries([...root.querySelectorAll('dialog')].map(d=>[d.dataset.kind,d]));
+  function open(kind) {
+   const dialog = dialogs[kind]; dialog.returnValue = '';
+   if(kind==='appearance') dialog.querySelectorAll('input').forEach(r=>r.checked=r.value===appearance);
+   if(kind==='profile') {const input=dialog.querySelector('input');input.value=root.querySelector('.profile-value').textContent;input.removeAttribute('aria-invalid');dialog.querySelector('[role=alert]').textContent='';}
+   dialog.showModal();
+   if(kind==='profile') dialog.querySelector('input').focus();
+  }
+  for(const kind of ['appearance','profile','reset']) root.querySelectorAll('.open-'+kind).forEach(b=>b.addEventListener('click',()=>open(kind)));
+  function theme(value) {
+   appearance=value;screen.classList.toggle('dark',value==='Dark');
+   // Theme variables are set on the screen so specimen themes stay side by side.
+   for(const [key,token] of Object.entries({canvas:'canvas',surface:'bubble',composer:'composer',line:'border',text:'text',muted:'muted'}))screen.style.setProperty('--'+key,`var(--${token}-${value.toLowerCase()})`);
+   screen.style.setProperty('--danger',value==='Dark'?'#ffb4ab':'#b42318');
+   screen.style.setProperty('--focus',value==='Dark'?'#75aeea':'#0054fd');
+   screen.style.colorScheme=value.toLowerCase();screen.style.color='var(--text)';root.querySelector('.appearance-value').textContent=value;
+  }
+  dialogs.appearance.addEventListener('close',()=>{if(dialogs.appearance.returnValue==='apply'){theme(dialogs.appearance.querySelector('input:checked').value);status.textContent=appearance+' appearance applied to this preview.';}});
+  dialogs.profile.querySelector('.cancel-profile').addEventListener('click',()=>dialogs.profile.close());
+  dialogs.profile.querySelector('form').addEventListener('submit',event=>{event.preventDefault();const input=dialogs.profile.querySelector('input');const value=input.value.trim();if(!value){input.setAttribute('aria-invalid','true');dialogs.profile.querySelector('[role=alert]').textContent='Enter a name to continue.';input.focus();return;}root.querySelector('.profile-value').textContent=value;dialogs.profile.close();status.textContent='Name updated in this preview.';});
+  dialogs.reset.addEventListener('close',()=>{if(dialogs.reset.returnValue!=='reset')return;root.querySelector('.profile-value').textContent='Alex';root.querySelector('.reminder-toggle').checked=false;root.querySelector('.haptics-toggle').checked=true;theme(initialTheme);status.textContent='Preview settings reset.';});
+  for(const name of ['reminder','haptics'])root.querySelector('.'+name+'-toggle').addEventListener('change',event=>{status.textContent=(name==='reminder'?'Reminders':'Haptics')+(event.target.checked?' enabled':' disabled')+' in this preview.';});
+  root.querySelector('.sample-secondary').addEventListener('click',()=>root.querySelector('.button-feedback').textContent='Secondary button activated.');
+  root.querySelector('.sample-save').addEventListener('click',event=>{const button=event.currentTarget;button.disabled=true;button.setAttribute('aria-busy','true');button.textContent='Saving…';setTimeout(()=>{button.disabled=false;button.removeAttribute('aria-busy');button.textContent='Save changes';root.querySelector('.button-feedback').textContent='Saved in this demo.';},700);});
+ });
+})();
+
+</script></body></html>
+

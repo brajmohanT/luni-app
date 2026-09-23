@@ -1,0 +1,43 @@
+/* Luni chat component library. Values are CSS pixels in this web specimen. */
+.library{--radius-message:12px;--message-gap:24px;--error:#b42318;--focus:#0054fd;min-width:0}
+.library.dark{--error:#ffb4ab;--focus:#75aeea}
+.library *{min-width:0}
+.library h4{font-size:16px;line-height:22px;font-weight:600;margin:0 0 16px}
+.specimen{padding:28px 0;border-bottom:1px solid var(--line)}
+.specimen:last-child{border-bottom:0}
+.spec-note,.message-meta{font-size:12px;line-height:16px;color:var(--muted)}
+.spec-note{margin:12px 0 0;max-width:54ch}
+.library .bubble{border-radius:var(--radius-message);overflow-wrap:anywhere;white-space:pre-wrap}
+.library .outgoing{margin-top:var(--message-gap);padding-right:8px}
+.library .quote{white-space:normal;margin:0 0 8px;font-size:14px;line-height:20px}
+.library .reaction{min-height:44px;min-width:44px;font-size:14px;padding:8px 12px}
+.library .reaction[aria-pressed=true]{background:var(--surface);border-color:var(--focus)}
+.library .reaction svg{fill:var(--focus)}
+.library button:focus-visible,.library textarea:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+.library button:disabled{cursor:not-allowed;background:var(--surface);color:var(--muted)}
+.message-meta{display:block;margin-top:8px}
+.typing{display:flex;align-items:center;gap:5px;min-height:42px;padding:14px 16px}
+.typing i{display:block;width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.composer-demo{margin-top:16px}
+.composer-demo:first-of-type{margin-top:0}
+.state-name{display:block;font-size:12px;line-height:16px;color:var(--muted);margin-bottom:8px}
+.library .composer{margin-top:0;gap:8px;padding:8px 8px 8px 16px;border-radius:28px;align-items:flex-end}
+.library .composer:focus-within{border-color:var(--focus)}
+.library textarea{display:block;flex:1;width:100%;resize:none;border:0;outline:none;background:transparent;color:var(--text);font:400 16px/22px -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;padding:11px 0;min-height:44px;max-height:132px;caret-color:var(--focus)}
+.library textarea::placeholder{color:var(--muted);opacity:1}
+.library .send{border:0;width:44px;height:44px;min-width:44px;padding:12px;flex-shrink:0}
+.library .send svg{width:20px;height:20px}
+.library .send:not(:disabled):hover{opacity:.85}
+.delivery-line{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px;color:var(--error);font-size:12px;line-height:16px;flex-wrap:wrap}
+.text-action{border:1px solid var(--line);border-radius:99px;min-height:44px;padding:8px 16px;background:transparent;color:var(--text);font-size:14px}
+.text-action:hover{background:var(--surface)}
+.demo-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:16px 0;font-size:12px;color:var(--muted)}
+.demo-controls label{display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer}
+.demo-controls input{width:18px;height:18px;accent-color:var(--focus)}
+.live-messages{max-height:300px;overflow:auto;scrollbar-color:var(--muted) var(--canvas);padding:4px 8px 16px 4px}
+.live-status{min-height:20px;margin:8px 0 0;color:var(--muted);font-size:12px;line-height:20px}
+.library-intro p{max-width:70ch;color:var(--muted-light)}
+.library-rules{padding-left:20px;font-size:14px;line-height:22px;max-width:76ch}
+.library-rules li+li{margin-top:8px}
+@media(max-width:760px){.library{padding:28px 20px}.library .bubble{max-width:90%}}
+@media print{.specimen{break-inside:avoid}.live-messages{max-height:none}}
