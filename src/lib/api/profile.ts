@@ -8,6 +8,7 @@ import {
 
 type ProfileRequestOptions = {
   signal?: AbortSignal;
+  expectedUserId?: string;
   requestId?: string;
 };
 
@@ -17,6 +18,7 @@ export function getMyProfile(options: ProfileRequestOptions = {}): Promise<Profi
     method: 'GET',
     responseSchema: profileSchema,
     signal: options.signal,
+    expectedUserId: options.expectedUserId,
     requestId: options.requestId,
   });
 }
@@ -33,6 +35,7 @@ export function updateMyProfile(
     body,
     responseSchema: profileSchema,
     signal: options.signal,
+    expectedUserId: options.expectedUserId,
     requestId: options.requestId,
   });
 }
@@ -43,6 +46,7 @@ export function completeMyOnboarding(options: ProfileRequestOptions = {}): Promi
     method: 'POST',
     responseSchema: profileSchema,
     signal: options.signal,
+    expectedUserId: options.expectedUserId,
     requestId: options.requestId,
   });
 }

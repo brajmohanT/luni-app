@@ -115,3 +115,14 @@ The three react-native-svg resolution errors reported above came from sandbox fi
 - [ ] Implement companion initialization sequencing, profile gating, infinite history queries, and cache updates in the next hook milestone. Current list/detail screens remain transitional; accounts without a companion receive the server's missing-companion error until initialization is wired.
 
 Verification: all 36 tests, full TypeScript checking outside the sandbox, targeted ESLint, and diff whitespace checks passed. No live backend or native flow test was performed.
+
+## API v2 migration: query and mutation hooks (2026-09-26)
+
+- [x] Add useMyProfile, useUpdateMyProfile, and useCompleteMyOnboarding. Cache server-confirmed profiles, serialize profile mutations, cancel competing reads, and reject older profile versions when newer data is cached.
+- [x] Add companion initialization and infinite history hooks. Sequence profile read, completed-onboarding check, companion PUT, then history GET. Expose fetchNextPage/hasNextPage; flatten newest-first pages into chronological messages and deduplicate server message IDs without losing quotes.
+- [x] Invalidate/refetch the sending account's history after successful chat sends. Reuse clientRequestId as the chat correlation header; retain explicit, non-automatic mutation retries.
+- [x] Scope keys and query clients by account. Remount query consumers and clear the prior cache on sign-out/account change. Forward expectedUserId to the API client so delayed operations cannot use another account's access token.
+- [x] Keep temporary list/detail hook adapters for the existing screens. Incomplete onboarding surfaces ONBOARDING_REQUIRED; onboarding routes and pagination controls remain screen-migration work.
+- [x] Add scripts/check-query-hooks.cjs using the real QueryClient, mutation cache, and InfiniteQueryObserver with mocked API functions. Add transport account-guard tests to check-api-client.cjs.
+
+Verification: 49 tests passed across both scripts; full TypeScript and targeted ESLint passed outside the sandbox; diff whitespace checks passed. Tests cover API sequencing, onboarding gates/completion, cursor pagination, quote/ID retention, profile mutation serialization, account-specific invalidation, canceled reads, and session mismatch. No native account-switch or live backend flow test was performed. Retry-After timing/recovery UI and final routes remain later milestones.

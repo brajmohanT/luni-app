@@ -14,11 +14,12 @@ type ApiRequestOptions<T> = {
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT';
   body?: unknown;
   signal?: AbortSignal;
+  expectedUserId?: string;
   // Reuse this UUID when retrying the same logical request.
   requestId?: string;
 };
 
-async function getAccessToken() {
+async function getAccessToken(expectedUserId?: string) {
   const { data, error } = await supabase.auth.getSession();
 
   if (error) {
@@ -35,6 +36,12 @@ async function getAccessToken() {
       code: 'MISSING_SESSION',
       status: null,
       requestId: null,
+    });
+  }
+
+  if (expectedUserId && data.session.user.id !== expectedUserId) {
+    throw new ApiClientError('Your account changed. Please try again.', {
+      code: 'MISSING_SESSION', status: null, requestId: null,
     });
   }
 
@@ -121,9 +128,10 @@ export async function apiRequest<T>({
   method = 'GET',
   body,
   signal,
+  expectedUserId,
   requestId: sentRequestId = Crypto.randomUUID(),
 }: ApiRequestOptions<T>): Promise<T> {
-  const accessToken = await getAccessToken();
+  const accessToken = await getAccessToken(expectedUserId);
   const headers = getClientHeaders(accessToken, sentRequestId);
 
   if (body !== undefined) {

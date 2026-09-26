@@ -14,6 +14,7 @@ import {
 
 type ConversationRequestOptions = {
   signal?: AbortSignal;
+  expectedUserId?: string;
   requestId?: string;
 };
 
@@ -25,6 +26,7 @@ export function putCompanionConversation(
     method: 'PUT',
     responseSchema: companionConversationResponseSchema,
     signal: options.signal,
+    expectedUserId: options.expectedUserId,
     requestId: options.requestId,
   });
 }
@@ -44,6 +46,7 @@ export function getCompanionMessages(
     method: 'GET',
     responseSchema: companionMessagesResponseSchema,
     signal: options.signal,
+    expectedUserId: options.expectedUserId,
     requestId: options.requestId,
   });
 }
@@ -60,6 +63,7 @@ export function sendChatMessage(
     body,
     responseSchema: chatResponseSchema,
     signal: options.signal,
+    expectedUserId: options.expectedUserId,
     requestId: options.requestId,
   });
 }

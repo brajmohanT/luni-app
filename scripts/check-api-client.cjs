@@ -298,3 +298,14 @@ test('conversation functions validate responses and preserve API errors', async 
     }
   }
 });
+
+test('account-bound request refuses another account token before fetching', async () => {
+  const app = setup(ok, { data: { session: { access_token: 'other-token', user: { id: 'other' } } }, error: null });
+  await assert.rejects(app.apiRequest({ ...options, expectedUserId: 'original' }), error => error.code === 'MISSING_SESSION');
+  assert.equal(app.calls.length, 0);
+});
+test('account-bound request accepts the matching session', async () => {
+  const app = setup(ok, { data: { session: { access_token: 'test-token', user: { id: 'original' } } }, error: null });
+  await app.apiRequest({ ...options, expectedUserId: 'original' });
+  assert.equal(app.calls.length, 1);
+});
