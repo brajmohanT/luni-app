@@ -41,7 +41,7 @@ export default function NewChatScreen() {
         <Text style={styles.prompt}>What would you like to talk about?</Text>
       </View>
 
-      <ChatComposer
+      <ChatComposer {...composer}
         autoFocus
         draft={composer.draft}
         errorMessage={composer.errorMessage}

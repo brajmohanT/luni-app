@@ -149,7 +149,7 @@ export default function ConversationDetailScreen() {
         renderItem={({ item }) => <MessageBubble message={item} />}
       />
 
-      <ChatComposer
+      <ChatComposer {...composer}
         draft={composer.draft}
         errorMessage={composer.errorMessage}
         hasFailedSend={composer.hasFailedSend}

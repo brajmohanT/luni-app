@@ -126,3 +126,14 @@ Verification: all 36 tests, full TypeScript checking outside the sandbox, target
 - [x] Add scripts/check-query-hooks.cjs using the real QueryClient, mutation cache, and InfiniteQueryObserver with mocked API functions. Add transport account-guard tests to check-api-client.cjs.
 
 Verification: 49 tests passed across both scripts; full TypeScript and targeted ESLint passed outside the sandbox; diff whitespace checks passed. Tests cover API sequencing, onboarding gates/completion, cursor pagination, quote/ID retention, profile mutation serialization, account-specific invalidation, canceled reads, and session mismatch. No native account-switch or live backend flow test was performed. Retry-After timing/recovery UI and final routes remain later milestones.
+
+## API v2 migration: safe retry behavior (2026-09-26)
+
+- [x] Add an in-memory ChatSendController with immutable pending text/quote/ID, synchronous duplicate-tap guards, strict local validation, and confirmed-success cleanup.
+- [x] Classify transient, validation, quote, payload-mismatch, auth/verification, and onboarding failures. Retain uncertainty across later failures and avoid claiming an unconfirmed message was not saved.
+- [x] Respect Retry-After with a deadline and countdown, including foreground updates. Editing into a new send cannot bypass the remaining wait.
+- [x] Lock pending text/quotes; require explicit edit-as-new confirmation for uncertain sends. Remove unavailable quotes when editing and use a fresh ID for the new send.
+- [x] Add session/profile recovery checks and same-account password recovery using shared Button/TextField controls. Keep full onboarding navigation for screen migration.
+- [x] Wire current screens to recovery controls and update the chat-send-retry flow guide.
+
+Verification: all 63 tests across the API, query, and retry scripts passed, along with full TypeScript, targeted ESLint, and diff whitespace checks. The 14 new tests cover lost responses, identical replay payloads, repeated taps, deadlines, explicit editing, error classification, and composer action props. Native/device interaction and live auth tests remain pending. Pending sends do not yet survive composer unmount, account changes, or app restart; persistence remains deferred.
