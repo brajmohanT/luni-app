@@ -11,9 +11,11 @@ import { env } from '@/lib/config/env';
 type ApiRequestOptions<T> = {
   path: string;
   responseSchema: ZodType<T>;
-  method?: 'GET' | 'POST';
+  method?: 'GET' | 'POST' | 'PATCH' | 'PUT';
   body?: unknown;
   signal?: AbortSignal;
+  // Reuse this UUID when retrying the same logical request.
+  requestId?: string;
 };
 
 async function getAccessToken() {
@@ -39,14 +41,14 @@ async function getAccessToken() {
   return data.session.access_token;
 }
 
-function getClientHeaders(accessToken: string) {
+function getClientHeaders(accessToken: string, requestId: string) {
   const headers: Record<string, string> = {
     Accept: 'application/json',
     Authorization: `Bearer ${accessToken}`,
     'X-App-Version': Constants.nativeApplicationVersion ?? Constants.expoConfig?.version ?? 'unknown',
     'X-Platform': Platform.OS,
     'X-Platform-Version': String(Platform.Version),
-    'X-Request-Id': Crypto.randomUUID(),
+    'X-Request-Id': requestId,
   };
 
   if (Constants.nativeBuildVersion) {
@@ -60,8 +62,17 @@ function getUrl(path: string) {
   return `${env.apiUrl}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
-async function parseError(response: Response): Promise<ApiClientError> {
-  const requestId = response.headers.get('X-Request-Id');
+// API v2 defines Retry-After as a positive integer number of seconds.
+function parseRetryAfter(response: Response): number | null {
+  const value = response.headers.get('Retry-After')?.trim();
+  if (!value || !/^\d+$/.test(value)) return null;
+  const seconds = Number(value);
+  return Number.isSafeInteger(seconds) && seconds >= 1 ? seconds : null;
+}
+
+async function parseError(response: Response, sentRequestId: string): Promise<ApiClientError> {
+  const retryAfterSeconds = parseRetryAfter(response);
+  const requestId = response.headers.get('X-Request-Id') || sentRequestId;
   let payload: unknown;
 
   try {
@@ -71,6 +82,7 @@ async function parseError(response: Response): Promise<ApiClientError> {
       code: 'INVALID_RESPONSE',
       status: response.status,
       requestId,
+      retryAfterSeconds,
     });
   }
 
@@ -81,18 +93,25 @@ async function parseError(response: Response): Promise<ApiClientError> {
       code: 'INVALID_RESPONSE',
       status: response.status,
       requestId,
+      retryAfterSeconds,
     });
   }
 
-  return toApiClientError(result.data, response.status, requestId);
+  return toApiClientError(result.data, response.status, requestId, retryAfterSeconds);
 }
 
-function toApiClientError(error: ApiError, status: number, requestId: string | null) {
+function toApiClientError(
+  error: ApiError,
+  status: number,
+  requestId: string,
+  retryAfterSeconds: number | null,
+) {
   return new ApiClientError(error.message, {
     code: error.code,
     status,
     requestId,
     details: error.details,
+    retryAfterSeconds,
   });
 }
 
@@ -102,9 +121,10 @@ export async function apiRequest<T>({
   method = 'GET',
   body,
   signal,
+  requestId: sentRequestId = Crypto.randomUUID(),
 }: ApiRequestOptions<T>): Promise<T> {
   const accessToken = await getAccessToken();
-  const headers = getClientHeaders(accessToken);
+  const headers = getClientHeaders(accessToken, sentRequestId);
 
   if (body !== undefined) {
     headers['Content-Type'] = 'application/json';
@@ -123,16 +143,16 @@ export async function apiRequest<T>({
     throw new ApiClientError('Unable to reach the service. Check your connection and try again.', {
       code: 'NETWORK_ERROR',
       status: null,
-      requestId: null,
+      requestId: sentRequestId,
       cause: error,
     });
   }
 
   if (!response.ok) {
-    throw await parseError(response);
+    throw await parseError(response, sentRequestId);
   }
 
-  const requestId = response.headers.get('X-Request-Id');
+  const requestId = response.headers.get('X-Request-Id') || sentRequestId;
   let payload: unknown;
 
   try {
@@ -142,6 +162,7 @@ export async function apiRequest<T>({
       code: 'INVALID_RESPONSE',
       status: response.status,
       requestId,
+      retryAfterSeconds: parseRetryAfter(response),
       cause: error,
     });
   }
@@ -153,6 +174,7 @@ export async function apiRequest<T>({
       code: 'INVALID_RESPONSE',
       status: response.status,
       requestId,
+      retryAfterSeconds: parseRetryAfter(response),
     });
   }
 

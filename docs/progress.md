@@ -2,7 +2,7 @@
 
 Use this document to track Luni mobile delivery, blockers, and release gates.
 
-Last updated: 2026-09-23.
+Last updated: 2026-09-26.
 
 Status: shared UI foundations implemented; onboarding migration is next. The Expo application runs with TypeScript, Expo Router, TanStack Query, SecureStore, and SQLite. Authentication and non-streaming conversation screens are connected; migration of those screens to the approved design remains pending.
 
@@ -73,3 +73,31 @@ Next implementation pass: onboarding. Keep the development preview available dur
 
 - [ ] Add RevenueCat after paid-plan and support flows are ready.
 - [ ] Add notifications after the team defines consent timing, private payload rules, token handling, and deep-link fallback.
+
+## API v2 migration: types and validation (2026-09-26)
+
+- [x] Add profile/style, partial profile-update, companion initialization, paginated history, reply-target, and chat-result schemas and inferred types.
+- [x] Match v2 error codes; validate UUIDs, timestamps, name/message bounds, and pagination inputs. Reject empty profile updates and unknown request fields, including conversationId on chat sends.
+- [x] Remove conversation titles and stop the existing composer from including conversationId. Keep deprecated list/history exports temporarily for consumers awaiting endpoint migration.
+- [ ] Migrate endpoint functions, query hooks, retry behavior, routing, and onboarding/chat UI in the remaining milestones. The app is not yet end-to-end compatible with v2.
+
+Verification: 63 in-memory validation assertions passed, including comparison of error codes against OpenAPI. Targeted ESLint and git diff --check passed. Full TypeScript checking reported unresolved react-native-svg declarations in three unchanged design-system/preview files; no other TypeScript errors were reported. pnpm exec could not locate the tsc/eslint command shims, so checks used the installed Node entry points. No native flow test was performed for this schema-only step. The pre-existing OpenAPI working-tree change was preserved.
+
+## API v2 migration: request client (2026-09-26)
+
+- [x] Support PATCH and PUT alongside GET/POST; preserve bodyless calls without a JSON body or Content-Type.
+- [x] Accept a caller-provided requestId for X-Request-Id, with UUID generation when omitted. Retain the outgoing ID on network errors or responses without a server request ID.
+- [x] Expose retryAfterSeconds on ApiClientError. Parse positive integer seconds per OpenAPI; use null for missing or invalid values, including unsafe integers. Preserve metadata even when error JSON is malformed.
+- [x] Add scripts/check-api-client.cjs with mocked HTTP/session checks. Run with node --test scripts/check-api-client.cjs.
+- [ ] Wire stable IDs and retry delays into endpoint callers and the send lifecycle in later steps. The request client does not perform automatic retries.
+
+Verification: 19 mocked HTTP tests passed; targeted ESLint and diff whitespace checks passed. Full TypeScript checking still reports only the three unresolved react-native-svg declaration errors in unchanged design-system/preview files. No live backend or device flow test was performed in this step.
+
+## API v2 migration: profile API functions (2026-09-26)
+
+- [x] Add getMyProfile (GET /me), updateMyProfile (PATCH /me), and completeMyOnboarding (bodyless POST /me/onboarding/complete) in src/lib/api/profile.ts.
+- [x] Validate partial updates before sending, trim names, and validate all returned profiles. Forward optional request IDs and abort signals through the shared authenticated client.
+- [x] Add nine profile regression tests covering defaults, partial writes, invalid input, bodyless completion, response validation, request options, and onboarding conflict metadata.
+- [ ] Connect profile query/mutation hooks and onboarding screens in later steps.
+
+Verification: all 28 mocked HTTP tests and targeted ESLint passed. Full TypeScript checking still reports the same three unresolved react-native-svg declaration errors in unchanged files. No live API or device flow test was performed.

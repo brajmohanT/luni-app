@@ -6,7 +6,6 @@ import { isApiClientError } from '@/lib/api/errors';
 import type { ChatRequest, ChatResponse } from '@/lib/api/types';
 
 type UseChatComposerOptions = {
-  conversationId?: string;
   onSuccess(response: ChatResponse): void | Promise<void>;
 };
 
@@ -19,7 +18,7 @@ function getSendErrorMessage(error: unknown) {
 }
 
 // Manages one draft and its idempotent send lifecycle.
-export function useChatComposer({ conversationId, onSuccess }: UseChatComposerOptions) {
+export function useChatComposer({ onSuccess }: UseChatComposerOptions) {
   const sendMessage = useSendChatMessage();
   const [draft, setDraft] = useState('');
   const [pendingRequest, setPendingRequest] = useState<ChatRequest | null>(null);
@@ -52,14 +51,13 @@ export function useChatComposer({ conversationId, onSuccess }: UseChatComposerOp
     const request: ChatRequest = {
       message,
       clientRequestId: Crypto.randomUUID(),
-      ...(conversationId ? { conversationId } : {}),
     };
 
     setValidationError(null);
     setPendingRequest(request);
     sendMessage.reset();
     void send(request);
-  }, [conversationId, draft, send, sendMessage]);
+  }, [draft, send, sendMessage]);
 
   // Replays the identical request after a recoverable failure.
   const retrySend = useCallback(() => {

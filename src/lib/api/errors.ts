@@ -8,12 +8,14 @@ type ApiClientErrorOptions = {
   requestId: string | null;
   details?: ApiError['details'];
   cause?: unknown;
+  retryAfterSeconds?: number | null;
 };
 
 export class ApiClientError extends Error {
   readonly code: ClientErrorCode;
   readonly status: number | null;
   readonly requestId: string | null;
+  readonly retryAfterSeconds: number | null;
   readonly details?: ApiError['details'];
 
   constructor(message: string, options: ApiClientErrorOptions) {
@@ -23,6 +25,7 @@ export class ApiClientError extends Error {
     this.status = options.status;
     this.requestId = options.requestId;
     this.details = options.details;
+    this.retryAfterSeconds = options.retryAfterSeconds ?? null;
   }
 }
 

@@ -1,0 +1,216 @@
+/* global __dirname */
+// Run with: node --test scripts/check-api-client.cjs
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const { test } = require('node:test');
+const ts = require('typescript');
+const { z } = require('zod');
+
+const sentId = '11111111-1111-4111-8111-111111111111';
+const serverId = '22222222-2222-4222-8222-222222222222';
+function load(relativePath, dependencies, globals = {}) {
+  const filename = path.resolve(__dirname, '..', relativePath);
+  const source = ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
+  }).outputText;
+  const exports = {};
+  vm.runInNewContext(source, {
+    exports,
+    require(name) {
+      if (Object.hasOwn(dependencies, name)) return dependencies[name];
+      throw new Error(`Unexpected import: ${name}`);
+    },
+    ...globals,
+  }, { filename });
+  return exports;
+}
+const types = load('src/lib/api/types.ts', { zod: { z } });
+const errors = load('src/lib/api/errors.ts', {});
+function setup(respond, session = { data: { session: { access_token: 'test-token' } }, error: null }) {
+  const calls = [];
+  let generated = 0;
+  const { apiRequest } = load('src/lib/api/client.ts', {
+    'expo-constants': { nativeApplicationVersion: '1.0.0', nativeBuildVersion: '42' },
+    'expo-crypto': { randomUUID: () => { generated++; return sentId; } },
+    'react-native': { Platform: { OS: 'android', Version: 36 } },
+    '@/lib/api/errors': errors,
+    '@/lib/api/types': types,
+    '@/lib/auth/supabase': { supabase: { auth: { getSession: async () => session } } },
+    '@/lib/config/env': { env: { apiUrl: 'https://example.test' } },
+  }, { fetch: async (...args) => { calls.push(args); return respond(...args); } });
+  return { apiRequest, calls, generated: () => generated };
+}
+const options = { path: '/me', responseSchema: z.object({ ok: z.boolean() }) };
+const ok = () => Response.json({ ok: true });
+
+for (const method of ['GET', 'POST', 'PUT']) {
+  test(`${method} supports bodyless requests`, async () => {
+    const app = setup(ok);
+    const signal = new AbortController().signal;
+    assert.deepEqual(await app.apiRequest({ ...options, method, signal }), { ok: true });
+    const [url, request] = app.calls[0];
+    assert.equal(url, 'https://example.test/me');
+    assert.equal(request.method, method);
+    assert.equal(request.body, undefined);
+    assert.equal(request.headers['Content-Type'], undefined);
+    assert.equal(request.headers.Authorization, 'Bearer test-token');
+    assert.equal(request.headers['X-App-Version'], '1.0.0');
+    assert.equal(request.headers['X-App-Build'], '42');
+    assert.equal(request.headers['X-Platform'], 'android');
+    assert.equal(request.headers['X-Platform-Version'], '36');
+    assert.equal(request.headers['X-Request-Id'], sentId);
+    assert.equal(request.signal, signal);
+    assert.equal(app.generated(), 1);
+  });
+}
+test('PATCH serializes JSON and preserves an explicit ID across retries', async () => {
+  const app = setup(ok);
+  const input = { ...options, path: 'me', method: 'PATCH', body: { preferredName: 'Sam' }, requestId: serverId };
+  await app.apiRequest(input);
+  await app.apiRequest(input);
+  for (const [url, request] of app.calls) {
+    assert.equal(url, 'https://example.test/me');
+    assert.equal(request.method, 'PATCH');
+    assert.equal(request.body, '{"preferredName":"Sam"}');
+    assert.equal(request.headers['Content-Type'], 'application/json');
+    assert.equal(request.headers['X-Request-Id'], serverId);
+  }
+  assert.equal(app.generated(), 0);
+});
+for (const [header, expected] of [['3', 3], [null, null], ['0', null], ['-1', null], ['1.5', null], ['3junk', null], ['9007199254740992', null]]) {
+  test(`Retry-After ${header} yields ${expected}`, async () => {
+    const app = setup(() => Response.json({ code: 'CONVERSATION_BUSY', message: 'Busy' }, {
+      status: 409, headers: { 'X-Request-Id': serverId, ...(header === null ? {} : { 'Retry-After': header }) },
+    }));
+    await assert.rejects(app.apiRequest(options), error => {
+      assert.ok(error instanceof errors.ApiClientError);
+      assert.equal(error.code, 'CONVERSATION_BUSY');
+      assert.equal(error.status, 409);
+      assert.equal(error.requestId, serverId);
+      assert.equal(error.retryAfterSeconds, expected);
+      return true;
+    });
+    assert.equal(app.calls.length, 1); // The client does not auto-retry writes.
+  });
+}
+test('network errors retain the outgoing ID and cause', async () => {
+  const cause = new Error('offline');
+  const app = setup(() => { throw cause; });
+  await assert.rejects(app.apiRequest(options), error => {
+    assert.equal(error.code, 'NETWORK_ERROR');
+    assert.equal(error.requestId, sentId);
+    assert.equal(error.retryAfterSeconds, null);
+    assert.equal(error.cause, cause);
+    return true;
+  });
+});
+for (const [body, status, code] of [
+  ['not json', 503, 'INVALID_RESPONSE'],
+  ['{}', 409, 'INVALID_RESPONSE'],
+  ['{"code":"CHAT_REQUEST_IN_PROGRESS","message":"Wait"}', 409, 'CHAT_REQUEST_IN_PROGRESS'],
+  ['not json', 200, 'INVALID_RESPONSE'],
+  ['{}', 200, 'INVALID_RESPONSE'],
+]) {
+  test(`response ${status} ${body} keeps fallback ID and retry metadata`, async () => {
+    const app = setup(() => new Response(body, { status, headers: { 'Retry-After': '3' } }));
+    await assert.rejects(app.apiRequest(options), error => {
+      assert.equal(error.code, code);
+      assert.equal(error.requestId, sentId);
+      assert.equal(error.retryAfterSeconds, 3);
+      return true;
+    });
+  });
+}
+test('missing session prevents the request', async () => {
+  const app = setup(ok, { data: { session: null }, error: null });
+  await assert.rejects(app.apiRequest(options), error => error.code === 'MISSING_SESSION');
+  assert.equal(app.calls.length, 0);
+});
+test('validation error details survive parsing', async () => {
+  const details = [{ path: 'preferredName', message: 'Required' }];
+  const app = setup(() => Response.json({ code: 'VALIDATION_ERROR', message: 'Invalid', details }, { status: 400 }));
+  await assert.rejects(app.apiRequest(options), error => {
+    assert.deepEqual(error.details, details);
+    return true;
+  });
+});
+
+const firstProfile = {
+  email: 'sam@example.com', preferredName: null, conversationStyle: 'warm_balanced',
+  onboardingCompletedAt: null, profileVersion: 0,
+};
+function setupProfiles(respond) {
+  const app = setup(respond);
+  const profiles = load('src/lib/api/profile.ts', {
+    '@/lib/api/client': { apiRequest: app.apiRequest },
+    '@/lib/api/types': types,
+  });
+  return { ...app, ...profiles };
+}
+test('profile GET returns first-account defaults', async () => {
+  const app = setupProfiles(() => Response.json(firstProfile));
+  assert.deepEqual(await app.getMyProfile(), firstProfile);
+  assert.equal(app.calls[0][0], 'https://example.test/me');
+  assert.equal(app.calls[0][1].method, 'GET');
+  assert.equal(app.calls[0][1].body, undefined);
+});
+for (const input of [{ preferredName: ' Sam ' }, { conversationStyle: 'direct_thoughtful' }, { preferredName: 'Sam', conversationStyle: 'gentle_reassuring' }]) {
+  test(`profile PATCH sends only supplied fields: ${JSON.stringify(input)}`, async () => {
+    const saved = { ...firstProfile, preferredName: 'Sam', ...input, profileVersion: 1 };
+    const app = setupProfiles(() => Response.json(saved));
+    assert.deepEqual(await app.updateMyProfile(input), saved);
+    const [url, request] = app.calls[0];
+    assert.equal(url, 'https://example.test/me');
+    assert.equal(request.method, 'PATCH');
+    assert.deepEqual(JSON.parse(request.body), { ...input, ...(input.preferredName ? { preferredName: input.preferredName.trim() } : {}) });
+  });
+}
+test('invalid profile updates never reach the network', () => {
+  const app = setupProfiles(ok);
+  for (const input of [{}, { preferredName: ' ' }, { conversationStyle: 'unknown' }, { preferredName: 'Sam', profileVersion: 3 }]) {
+    assert.throws(() => app.updateMyProfile(input), error => error instanceof z.ZodError);
+  }
+  assert.equal(app.calls.length, 0);
+});
+test('completion is bodyless and returns the server completion timestamp', async () => {
+  const saved = { ...firstProfile, preferredName: 'Sam', onboardingCompletedAt: '2026-09-26T12:00:00Z', profileVersion: 2 };
+  const app = setupProfiles(() => Response.json(saved));
+  assert.deepEqual(await app.completeMyOnboarding(), saved);
+  const [url, request] = app.calls[0];
+  assert.equal(url, 'https://example.test/me/onboarding/complete');
+  assert.equal(request.method, 'POST');
+  assert.equal(request.body, undefined);
+  assert.equal(request.headers['Content-Type'], undefined);
+});
+test('all profile functions forward request IDs and cancellation signals', async () => {
+  const app = setupProfiles(() => Response.json(firstProfile));
+  const signal = new AbortController().signal;
+  const opts = { requestId: serverId, signal };
+  await app.getMyProfile(opts);
+  await app.updateMyProfile({ preferredName: 'Sam' }, opts);
+  await app.completeMyOnboarding(opts);
+  for (const [, request] of app.calls) {
+    assert.equal(request.headers['X-Request-Id'], serverId);
+    assert.equal(request.signal, signal);
+  }
+  assert.equal(app.generated(), 0);
+});
+test('all profile functions reject malformed server profiles', async () => {
+  const app = setupProfiles(() => Response.json({ email: 'sam@example.com' }));
+  for (const run of [() => app.getMyProfile(), () => app.updateMyProfile({ preferredName: 'Sam' }), () => app.completeMyOnboarding()]) {
+    await assert.rejects(run(), error => error.code === 'INVALID_RESPONSE');
+  }
+});
+test('completion preserves incomplete-profile conflict metadata', async () => {
+  const app = setupProfiles(() => Response.json({ code: 'ONBOARDING_PROFILE_INCOMPLETE', message: 'Save a name first.' }, {
+    status: 409, headers: { 'X-Request-Id': serverId },
+  }));
+  await assert.rejects(app.completeMyOnboarding(), error => {
+    assert.equal(error.code, 'ONBOARDING_PROFILE_INCOMPLETE');
+    assert.equal(error.status, 409);
+    assert.equal(error.requestId, serverId);
+    return true;
+  });
+});

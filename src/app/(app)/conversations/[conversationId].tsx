@@ -58,7 +58,6 @@ export default function ConversationDetailScreen() {
     await refetch();
   }, [refetch]);
   const composer = useChatComposer({
-    conversationId,
     onSuccess: refreshAfterSend,
   });
 
@@ -131,7 +130,7 @@ export default function ConversationDetailScreen() {
           <Text style={styles.backButtonText}>Back</Text>
         </Pressable>
         <Text numberOfLines={1} style={styles.headerTitle}>
-          {data.conversation.title ?? 'Conversation'}
+          Conversation
         </Text>
         <View style={styles.headerSpacer} />
       </View>

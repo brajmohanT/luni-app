@@ -31,7 +31,7 @@ function ConversationRow({ conversation }: { conversation: Conversation }) {
 
   return (
     <Pressable
-      accessibilityLabel={`Open ${conversation.title ?? 'conversation'}`}
+      accessibilityLabel="Open conversation"
       accessibilityRole="button"
       onPress={() =>
         router.push({
@@ -41,7 +41,7 @@ function ConversationRow({ conversation }: { conversation: Conversation }) {
       }
       style={({ pressed }) => [styles.conversationRow, pressed && styles.conversationRowPressed]}>
       <Text numberOfLines={1} style={styles.conversationTitle}>
-        {conversation.title ?? 'Conversation'}
+        Conversation
       </Text>
       <Text style={styles.conversationDate}>{formatUpdatedAt(conversation.updatedAt)}</Text>
     </Pressable>

@@ -1,9 +1,9 @@
 openapi: 3.1.0
 info:
   title: Luni API
-  version: 1.0.0
+  version: 2.0.0
   description: |
-    API contract for the Luni mobile application.
+    API contract for the forced-update Luni mobile application. This version uses one canonical companion conversation per user.
     Any unmatched route returns 404 ROUTE_NOT_FOUND with the ApiError schema.
 servers:
   - url: http://localhost:8080
@@ -55,10 +55,10 @@ paths:
                 $ref: '#/components/schemas/Ready'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
-  /conversations:
+  /me:
     get:
-      operationId: listConversations
-      summary: List the authenticated user's recent conversations
+      operationId: getMyProfile
+      summary: Get the authenticated user's profile and onboarding state
       parameters:
         - $ref: '#/components/parameters/RequestId'
         - $ref: '#/components/parameters/AppVersion'
@@ -67,20 +67,14 @@ paths:
         - $ref: '#/components/parameters/PlatformVersion'
       responses:
         '200':
-          description: Up to 50 conversations, newest first
+          description: Stored profile or defaults for a first-time account
           headers:
             X-Request-Id:
               $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
-                type: object
-                required: [conversations]
-                properties:
-                  conversations:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Conversation'
+                $ref: '#/components/schemas/Profile'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -89,12 +83,48 @@ paths:
           $ref: '#/components/responses/InternalError'
         '503':
           $ref: '#/components/responses/ServiceDraining'
-  /conversations/{conversationId}/messages:
-    get:
-      operationId: getConversationMessages
-      summary: Load the authenticated user's conversation and recent messages
+    patch:
+      operationId: updateMyProfile
+      summary: Create or update the authenticated user's profile
       parameters:
-        - $ref: '#/components/parameters/ConversationId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/AppVersion'
+        - $ref: '#/components/parameters/AppBuild'
+        - $ref: '#/components/parameters/Platform'
+        - $ref: '#/components/parameters/PlatformVersion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Complete updated profile
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/EmailNotConfirmed'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceDraining'
+  /me/onboarding/complete:
+    post:
+      operationId: completeMyOnboarding
+      summary: Mark onboarding complete after the preferred name is saved
+      parameters:
         - $ref: '#/components/parameters/RequestId'
         - $ref: '#/components/parameters/AppVersion'
         - $ref: '#/components/parameters/AppBuild'
@@ -102,30 +132,84 @@ paths:
         - $ref: '#/components/parameters/PlatformVersion'
       responses:
         '200':
-          description: Up to 100 messages in chronological order
+          description: Complete profile with the original or newly assigned completion time
           headers:
             X-Request-Id:
               $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
-                type: object
-                required: [conversation, messages]
-                properties:
-                  conversation:
-                    $ref: '#/components/schemas/Conversation'
-                  messages:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Message'
-        '400':
-          $ref: '#/components/responses/ValidationError'
+                $ref: '#/components/schemas/Profile'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/EmailNotConfirmed'
+        '409':
+          $ref: '#/components/responses/OnboardingProfileIncomplete'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceDraining'
+  /conversations/companion:
+    put:
+      operationId: putCompanionConversation
+      summary: Create or return the authenticated user's companion conversation
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/AppVersion'
+        - $ref: '#/components/parameters/AppBuild'
+        - $ref: '#/components/parameters/Platform'
+        - $ref: '#/components/parameters/PlatformVersion'
+      responses:
+        '200':
+          description: Canonical companion conversation
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanionConversationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/EmailNotConfirmed'
+        '409':
+          $ref: '#/components/responses/OnboardingRequired'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceDraining'
+  /conversations/companion/messages:
+    get:
+      operationId: getCompanionMessages
+      summary: Load the authenticated user's companion conversation and recent messages
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/AppVersion'
+        - $ref: '#/components/parameters/AppBuild'
+        - $ref: '#/components/parameters/Platform'
+        - $ref: '#/components/parameters/PlatformVersion'
+        - $ref: '#/components/parameters/MessagePageLimit'
+        - $ref: '#/components/parameters/MessageCursor'
+      responses:
+        '200':
+          description: One page of messages in chronological order, starting with the newest page
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanionMessagesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/EmailNotConfirmed'
+        '400':
+          $ref: '#/components/responses/ValidationError'
         '404':
-          $ref: '#/components/responses/ConversationNotFound'
+          $ref: '#/components/responses/CompanionConversationNotFound'
         '500':
           $ref: '#/components/responses/InternalError'
         '503':
@@ -163,7 +247,7 @@ paths:
         '403':
           $ref: '#/components/responses/EmailNotConfirmed'
         '404':
-          $ref: '#/components/responses/ConversationNotFound'
+          $ref: '#/components/responses/ChatResourceNotFound'
         '409':
           $ref: '#/components/responses/ChatConflict'
         '413':
@@ -185,6 +269,11 @@ components:
       schema:
         type: string
         format: uuid
+    RetryAfter:
+      description: Seconds to wait before retrying a temporarily blocked chat request.
+      schema:
+        type: integer
+        minimum: 1
   parameters:
     RequestId:
       name: X-Request-Id
@@ -229,13 +318,25 @@ components:
         type: string
         minLength: 1
         examples: ['15', '18.3']
-    ConversationId:
-      name: conversationId
-      in: path
-      required: true
+    MessagePageLimit:
+      name: limit
+      in: query
+      required: false
+      description: Number of messages to return. Defaults to 50.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
+    MessageCursor:
+      name: cursor
+      in: query
+      required: false
+      description: Opaque cursor returned by the previous page. Requests messages older than that page.
       schema:
         type: string
-        format: uuid
+        minLength: 1
+        maxLength: 512
   responses:
     Unauthorized:
       description: Missing, invalid, or expired bearer token
@@ -257,15 +358,26 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/EmailNotConfirmedError'
-    ConversationNotFound:
-      description: The conversation does not exist or does not belong to the authenticated user
+    ChatResourceNotFound:
+      description: A stored retry conversation or requested reply target was not found
       headers:
         X-Request-Id:
           $ref: '#/components/headers/RequestId'
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ConversationNotFoundError'
+            oneOf:
+              - $ref: '#/components/schemas/ConversationNotFoundError'
+              - $ref: '#/components/schemas/ReplyTargetNotFoundError'
+    CompanionConversationNotFound:
+      description: The authenticated user has no companion conversation
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CompanionConversationNotFoundError'
     ValidationError:
       description: Request body or route parameter failed validation
       headers:
@@ -287,16 +399,38 @@ components:
               - $ref: '#/components/schemas/InvalidJsonError'
               - $ref: '#/components/schemas/ValidationError'
     ChatConflict:
-      description: A duplicate chat request or another message in the conversation is processing
+      description: Onboarding is incomplete, a request ID payload differs, a duplicate request is processing, or the companion conversation is busy. Retry-After is present only for CHAT_REQUEST_IN_PROGRESS and CONVERSATION_BUSY.
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/ChatRequestInProgressError'
+              - $ref: '#/components/schemas/ChatRequestPayloadMismatchError'
+              - $ref: '#/components/schemas/ConversationBusyError'
+              - $ref: '#/components/schemas/OnboardingRequiredError'
+    OnboardingRequired:
+      description: The user must complete onboarding before creating a companion conversation
       headers:
         X-Request-Id:
           $ref: '#/components/headers/RequestId'
       content:
         application/json:
           schema:
-            oneOf:
-              - $ref: '#/components/schemas/ChatRequestInProgressError'
-              - $ref: '#/components/schemas/ConversationBusyError'
+            $ref: '#/components/schemas/OnboardingRequiredError'
+    OnboardingProfileIncomplete:
+      description: The user must save a preferred name before completing onboarding
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OnboardingProfileIncompleteError'
     PayloadTooLarge:
       description: JSON request body exceeds 16 KB
       headers:
@@ -334,25 +468,112 @@ components:
           schema:
             $ref: '#/components/schemas/InternalError'
   schemas:
+    ConversationStyle:
+      type: string
+      description: Selects the server-owned tone instructions used for future companion replies.
+      enum:
+        - warm_balanced
+        - gentle_reassuring
+        - playful_casual
+        - direct_thoughtful
+    Profile:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+        - preferredName
+        - conversationStyle
+        - onboardingCompletedAt
+        - profileVersion
+      properties:
+        email:
+          type: string
+          format: email
+        preferredName:
+          type: [string, 'null']
+          minLength: 1
+          maxLength: 40
+          description: User-provided profile data that the companion may use when addressing the user.
+        conversationStyle:
+          $ref: '#/components/schemas/ConversationStyle'
+        onboardingCompletedAt:
+          type: [string, 'null']
+          format: date-time
+        profileVersion:
+          type: integer
+          minimum: 0
+          description: Zero identifies a first-time account with no application user row.
+    UpdateProfileRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        preferredName:
+          type: string
+          minLength: 1
+          maxLength: 40
+          description: The server trims whitespace before validating and saving this value.
+        conversationStyle:
+          $ref: '#/components/schemas/ConversationStyle'
     Conversation:
       type: object
-      required: [id, title, createdAt, updatedAt]
+      additionalProperties: false
+      required: [id, createdAt, updatedAt]
       properties:
         id:
           type: string
           format: uuid
-        title:
-          type: [string, 'null']
-          description: Always null in the current API. The backend will provide titles in a future contract revision.
         createdAt:
           type: string
           format: date-time
         updatedAt:
           type: string
           format: date-time
+    CompanionConversationResponse:
+      type: object
+      additionalProperties: false
+      required: [conversation, created]
+      properties:
+        conversation:
+          $ref: '#/components/schemas/Conversation'
+        created:
+          type: boolean
+          description: True only when this request created the conversation and its greeting.
+    CompanionMessagesResponse:
+      type: object
+      additionalProperties: false
+      required: [conversation, messages, nextCursor, hasMore]
+      properties:
+        conversation:
+          $ref: '#/components/schemas/Conversation'
+        messages:
+          type: array
+          description: Messages in chronological order within this page.
+          items:
+            $ref: '#/components/schemas/Message'
+        nextCursor:
+          type: [string, 'null']
+          description: Send this value to load the next older page. Null when no older messages remain.
+        hasMore:
+          type: boolean
+          description: True when an older page is available.
+    ReplyTarget:
+      type: object
+      additionalProperties: false
+      required: [id, role, content]
+      properties:
+        id:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [assistant]
+        content:
+          type: string
     Message:
       type: object
-      required: [id, role, content, createdAt]
+      additionalProperties: false
+      required: [id, role, content, replyToMessageId, replyToMessage, createdAt]
       properties:
         id:
           type: string
@@ -362,6 +583,13 @@ components:
           enum: [user, assistant, system]
         content:
           type: string
+        replyToMessageId:
+          type: [string, 'null']
+          format: uuid
+        replyToMessage:
+          oneOf:
+            - $ref: '#/components/schemas/ReplyTarget'
+            - type: 'null'
         createdAt:
           type: string
           format: date-time
@@ -379,21 +607,42 @@ components:
           type: string
           format: uuid
           description: Generate one UUID per user send. Reuse it only to retry that same send.
-        conversationId:
+        replyToMessageId:
           type: string
           format: uuid
-          description: Omit to create a new conversation.
+          description: Assistant message in the canonical conversation that this message replies to.
     ChatResponse:
       type: object
-      required: [reply, responseId, conversationId]
+      additionalProperties: false
+      required:
+        - reply
+        - responseId
+        - conversationId
+        - userMessageId
+        - assistantMessageId
+        - userMessageCreatedAt
+        - assistantMessageCreatedAt
       properties:
         reply:
           type: string
         responseId:
           type: [string, 'null']
+          description: OpenAI provider response ID, not a persisted message ID.
         conversationId:
           type: string
           format: uuid
+        userMessageId:
+          type: string
+          format: uuid
+        assistantMessageId:
+          type: string
+          format: uuid
+        userMessageCreatedAt:
+          type: string
+          format: date-time
+        assistantMessageCreatedAt:
+          type: string
+          format: date-time
     ApiError:
       type: object
       required: [code, message]
@@ -409,7 +658,12 @@ components:
             - PAYLOAD_TOO_LARGE
             - CONVERSATION_NOT_FOUND
             - CHAT_REQUEST_IN_PROGRESS
+            - CHAT_REQUEST_PAYLOAD_MISMATCH
             - CONVERSATION_BUSY
+            - COMPANION_CONVERSATION_NOT_FOUND
+            - ONBOARDING_PROFILE_INCOMPLETE
+            - ONBOARDING_REQUIRED
+            - REPLY_TARGET_NOT_FOUND
             - SERVICE_DRAINING
             - SERVICE_UNAVAILABLE
             - ROUTE_NOT_FOUND
@@ -456,6 +710,20 @@ components:
           properties:
             code:
               const: CONVERSATION_NOT_FOUND
+    CompanionConversationNotFoundError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              const: COMPANION_CONVERSATION_NOT_FOUND
+    ReplyTargetNotFoundError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              const: REPLY_TARGET_NOT_FOUND
     ValidationError:
       allOf:
         - $ref: '#/components/schemas/ApiError'
@@ -485,6 +753,13 @@ components:
           properties:
             code:
               const: CHAT_REQUEST_IN_PROGRESS
+    ChatRequestPayloadMismatchError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              const: CHAT_REQUEST_PAYLOAD_MISMATCH
     ConversationBusyError:
       allOf:
         - $ref: '#/components/schemas/ApiError'
@@ -492,6 +767,20 @@ components:
           properties:
             code:
               const: CONVERSATION_BUSY
+    OnboardingRequiredError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              const: ONBOARDING_REQUIRED
+    OnboardingProfileIncompleteError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              const: ONBOARDING_PROFILE_INCOMPLETE
     ServiceDrainingError:
       allOf:
         - $ref: '#/components/schemas/ApiError'
