@@ -1,10 +1,13 @@
-// https://docs.expo.dev/guides/using-eslint/
 const { defineConfig } = require('eslint/config');
-const expoConfig = require("eslint-config-expo/flat");
+const expoConfig = require('eslint-config-expo/flat');
 
 module.exports = defineConfig([
+  {
+    ignores: ['.expo/**', 'dist/**', 'web-build/**', 'android/**', 'ios/**', 'docs/design/**'],
+  },
   expoConfig,
   {
-    ignores: ["dist/*"],
-  }
+    files: ['scripts/check-brand.cjs', 'scripts/check-controls.cjs'],
+    languageOptions: { globals: { __dirname: 'readonly' } },
+  },
 ]);

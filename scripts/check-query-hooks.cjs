@@ -168,3 +168,14 @@ test('send failure is not automatically retried', async () => {
   assert.equal(app.calls.filter(x => Array.isArray(x) && x[0] === 'send').length, 1);
   app.client.clear();
 });
+
+test('history works with the actual React Native AbortController polyfill', async () => {
+  const original = global.AbortController;
+  global.AbortController = require('abort-controller/dist/abort-controller').AbortController;
+  const app = setup();
+  try {
+    const data = await app.client.fetchInfiniteQuery(app.companionMessagesQueryOptions(app.client, 'a'));
+    assert.equal(data.pages[0].messages[0].id, 'greeting');
+    assert.deepEqual(app.calls, ['profile', 'put', ['messages', undefined]]);
+  } finally { app.client.clear(); global.AbortController = original; }
+});

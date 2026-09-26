@@ -1,5 +1,5 @@
 import {
-  infiniteQueryOptions, mutationOptions, queryOptions,
+  CancelledError, infiniteQueryOptions, mutationOptions, queryOptions,
   type InfiniteData, type QueryClient,
 } from '@tanstack/react-query';
 import { getCompanionMessages, putCompanionConversation, sendChatMessage } from '@/lib/api/conversations';
@@ -22,7 +22,7 @@ export function companionQueryOptions(client: QueryClient, userId: string | unde
     queryFn: async ({ signal }) => {
       requireAccount(userId);
       const profile = await client.fetchQuery(profileQueryOptions(userId));
-      signal.throwIfAborted();
+      if (signal.aborted) throw new CancelledError({ revert: true });
       if (!profile.onboardingCompletedAt) {
         throw new ApiClientError('Complete onboarding to start your conversation.', {
           code: 'ONBOARDING_REQUIRED', status: 409, requestId: null,
@@ -42,7 +42,7 @@ export function companionMessagesQueryOptions(client: QueryClient, userId: strin
     queryFn: async ({ pageParam, signal }) => {
       requireAccount(userId);
       await client.fetchQuery(companionQueryOptions(client, userId));
-      signal.throwIfAborted();
+      if (signal.aborted) throw new CancelledError({ revert: true });
       return getCompanionMessages({ limit: 50, cursor: pageParam }, { signal, expectedUserId: userId });
     },
     getNextPageParam: (lastPage) =>

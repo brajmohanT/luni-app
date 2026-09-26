@@ -137,3 +137,13 @@ Verification: 49 tests passed across both scripts; full TypeScript and targeted 
 - [x] Wire current screens to recovery controls and update the chat-send-retry flow guide.
 
 Verification: all 63 tests across the API, query, and retry scripts passed, along with full TypeScript, targeted ESLint, and diff whitespace checks. The 14 new tests cover lost responses, identical replay payloads, repeated taps, deadlines, explicit editing, error classification, and composer action props. Native/device interaction and live auth tests remain pending. Pending sends do not yet survive composer unmount, account changes, or app restart; persistence remains deferred.
+
+## API v2 migration: foundation verification (2026-09-26)
+
+Local verification passed; live API and Android verification remain incomplete.
+
+- [x] Run 66 regression tests, full TypeScript, full-project ESLint with zero warnings, brand checks, and rendered light/dark control checks.
+- [x] Verify matching OpenAPI hashes, v2 endpoint usage, rejected conversationId chat input, and development-only preview guards.
+- [x] Fix native AbortSignal incompatibility and static Expo environment references; add regressions against installed native/Expo implementations.
+- [x] Fix lint scope and add the repeatable, fail-fast pnpm verify:foundation command.
+
