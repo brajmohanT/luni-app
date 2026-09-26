@@ -214,3 +214,87 @@ test('completion preserves incomplete-profile conflict metadata', async () => {
     return true;
   });
 });
+
+const conversation = { id: sentId, createdAt: '2026-09-26T12:00:00Z', updatedAt: '2026-09-26T12:00:00Z' };
+const history = { conversation, messages: [], nextCursor: null, hasMore: false };
+const chatResult = { reply: 'Hello', responseId: null, conversationId: sentId, userMessageId: sentId, assistantMessageId: serverId, userMessageCreatedAt: conversation.createdAt, assistantMessageCreatedAt: conversation.createdAt };
+function setupConversations(respond) {
+  const app = setup(respond);
+  return { ...app, ...load('src/lib/api/conversations.ts', {
+    '@/lib/api/client': { apiRequest: app.apiRequest }, '@/lib/api/types': types,
+  }) };
+}
+test('companion PUT is bodyless and preserves created status', async () => {
+  for (const created of [true, false]) {
+    const app = setupConversations(() => Response.json({ conversation, created }));
+    assert.deepEqual(await app.putCompanionConversation(), { conversation, created });
+    const [url, request] = app.calls[0];
+    assert.equal(url, 'https://example.test/conversations/companion');
+    assert.equal(request.method, 'PUT');
+    assert.equal(request.body, undefined);
+    assert.equal(request.headers['Content-Type'], undefined);
+  }
+});
+test('history GET omits unspecified pagination parameters', async () => {
+  const app = setupConversations(() => Response.json(history));
+  assert.deepEqual(await app.getCompanionMessages(), history);
+  assert.equal(app.calls[0][0], 'https://example.test/conversations/companion/messages');
+  assert.equal(app.calls[0][1].method, 'GET');
+});
+test('history preserves opaque cursors and quoted server messages', async () => {
+  const cursor = 'a+/=?& #';
+  const quote = { id: serverId, role: 'assistant', content: 'Saved greeting' };
+  const page = { ...history, messages: [{ id: sentId, role: 'user', content: 'Hi', replyToMessageId: serverId, replyToMessage: quote, createdAt: conversation.createdAt }], nextCursor: cursor, hasMore: true };
+  const app = setupConversations(() => Response.json(page));
+  assert.deepEqual(await app.getCompanionMessages({ limit: 25, cursor }), page);
+  const url = new URL(app.calls[0][0]);
+  assert.equal(url.searchParams.get('limit'), '25');
+  assert.equal(url.searchParams.get('cursor'), cursor);
+  assert.equal(app.calls[0][1].body, undefined);
+});
+test('invalid history query is rejected before fetching', () => {
+  const app = setupConversations(ok);
+  for (const query of [{ limit: 0 }, { limit: 101 }, { cursor: '' }, { conversationId: sentId }]) {
+    assert.throws(() => app.getCompanionMessages(query), error => error instanceof z.ZodError);
+  }
+  assert.equal(app.calls.length, 0);
+});
+test('chat sends v2 payload and keeps request identity on replay', async () => {
+  const app = setupConversations(() => Response.json(chatResult));
+  const signal = new AbortController().signal;
+  const input = { message: ' Hi ', clientRequestId: sentId, replyToMessageId: serverId };
+  for (let attempt = 0; attempt < 2; attempt++) {
+    assert.deepEqual(await app.sendChatMessage(input, { requestId: serverId, signal }), chatResult);
+  }
+  for (const [url, request] of app.calls) {
+    assert.equal(url, 'https://example.test/chat');
+    assert.equal(request.method, 'POST');
+    assert.deepEqual(JSON.parse(request.body), { ...input, message: 'Hi' });
+    assert.equal(request.headers['X-Request-Id'], serverId);
+    assert.equal(request.signal, signal);
+  }
+});
+test('chat rejects legacy conversation IDs before fetching', () => {
+  const app = setupConversations(ok);
+  assert.throws(() => app.sendChatMessage({ message: 'Hi', clientRequestId: sentId, conversationId: sentId }), error => error instanceof z.ZodError);
+  assert.equal(app.calls.length, 0);
+});
+test('companion and history forward caller options', async () => {
+  const app = setupConversations(url => Response.json(url.endsWith('/messages') ? history : { conversation, created: false }));
+  const signal = new AbortController().signal;
+  const opts = { requestId: serverId, signal };
+  await app.putCompanionConversation(opts);
+  await app.getCompanionMessages({}, opts);
+  for (const [, request] of app.calls) {
+    assert.equal(request.headers['X-Request-Id'], serverId);
+    assert.equal(request.signal, signal);
+  }
+});
+test('conversation functions validate responses and preserve API errors', async () => {
+  for (const result of ['invalid', 'error']) {
+    const app = setupConversations(() => result === 'invalid' ? Response.json({}) : Response.json({ code: 'ONBOARDING_REQUIRED', message: 'Complete onboarding.' }, { status: 409 }));
+    for (const run of [() => app.putCompanionConversation(), () => app.getCompanionMessages(), () => app.sendChatMessage({ message: 'Hi', clientRequestId: sentId })]) {
+      await assert.rejects(run(), error => error.code === (result === 'invalid' ? 'INVALID_RESPONSE' : 'ONBOARDING_REQUIRED'));
+    }
+  }
+});

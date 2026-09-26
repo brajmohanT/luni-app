@@ -101,3 +101,17 @@ Verification: 19 mocked HTTP tests passed; targeted ESLint and diff whitespace c
 - [ ] Connect profile query/mutation hooks and onboarding screens in later steps.
 
 Verification: all 28 mocked HTTP tests and targeted ESLint passed. Full TypeScript checking still reports the same three unresolved react-native-svg declaration errors in unchanged files. No live API or device flow test was performed.
+
+## TypeScript verification correction (2026-09-26)
+
+The three react-native-svg resolution errors reported above came from sandbox file-access restrictions, not missing declarations or application code. Reading node_modules/react-native-svg/package.json inside the sandbox returned Access denied. Outside the sandbox, the manifest correctly declares lib/typescript/index.d.ts, and node node_modules/typescript/bin/tsc --noEmit passes with exit code 0. No dependency reinstall, type shim, or tsconfig change is needed. Run future TypeScript checks with sufficient read access to the installed package.
+
+## API v2 migration: conversation API functions (2026-09-26)
+
+- [x] Replace list and ID-based history functions with bodyless putCompanionConversation and paginated getCompanionMessages. Validate pagination inputs and encode opaque cursors.
+- [x] Update sendChatMessage to accept optional request ID/cancellation options while validating the strict v2 message/clientRequestId/replyToMessageId payload and persisted result IDs.
+- [x] Remove obsolete list/history schema aliases and types. Adapt existing hooks to read companion history, with a temporary single-conversation list adapter until routing migration. No removed conversation endpoints remain in the API functions.
+- [x] Add eight conversation API regression tests; the combined mocked HTTP suite now has 36 passing tests.
+- [ ] Implement companion initialization sequencing, profile gating, infinite history queries, and cache updates in the next hook milestone. Current list/detail screens remain transitional; accounts without a companion receive the server's missing-companion error until initialization is wired.
+
+Verification: all 36 tests, full TypeScript checking outside the sandbox, targeted ESLint, and diff whitespace checks passed. No live backend or native flow test was performed.

@@ -2,26 +2,56 @@ import { apiRequest } from '@/lib/api/client';
 import {
   chatRequestSchema,
   chatResponseSchema,
-  conversationMessagesResponseSchema,
-  listConversationsResponseSchema,
+  companionConversationResponseSchema,
+  companionMessagesQuerySchema,
+  companionMessagesResponseSchema,
   type ChatRequest,
+  type ChatResponse,
+  type CompanionConversationResponse,
+  type CompanionMessagesQuery,
+  type CompanionMessagesResponse,
 } from '@/lib/api/types';
 
-export function listConversations() {
+type ConversationRequestOptions = {
+  signal?: AbortSignal;
+  requestId?: string;
+};
+
+export function putCompanionConversation(
+  options: ConversationRequestOptions = {},
+): Promise<CompanionConversationResponse> {
   return apiRequest({
-    path: '/conversations',
-    responseSchema: listConversationsResponseSchema,
+    path: '/conversations/companion',
+    method: 'PUT',
+    responseSchema: companionConversationResponseSchema,
+    signal: options.signal,
+    requestId: options.requestId,
   });
 }
 
-export function getConversationMessages(conversationId: string) {
+export function getCompanionMessages(
+  query: CompanionMessagesQuery = {},
+  options: ConversationRequestOptions = {},
+): Promise<CompanionMessagesResponse> {
+  const { limit, cursor } = companionMessagesQuerySchema.parse(query);
+  const parameters: string[] = [];
+  if (limit !== undefined) parameters.push(`limit=${limit}`);
+  if (cursor !== undefined) parameters.push(`cursor=${encodeURIComponent(cursor)}`);
+  const suffix = parameters.length ? `?${parameters.join('&')}` : '';
+
   return apiRequest({
-    path: `/conversations/${encodeURIComponent(conversationId)}/messages`,
-    responseSchema: conversationMessagesResponseSchema,
+    path: `/conversations/companion/messages${suffix}`,
+    method: 'GET',
+    responseSchema: companionMessagesResponseSchema,
+    signal: options.signal,
+    requestId: options.requestId,
   });
 }
 
-export function sendChatMessage(request: ChatRequest) {
+export function sendChatMessage(
+  request: ChatRequest,
+  options: ConversationRequestOptions = {},
+): Promise<ChatResponse> {
   const body = chatRequestSchema.parse(request);
 
   return apiRequest({
@@ -29,5 +59,7 @@ export function sendChatMessage(request: ChatRequest) {
     method: 'POST',
     body,
     responseSchema: chatResponseSchema,
+    signal: options.signal,
+    requestId: options.requestId,
   });
 }

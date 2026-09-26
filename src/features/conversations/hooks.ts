@@ -1,8 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
-  getConversationMessages,
-  listConversations,
+  getCompanionMessages,
   sendChatMessage,
 } from '@/lib/api/conversations';
 import type { ChatRequest } from '@/lib/api/types';
@@ -21,9 +20,10 @@ export function useConversations() {
 
   return useQuery({
     queryKey: conversationKeys.list(userId ?? 'anonymous'),
-    queryFn: listConversations,
+    queryFn: ({ signal }) => getCompanionMessages({}, { signal }),
     enabled: Boolean(userId),
-    select: ({ conversations }) => conversations,
+    // Temporary adapter for the list screen until continuous-chat routing lands.
+    select: ({ conversation }) => [conversation],
   });
 }
 
@@ -33,7 +33,7 @@ export function useConversationMessages(conversationId: string | undefined) {
 
   return useQuery({
     queryKey: conversationKeys.detail(userId ?? 'anonymous', conversationId ?? 'unknown'),
-    queryFn: () => getConversationMessages(conversationId!),
+    queryFn: ({ signal }) => getCompanionMessages({}, { signal }),
     enabled: Boolean(userId && conversationId),
   });
 }

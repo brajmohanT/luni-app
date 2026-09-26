@@ -109,14 +109,6 @@ export const companionMessagesResponseSchema = z.strictObject({
   hasMore: z.boolean(),
 });
 
-/** @deprecated Temporary wrapper for old consumers; the list endpoint is removed in v2. */
-export const listConversationsResponseSchema = z.object({
-  conversations: z.array(conversationSchema),
-});
-
-/** @deprecated Use companionMessagesResponseSchema when migrating endpoint calls. */
-export const conversationMessagesResponseSchema = companionMessagesResponseSchema;
-
 export type ApiErrorCode = z.infer<typeof apiErrorCodeSchema>;
 export type ApiError = z.infer<typeof apiErrorSchema>;
 export type ConversationStyle = z.infer<typeof conversationStyleSchema>;
@@ -130,7 +122,3 @@ export type ChatResponse = z.infer<typeof chatResponseSchema>;
 export type CompanionConversationResponse = z.infer<typeof companionConversationResponseSchema>;
 export type CompanionMessagesQuery = z.infer<typeof companionMessagesQuerySchema>;
 export type CompanionMessagesResponse = z.infer<typeof companionMessagesResponseSchema>;
-/** @deprecated Remove with the old list endpoint consumer. */
-export type ListConversationsResponse = z.infer<typeof listConversationsResponseSchema>;
-/** @deprecated Use CompanionMessagesResponse. */
-export type ConversationMessagesResponse = CompanionMessagesResponse;
