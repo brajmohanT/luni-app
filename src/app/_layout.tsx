@@ -3,12 +3,28 @@ import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { palette } from '@/design-system/tokens';
+import { SessionLoadingScreen } from '@/features/auth/session-loading-screen';
 import { AppProviders } from '@/providers/app-providers';
+import { useAuth } from '@/providers/auth-provider';
 
 export default function RootLayout() {
-  const pathname = usePathname();
   return (
     <AppProviders>
+      <RootNavigator />
+    </AppProviders>
+  );
+}
+
+function RootNavigator() {
+  const pathname = usePathname();
+  const { isLoading } = useAuth();
+
+  if (isLoading) {
+    return <SessionLoadingScreen />;
+  }
+
+  return (
+    <>
       {__DEV__ && pathname !== '/design-system' && (
         <SafeAreaView edges={['top']} style={styles.developmentBar}>
           <Link href="/design-system" style={styles.developmentLink}>
@@ -23,7 +39,7 @@ export default function RootLayout() {
           </Stack.Protected>
         </Stack>
       </View>
-    </AppProviders>
+    </>
   );
 }
 

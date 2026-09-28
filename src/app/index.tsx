@@ -1,26 +1,10 @@
 import { Redirect } from 'expo-router';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
+import { authRoutes } from '@/features/auth/routes';
 import { useAuth } from '@/providers/auth-provider';
 
 export default function IndexScreen() {
-  const { isLoading, session } = useAuth();
+  const { session } = useAuth();
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingScreen}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
-
-  return <Redirect href={session ? '/(app)' : '/(auth)/welcome'} />;
+  return <Redirect href={session ? authRoutes.authenticated : authRoutes.welcome} />;
 }
-
-const styles = StyleSheet.create({
-  loadingScreen: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-  },
-});

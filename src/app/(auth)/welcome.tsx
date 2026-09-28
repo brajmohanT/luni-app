@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BrandBackground, Button, LuniLogo } from '@/design-system/components';
 import { useTheme, type Theme } from '@/design-system/theme';
+import { authRoutes } from '@/features/auth/routes';
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -28,11 +29,11 @@ export default function WelcomeScreen() {
           </View>
 
           <View style={styles.actions}>
-            <Button onPress={() => router.push('/(auth)/sign-in')} style={styles.action}>
+            <Button onPress={() => router.push(authRoutes.signIn)} style={styles.action}>
               Sign in
             </Button>
             <Button
-              onPress={() => router.push('/(auth)/sign-up')}
+              onPress={() => router.push(authRoutes.signUp)}
               style={styles.action}
               variant="outlined">
               Create account

@@ -8,6 +8,7 @@ import { Button, TextField } from '@/design-system/components';
 import { useTheme, type Theme } from '@/design-system/theme';
 import { AuthScreen } from '@/features/auth/auth-screen';
 import { getAuthErrorMessage } from '@/features/auth/errors';
+import { authRoutes } from '@/features/auth/routes';
 import { signUpSchema, type SignUpFormValues } from '@/lib/validation/auth';
 import { useAuth } from '@/providers/auth-provider';
 
@@ -43,7 +44,7 @@ export default function SignUpScreen() {
   if (confirmationEmail) {
     return (
       <AuthScreen
-        onBack={() => router.replace('/(auth)/welcome')}
+        onBack={() => router.replace(authRoutes.welcome)}
         subtitle="Confirm your account to continue."
         title="Check your email">
         <View style={styles.confirmation}>
@@ -52,7 +53,7 @@ export default function SignUpScreen() {
           <Text style={styles.confirmationText}>
             Open the link on this device, then return to Luni and sign in.
           </Text>
-          <Button onPress={() => router.replace('/(auth)/sign-in')}>Go to sign in</Button>
+          <Button onPress={() => router.replace(authRoutes.signIn)}>Go to sign in</Button>
           <Button
             onPress={() => {
               setConfirmationEmail(null);
@@ -68,7 +69,7 @@ export default function SignUpScreen() {
 
   return (
     <AuthScreen
-      onBack={() => router.replace('/(auth)/welcome')}
+      onBack={() => router.replace(authRoutes.welcome)}
       subtitle="Create an account to start your conversation with Luni."
       title="Create your account">
       <View style={styles.form}>
@@ -164,7 +165,7 @@ export default function SignUpScreen() {
 
       <View style={styles.alternate}>
         <Text style={styles.alternateText}>Already have an account?</Text>
-        <Button onPress={() => router.replace('/(auth)/sign-in')} variant="outlined">
+        <Button onPress={() => router.replace(authRoutes.signIn)} variant="outlined">
           Sign in
         </Button>
       </View>

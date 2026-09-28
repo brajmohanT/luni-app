@@ -1,30 +1,14 @@
 import { Redirect, Stack } from 'expo-router';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
+import { authRoutes } from '@/features/auth/routes';
 import { useAuth } from '@/providers/auth-provider';
 
 export default function AuthLayout() {
-  const { isLoading, session } = useAuth();
-
-  if (isLoading) {
-    return (
-      <View style={styles.loadingScreen}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
+  const { session } = useAuth();
 
   if (session) {
-    return <Redirect href="/(app)" />;
+    return <Redirect href={authRoutes.authenticated} />;
   }
 
   return <Stack screenOptions={{ headerShown: false }} />;
 }
-
-const styles = StyleSheet.create({
-  loadingScreen: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-  },
-});

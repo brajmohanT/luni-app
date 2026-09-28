@@ -7,11 +7,12 @@ flowchart TD
   launch[App launches] --> providers[AppProviders]
   providers --> auth[AuthProvider restores session from SecureStore]
   auth --> loading{Session restoration complete?}
-  loading -- No --> spinner[Show loading screen]
+  loading -- No --> spinner[Root navigator shows the themed session-loading screen]
   spinner --> loading
   loading -- Yes --> session{Supabase session exists?}
 
-  session -- No --> authRoutes[Auth route group]
+  session -- No --> welcome[Welcome screen]
+  welcome --> authRoutes[Auth route group]
   authRoutes --> signIn[Sign-in screen]
   authRoutes --> signUp[Sign-up screen]
 
@@ -28,9 +29,10 @@ flowchart TD
   signUpResult -- Yes --> persist
 
   persist --> authEvent[Supabase auth-state event]
-  authEvent --> appRoutes[Protected app route group]
+  authEvent --> handoff[Authenticated entry route]
+  handoff --> appRoutes[Protected app route group]
 
-  session -- Yes --> appRoutes
+  session -- Yes --> handoff
   appRoutes --> appScreen[Conversation screens]
 
   appRoutes --> missingSession{Session removed?}
@@ -39,9 +41,11 @@ flowchart TD
 
 ## Route guard rules
 
-- `src/app/index.tsx` redirects to `/(app)` when a session exists, otherwise to `/(auth)/sign-in`.
-- `src/app/(app)/_layout.tsx` redirects unauthenticated users to sign-in.
-- `src/app/(auth)/_layout.tsx` redirects authenticated users to `/(app)`.
+- `src/app/_layout.tsx` holds the navigator until the initial Supabase session check finishes. Route screens do not mount behind the loading surface.
+- `src/app/index.tsx` redirects to the authenticated entry route when a session exists, otherwise to Welcome.
+- `src/app/(app)/_layout.tsx` redirects a user whose session expires to sign-in.
+- `src/app/(auth)/_layout.tsx` sends an authenticated user through the same authenticated entry route used at launch.
+- `src/features/auth/routes.ts` owns these destinations. The authenticated entry remains `/(app)` until profile-based onboarding routing replaces the transitional conversation screen.
 - `AuthProvider` listens for Supabase auth-state changes, so route guards react after sign-in, sign-up with a session, or sign-out.
 - Supabase stores the session through the SecureStore adapter in `src/lib/auth/secure-storage.ts`.
 
@@ -51,4 +55,4 @@ The root layout exposes `/design-system` through `Stack.Protected` with a `__DEV
 
 The preview uses local sample data and an isolated ThemeProvider. It does not grant access to authenticated feature screens or change session state. Close it to return to the previous screen. Production builds have no preview launcher or route access.
 
-The approved onboarding flow has not yet replaced the current email/password screens. Name, conversation style, and onboarding-completion persistence are the next UI integration work.
+Welcome and password authentication use the approved design system. Preferred name, conversation style, and onboarding-completion persistence are the next UI integration work.

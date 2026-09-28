@@ -156,3 +156,15 @@ Local verification passed; live API and Android verification remain incomplete.
 - [x] Keep Google, Apple, and email-link prototype simulations out of the production authentication flow.
 
 Verification: the 66-test foundation suite, full TypeScript, full-project ESLint, brand checks, shared-control light/dark checks, and diff whitespace checks passed. Android bundle and device interaction checks were not run in this step.
+
+## Authenticated handoff (2026-09-28)
+
+- [x] Gate the root navigator until Supabase finishes its initial SecureStore session check.
+- [x] Replace duplicate route-level spinners with one themed, accessible session-loading screen.
+- [x] Centralize Welcome, sign-in, sign-up, and authenticated-entry destinations.
+- [x] Route restored and newly created sessions through the same authenticated entry point without mounting auth and protected screens during restoration.
+- [x] Send sessions that expire inside protected routes to password sign-in.
+- [x] Recover from an unexpected session-storage failure instead of leaving the app on its loading screen.
+- [ ] Replace the transitional authenticated destination with the `/me` onboarding decision in the preferred-name milestone.
+
+Verification: the 66-test foundation suite, full TypeScript, full-project ESLint, brand checks, shared-control light/dark checks, and diff whitespace checks passed. The handoff is verified from route and provider state; live password-auth, app-restart, and session-expiry interaction checks remain for Android device testing.

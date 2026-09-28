@@ -8,6 +8,7 @@ import { Button, TextField } from '@/design-system/components';
 import { useTheme, type Theme } from '@/design-system/theme';
 import { AuthScreen } from '@/features/auth/auth-screen';
 import { getAuthErrorMessage } from '@/features/auth/errors';
+import { authRoutes } from '@/features/auth/routes';
 import { signInSchema, type SignInFormValues } from '@/lib/validation/auth';
 import { useAuth } from '@/providers/auth-provider';
 
@@ -38,7 +39,7 @@ export default function SignInScreen() {
 
   return (
     <AuthScreen
-      onBack={() => router.replace('/(auth)/welcome')}
+      onBack={() => router.replace(authRoutes.welcome)}
       subtitle="Return to your conversation with Luni."
       title="Welcome back">
       <View style={styles.form}>
@@ -107,7 +108,7 @@ export default function SignInScreen() {
 
       <View style={styles.alternate}>
         <Text style={styles.alternateText}>New to Luni?</Text>
-        <Button onPress={() => router.replace('/(auth)/sign-up')} variant="outlined">
+        <Button onPress={() => router.replace(authRoutes.signUp)} variant="outlined">
           Create account
         </Button>
       </View>

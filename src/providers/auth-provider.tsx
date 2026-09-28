@@ -40,15 +40,26 @@ export function AuthProvider({ children }: PropsWithChildren) {
     let isMounted = true;
 
     async function loadSession() {
-      const { data, error } = await supabase.auth.getSession();
+      try {
+        const { data, error } = await supabase.auth.getSession();
 
-      if (error) {
+        if (error) {
+          console.error('Unable to restore the Supabase session.', error);
+        }
+
+        if (isMounted) {
+          setSession(data.session);
+        }
+      } catch (error) {
         console.error('Unable to restore the Supabase session.', error);
-      }
 
-      if (isMounted) {
-        setSession(data.session);
-        setIsLoading(false);
+        if (isMounted) {
+          setSession(null);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     }
 
