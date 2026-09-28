@@ -6,11 +6,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BrandBackground, Button, LuniLogo } from '@/design-system/components';
 import { useTheme, type Theme } from '@/design-system/theme';
 import { authRoutes } from '@/features/auth/routes';
+import { useScreenReaderFocus } from '@/features/auth/use-screen-reader-focus';
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const titleRef = useScreenReaderFocus();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -22,7 +24,7 @@ export default function WelcomeScreen() {
 
           <View style={styles.copy}>
             <Text style={styles.wordmark}>luni</Text>
-            <Text accessibilityRole="header" style={styles.title}>
+            <Text ref={titleRef} accessibilityRole="header" style={styles.title}>
               A little company.{`\n`}Room to be you.
             </Text>
             <Text style={styles.subtitle}>Your AI companion for everyday conversations.</Text>

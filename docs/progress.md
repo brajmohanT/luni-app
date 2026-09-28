@@ -168,3 +168,14 @@ Verification: the 66-test foundation suite, full TypeScript, full-project ESLint
 - [ ] Replace the transitional authenticated destination with the `/me` onboarding decision in the preferred-name milestone.
 
 Verification: the 66-test foundation suite, full TypeScript, full-project ESLint, brand checks, shared-control light/dark checks, and diff whitespace checks passed. The handoff is verified from route and provider state; live password-auth, app-restart, and session-expiry interaction checks remain for Android device testing.
+
+## Authentication accessibility and mobile behavior (2026-09-28)
+
+- [x] Focus each authentication screen heading for active screen-reader users after route transitions, including the sign-up confirmation state.
+- [x] Connect React Hook Form field refs so failed submissions focus the first invalid field while retaining the existing inline and live-region errors.
+- [x] Make authentication back controls follow navigation history with a direct Welcome fallback for deep-linked screens.
+- [x] Keep the status bar, Android navigation bar, and native root background in sync with the active light or dark theme.
+- [x] Preserve keyboard-safe scrolling, input return-key order, safe-area coverage, minimum control sizes, and the development-only Design System preview.
+- [ ] Complete manual TalkBack, larger-text, keyboard/small-screen, Android back, and wider Android/iOS device review.
+
+Verification: targeted TypeScript and ESLint checks passed, and Expo resolved the navigation-bar plugin in the public app configuration. Native interaction and visual checks were left for manual review as requested.

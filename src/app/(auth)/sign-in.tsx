@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
-import { useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -36,18 +36,23 @@ export default function SignInScreen() {
       setError('root', { message: getAuthErrorMessage('sign-in', error) });
     }
   });
+  const backToWelcome = useCallback(() => {
+    if (router.canGoBack()) router.back();
+    else router.replace(authRoutes.welcome);
+  }, [router]);
 
   return (
     <AuthScreen
-      onBack={() => router.replace(authRoutes.welcome)}
+      onBack={backToWelcome}
       subtitle="Return to your conversation with Luni."
       title="Welcome back">
       <View style={styles.form}>
         <Controller
           control={control}
           name="email"
-          render={({ field: { onBlur, onChange, value } }) => (
+          render={({ field: { onBlur, onChange, ref, value } }) => (
             <TextField
+              ref={ref}
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect={false}
@@ -73,9 +78,12 @@ export default function SignInScreen() {
         <Controller
           control={control}
           name="password"
-          render={({ field: { onBlur, onChange, value } }) => (
+          render={({ field: { onBlur, onChange, ref, value } }) => (
             <TextField
-              ref={passwordRef}
+              ref={instance => {
+                passwordRef.current = instance;
+                ref(instance);
+              }}
               autoComplete="current-password"
               disabled={isSubmitting}
               errorText={errors.password?.message}

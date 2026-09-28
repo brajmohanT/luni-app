@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -40,11 +40,15 @@ export default function SignUpScreen() {
       setError('root', { message: getAuthErrorMessage('sign-up', error) });
     }
   });
+  const backToWelcome = useCallback(() => {
+    if (router.canGoBack()) router.back();
+    else router.replace(authRoutes.welcome);
+  }, [router]);
 
   if (confirmationEmail) {
     return (
       <AuthScreen
-        onBack={() => router.replace(authRoutes.welcome)}
+        onBack={backToWelcome}
         subtitle="Confirm your account to continue."
         title="Check your email">
         <View style={styles.confirmation}>
@@ -69,15 +73,16 @@ export default function SignUpScreen() {
 
   return (
     <AuthScreen
-      onBack={() => router.replace(authRoutes.welcome)}
+      onBack={backToWelcome}
       subtitle="Create an account to start your conversation with Luni."
       title="Create your account">
       <View style={styles.form}>
         <Controller
           control={control}
           name="email"
-          render={({ field: { onBlur, onChange, value } }) => (
+          render={({ field: { onBlur, onChange, ref, value } }) => (
             <TextField
+              ref={ref}
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect={false}
@@ -103,9 +108,12 @@ export default function SignUpScreen() {
         <Controller
           control={control}
           name="password"
-          render={({ field: { onBlur, onChange, value } }) => (
+          render={({ field: { onBlur, onChange, ref, value } }) => (
             <TextField
-              ref={passwordRef}
+              ref={instance => {
+                passwordRef.current = instance;
+                ref(instance);
+              }}
               autoComplete="new-password"
               blurOnSubmit={false}
               disabled={isSubmitting}
@@ -130,9 +138,12 @@ export default function SignUpScreen() {
         <Controller
           control={control}
           name="confirmPassword"
-          render={({ field: { onBlur, onChange, value } }) => (
+          render={({ field: { onBlur, onChange, ref, value } }) => (
             <TextField
-              ref={confirmationRef}
+              ref={instance => {
+                confirmationRef.current = instance;
+                ref(instance);
+              }}
               autoComplete="new-password"
               disabled={isSubmitting}
               errorText={errors.confirmPassword?.message}

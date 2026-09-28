@@ -6,6 +6,7 @@ import Svg, { Path } from 'react-native-svg';
 
 import { IconButton } from '@/design-system/components';
 import { useTheme, type Theme } from '@/design-system/theme';
+import { useScreenReaderFocus } from '@/features/auth/use-screen-reader-focus';
 
 type AuthScreenProps = PropsWithChildren<{
   title: string;
@@ -31,6 +32,7 @@ function BackIcon({ color, size }: { color: string; size: number }) {
 export function AuthScreen({ title, subtitle, onBack, children }: AuthScreenProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const titleRef = useScreenReaderFocus(title);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -51,7 +53,7 @@ export function AuthScreen({ title, subtitle, onBack, children }: AuthScreenProp
               />
             </View>
             <View style={styles.intro}>
-              <Text accessibilityRole="header" style={styles.title}>{title}</Text>
+              <Text ref={titleRef} accessibilityRole="header" style={styles.title}>{title}</Text>
               <Text style={styles.subtitle}>{subtitle}</Text>
             </View>
             {children}
