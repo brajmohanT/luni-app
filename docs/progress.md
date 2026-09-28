@@ -4,7 +4,7 @@ Use this document to track Luni mobile delivery, blockers, and release gates.
 
 Last updated: 2026-09-28.
 
-Status: shared UI foundations, Welcome/password authentication, and preferred-name onboarding are implemented. Conversation-style onboarding is next. The Expo application runs with TypeScript, Expo Router, TanStack Query, SecureStore, and SQLite. Authentication and non-streaming conversation screens are connected; chat migration remains pending.
+Status: shared UI foundations, Welcome/password authentication, and preferred-name onboarding are implemented. Conversation-style selection and completion are implemented; Android review and continuous-chat routing remain. The Expo application runs with TypeScript, Expo Router, TanStack Query, SecureStore, and SQLite. Authentication and non-streaming conversation screens are connected; chat migration remains pending.
 
 Current status: the first local Android development build installed and launched successfully on a connected physical device. The login and sign-up screens render correctly. The prior Windows CMake object-path issue was addressed by relocating the app to a shorter path and using pnpm's hoisted node-modules layout.
 
@@ -42,14 +42,14 @@ Approved visual reference: [Design library](design/index.html). Implementation a
 - [x] Complete user visual review of the preview on Android.
 - [ ] Complete TalkBack, keyboard, larger-text, and wider device checks. iOS review remains pending.
 - [ ] Select the final font family. Keep platform defaults until that decision.
-- [ ] Migrate onboarding: welcome → sign-in → preferred name → conversation style → first chat. Welcome, password authentication, and preferred name are complete; style and first-chat routing remain.
+- [ ] Migrate onboarding: welcome → sign-in → preferred name → conversation style → first chat. Welcome, password authentication, preferred name, and style completion are implemented; style device review and first-chat routing remain.
 - [ ] Connect onboarding state and persistence after checking the existing auth and backend contracts. Prototype actions are simulations, not implemented services.
 - [ ] Migrate chat to the approved bubbles, supplied profile pictures, filled blue reactions, composer, and recovery states while preserving send/retry behavior.
 - [ ] Build the approved settings screens and persist the appearance preference. Current theme preferences live in memory.
 
 Validation completed for the shared UI: TypeScript, ESLint, brand geometry/logo checks, light/dark rendered accessibility checks, and an Android development bundle export. These checks do not replace native interaction or screen-reader testing.
 
-Next implementation pass: conversation-style onboarding. Keep the development preview available during screen migration. Conversation screens still use their earlier UI.
+Next implementation pass: verify conversation-style onboarding on Android, then replace transitional conversation routing. Keep the development preview available during screen migration. Conversation screens still use their earlier UI.
 
 ## Chat and memory
 
@@ -190,3 +190,33 @@ Verification: targeted TypeScript and ESLint checks passed, and Expo resolved th
 - [x] Confirm the preferred-name behavior on an Android device.
 
 Verification: regression tests, TypeScript, full-project ESLint, brand checks, and diff whitespace checks passed. The shared-control renderer reached an existing Node 24 limitation while loading TypeScript from `node_modules`; it did not report an application failure. The user completed the Android behavior check.
+
+## Conversation-style onboarding: selector UI (2026-09-28)
+
+- [x] Replace the style handoff with four single-select rows from the approved onboarding prototype.
+- [x] Default the local selection to Warm and balanced and update the sample greeting when a style is selected.
+- [x] Reuse ProfileScreen, brand artwork, typography, spacing, and light/dark theme tokens; add radio semantics, focus outlines, and a polite greeting announcement.
+- [x] Step 2: initialize from the saved server style and add back navigation to preferred name.
+- [x] Step 3: connect Start talking/Skip, profile saving, onboarding completion, and recovery states.
+
+Verification: full TypeScript checking with native-package read access, targeted ESLint, and diff whitespace checks passed. Android visual/interaction, TalkBack, and larger-text review remain pending. Selection is local to this screen; this step makes no profile writes and does not complete onboarding. The development-only Design System preview is unchanged.
+
+## Conversation-style onboarding: saved state and back navigation (2026-09-28)
+
+- [x] Read the saved conversation style through useMyProfile and preselect it when profile data is available.
+- [x] Show loading and retry states instead of briefly selecting an incorrect default; keep an edited selection during background profile refreshes.
+- [x] Add an optional shared IconButton back control to ProfileScreen. On the style screen, both this control and focused Android Back return to preferred-name editing through route replacement, including direct entry.
+- [x] Redirect profiles without a preferred name to the name screen. The existing name form prefills the saved name and returns to style after saving.
+
+Verification: full TypeScript and targeted ESLint passed with native-package read access; all 12 existing query regression tests and diff whitespace checks passed. These query tests do not verify native screen interactions. Android back, saved-style display, loading/retry, and larger-text review remain pending. Style changes remain unsaved until step 3; leaving and reopening the screen restores the server value.
+
+## Conversation-style onboarding: completion workflow (2026-09-28)
+
+- [x] Start talking saves the selected style; Skip for now saves warm_balanced through the existing profile mutation hook.
+- [x] Wait for the confirmed style save, then call bodyless onboarding completion. Return to the authenticated entry only after the server returns onboardingCompletedAt.
+- [x] Disable choices, both actions, and the back control while submitting. Block repeated same-tick actions and Android Back during submission.
+- [x] Retain the selected style and request-ID error details after failures. Retry saving after an unconfirmed save; retry only completion after a confirmed save. Saving a different choice invalidates the prior save checkpoint.
+- [x] Stop the remaining workflow after unmount/account-change cleanup, preventing stale navigation or a new completion call after an abandoned save.
+- [x] Add 13 workflow regression tests and include them in verify:foundation.
+
+Verification: all 79 combined API, query, chat-retry, environment, and onboarding regression tests passed. Full TypeScript, targeted ESLint with zero warnings, and diff whitespace checks passed. No live API, Android interaction, or screenshot review ran in this step. Completion returns to the existing authenticated entry; the transitional conversation list remains until milestone 5. Step 4 is Android flow review and fixes.

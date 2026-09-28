@@ -3,16 +3,30 @@ import { useMemo } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { BrandBackground, LuniLogo } from '@/design-system/components';
+import Svg, { Path } from 'react-native-svg';
+
+import { BrandBackground, IconButton, LuniLogo } from '@/design-system/components';
 import { useTheme, type Theme } from '@/design-system/theme';
 import { useScreenReaderFocus } from '@/features/auth/use-screen-reader-focus';
 
 type ProfileScreenProps = PropsWithChildren<{
   title: string;
   subtitle: string;
+  onBack?: () => void;
+  backLabel?: string;
+  backDisabled?: boolean;
 }>;
 
-export function ProfileScreen({ title, subtitle, children }: ProfileScreenProps) {
+function BackIcon({ color, size }: { color: string; size: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" accessible={false}>
+      <Path d="M19 12H5m6-6-6 6 6 6" fill="none" stroke={color}
+        strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+export function ProfileScreen({ title, subtitle, onBack, backLabel = 'Back', backDisabled = false, children }: ProfileScreenProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const titleRef = useScreenReaderFocus(title);
@@ -27,6 +41,11 @@ export function ProfileScreen({ title, subtitle, children }: ProfileScreenProps)
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled">
           <View style={styles.page}>
+            {onBack && (
+              <View style={styles.backControl}>
+                <IconButton accessibilityLabel={backLabel} icon={BackIcon} onPress={onBack} disabled={backDisabled} />
+              </View>
+            )}
             <BrandBackground variant="welcome" style={styles.mark}>
               <LuniLogo decorative size={44} />
             </BrandBackground>
@@ -56,6 +75,7 @@ const createStyles = (theme: Theme) => StyleSheet.create({
     paddingTop: theme.spacing.xxxl,
     width: '100%',
   },
+  backControl: { alignItems: 'flex-start', marginBottom: theme.spacing.xxl },
   mark: {
     alignItems: 'center',
     alignSelf: 'flex-start',
