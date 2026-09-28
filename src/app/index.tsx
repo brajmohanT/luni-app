@@ -14,7 +14,7 @@ export default function IndexScreen() {
     );
   }
 
-  return <Redirect href={session ? '/(app)' : '/(auth)/sign-in'} />;
+  return <Redirect href={session ? '/(app)' : '/(auth)/welcome'} />;
 }
 
 const styles = StyleSheet.create({

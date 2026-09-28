@@ -1,23 +1,30 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link } from 'expo-router';
+import { useRouter } from 'expo-router';
+import { useMemo, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { Button, TextField } from '@/design-system/components';
+import { useTheme, type Theme } from '@/design-system/theme';
+import { AuthScreen } from '@/features/auth/auth-screen';
+import { getAuthErrorMessage } from '@/features/auth/errors';
 import { signInSchema, type SignInFormValues } from '@/lib/validation/auth';
 import { useAuth } from '@/providers/auth-provider';
 
 export default function SignInScreen() {
+  const router = useRouter();
   const { signInWithPassword } = useAuth();
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const passwordRef = useRef<TextInput>(null);
   const {
     control,
+    clearErrors,
     formState: { errors, isSubmitting },
     handleSubmit,
     setError,
   } = useForm<SignInFormValues>({
-    defaultValues: {
-      email: '',
-      password: '',
-    },
+    defaultValues: { email: '', password: '' },
     resolver: zodResolver(signInSchema),
   });
 
@@ -25,145 +32,96 @@ export default function SignInScreen() {
     try {
       await signInWithPassword({ email, password });
     } catch (error) {
-      setError('root', {
-        message: error instanceof Error ? error.message : 'Unable to sign in. Please try again.',
-      });
+      setError('root', { message: getAuthErrorMessage('sign-in', error) });
     }
   });
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome back</Text>
-      <Text style={styles.subtitle}>Sign in to continue to Luni.</Text>
-
+    <AuthScreen
+      onBack={() => router.replace('/(auth)/welcome')}
+      subtitle="Return to your conversation with Luni."
+      title="Welcome back">
       <View style={styles.form}>
-        <Text style={styles.label}>Email</Text>
         <Controller
           control={control}
           name="email"
           render={({ field: { onBlur, onChange, value } }) => (
-            <TextInput
+            <TextField
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect={false}
+              blurOnSubmit={false}
+              disabled={isSubmitting}
+              errorText={errors.email?.message}
               keyboardType="email-address"
+              label="Email"
               onBlur={onBlur}
-              onChangeText={onChange}
+              onChangeText={value => {
+                clearErrors('root');
+                onChange(value);
+              }}
+              onSubmitEditing={() => passwordRef.current?.focus()}
               placeholder="you@example.com"
-              style={[styles.input, errors.email && styles.inputError]}
+              returnKeyType="next"
               textContentType="username"
               value={value}
             />
           )}
         />
-        {errors.email && <Text style={styles.fieldError}>{errors.email.message}</Text>}
 
-        <Text style={styles.label}>Password</Text>
         <Controller
           control={control}
           name="password"
           render={({ field: { onBlur, onChange, value } }) => (
-            <TextInput
+            <TextField
+              ref={passwordRef}
               autoComplete="current-password"
+              disabled={isSubmitting}
+              errorText={errors.password?.message}
+              label="Password"
               onBlur={onBlur}
-              onChangeText={onChange}
+              onChangeText={value => {
+                clearErrors('root');
+                onChange(value);
+              }}
+              onSubmitEditing={onSubmit}
               placeholder="Your password"
+              returnKeyType="done"
               secureTextEntry
-              style={[styles.input, errors.password && styles.inputError]}
               textContentType="password"
               value={value}
             />
           )}
         />
-        {errors.password && <Text style={styles.fieldError}>{errors.password.message}</Text>}
 
-        {errors.root && <Text style={styles.submitError}>{errors.root.message}</Text>}
+        {errors.root?.message && (
+          <Text accessibilityLiveRegion="polite" style={styles.formError}>
+            {errors.root.message}
+          </Text>
+        )}
 
-        <Pressable
-          accessibilityRole="button"
-          disabled={isSubmitting}
-          onPress={onSubmit}
-          style={({ pressed }) => [
-            styles.submitButton,
-            isSubmitting && styles.submitButtonDisabled,
-            pressed && !isSubmitting && styles.submitButtonPressed,
-          ]}>
-          <Text style={styles.submitButtonText}>{isSubmitting ? 'Signing in…' : 'Sign in'}</Text>
-        </Pressable>
+        <Button loading={isSubmitting} loadingLabel="Signing in…" onPress={onSubmit}>
+          Sign in
+        </Button>
       </View>
 
-      <Text style={styles.footer}>
-        New to Luni? <Link href="/(auth)/sign-up">Create an account</Link>
-      </Text>
-    </View>
+      <View style={styles.alternate}>
+        <Text style={styles.alternateText}>New to Luni?</Text>
+        <Button onPress={() => router.replace('/(auth)/sign-up')} variant="outlined">
+          Create account
+        </Button>
+      </View>
+    </AuthScreen>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 24,
-  },
-  fieldError: {
-    color: '#B42318',
-    fontSize: 14,
-    marginTop: 6,
-  },
-  footer: {
-    marginTop: 24,
+const createStyles = (theme: Theme) => StyleSheet.create({
+  form: { gap: theme.spacing.xl },
+  formError: { ...theme.typography.secondary, color: theme.colors.danger },
+  alternate: { gap: theme.spacing.md, marginTop: theme.spacing.xxxl },
+  alternateText: {
+    ...theme.typography.secondary,
+    color: theme.colors.textMuted,
     textAlign: 'center',
-  },
-  form: {
-    gap: 10,
-    marginTop: 32,
-  },
-  input: {
-    borderColor: '#98A2B3',
-    borderRadius: 10,
-    borderWidth: 1,
-    fontSize: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  inputError: {
-    borderColor: '#B42318',
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginTop: 6,
-  },
-  submitButton: {
-    alignItems: 'center',
-    backgroundColor: '#208AEF',
-    borderRadius: 10,
-    marginTop: 14,
-    paddingVertical: 14,
-  },
-  submitButtonDisabled: {
-    opacity: 0.6,
-  },
-  submitButtonPressed: {
-    opacity: 0.8,
-  },
-  submitButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  submitError: {
-    color: '#B42318',
-    marginTop: 6,
-    textAlign: 'center',
-  },
-  subtitle: {
-    color: '#475467',
-    fontSize: 16,
-    marginTop: 8,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: '700',
   },
 });

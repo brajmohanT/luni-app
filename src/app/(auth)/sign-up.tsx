@@ -1,203 +1,187 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link } from 'expo-router';
-import { useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { Button, TextField } from '@/design-system/components';
+import { useTheme, type Theme } from '@/design-system/theme';
+import { AuthScreen } from '@/features/auth/auth-screen';
+import { getAuthErrorMessage } from '@/features/auth/errors';
 import { signUpSchema, type SignUpFormValues } from '@/lib/validation/auth';
 import { useAuth } from '@/providers/auth-provider';
 
 export default function SignUpScreen() {
+  const router = useRouter();
   const { signUpWithPassword } = useAuth();
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const passwordRef = useRef<TextInput>(null);
+  const confirmationRef = useRef<TextInput>(null);
+  const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
   const {
     control,
+    clearErrors,
     formState: { errors, isSubmitting },
     handleSubmit,
+    reset,
     setError,
   } = useForm<SignUpFormValues>({
-    defaultValues: {
-      confirmPassword: '',
-      email: '',
-      password: '',
-    },
+    defaultValues: { confirmPassword: '', email: '', password: '' },
     resolver: zodResolver(signUpSchema),
   });
 
   const onSubmit = handleSubmit(async ({ email, password }) => {
-    setSuccessMessage(null);
-
     try {
       const result = await signUpWithPassword({ email, password });
-
-      if (result.requiresEmailConfirmation) {
-        setSuccessMessage('Check your email to confirm your account, then return to Luni to sign in.');
-      }
+      if (result.requiresEmailConfirmation) setConfirmationEmail(email);
     } catch (error) {
-      setError('root', {
-        message: error instanceof Error ? error.message : 'Unable to create your account. Please try again.',
-      });
+      setError('root', { message: getAuthErrorMessage('sign-up', error) });
     }
   });
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Create your account</Text>
-      <Text style={styles.subtitle}>Start your conversation with Luni.</Text>
+  if (confirmationEmail) {
+    return (
+      <AuthScreen
+        onBack={() => router.replace('/(auth)/welcome')}
+        subtitle="Confirm your account to continue."
+        title="Check your email">
+        <View style={styles.confirmation}>
+          <Text style={styles.confirmationText}>We sent a confirmation link to:</Text>
+          <Text selectable style={styles.confirmationEmail}>{confirmationEmail}</Text>
+          <Text style={styles.confirmationText}>
+            Open the link on this device, then return to Luni and sign in.
+          </Text>
+          <Button onPress={() => router.replace('/(auth)/sign-in')}>Go to sign in</Button>
+          <Button
+            onPress={() => {
+              setConfirmationEmail(null);
+              reset({ confirmPassword: '', email: confirmationEmail, password: '' });
+            }}
+            variant="outlined">
+            Use a different email
+          </Button>
+        </View>
+      </AuthScreen>
+    );
+  }
 
+  return (
+    <AuthScreen
+      onBack={() => router.replace('/(auth)/welcome')}
+      subtitle="Create an account to start your conversation with Luni."
+      title="Create your account">
       <View style={styles.form}>
-        <Text style={styles.label}>Email</Text>
         <Controller
           control={control}
           name="email"
           render={({ field: { onBlur, onChange, value } }) => (
-            <TextInput
+            <TextField
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect={false}
+              blurOnSubmit={false}
+              disabled={isSubmitting}
+              errorText={errors.email?.message}
               keyboardType="email-address"
+              label="Email"
               onBlur={onBlur}
-              onChangeText={onChange}
+              onChangeText={value => {
+                clearErrors('root');
+                onChange(value);
+              }}
+              onSubmitEditing={() => passwordRef.current?.focus()}
               placeholder="you@example.com"
-              style={[styles.input, errors.email && styles.inputError]}
+              returnKeyType="next"
               textContentType="emailAddress"
               value={value}
             />
           )}
         />
-        {errors.email && <Text style={styles.fieldError}>{errors.email.message}</Text>}
 
-        <Text style={styles.label}>Password</Text>
         <Controller
           control={control}
           name="password"
           render={({ field: { onBlur, onChange, value } }) => (
-            <TextInput
+            <TextField
+              ref={passwordRef}
               autoComplete="new-password"
+              blurOnSubmit={false}
+              disabled={isSubmitting}
+              errorText={errors.password?.message}
+              helperText="Use at least 6 characters."
+              label="Password"
               onBlur={onBlur}
-              onChangeText={onChange}
-              placeholder="At least 6 characters"
+              onChangeText={value => {
+                clearErrors('root');
+                onChange(value);
+              }}
+              onSubmitEditing={() => confirmationRef.current?.focus()}
+              placeholder="Create a password"
+              returnKeyType="next"
               secureTextEntry
-              style={[styles.input, errors.password && styles.inputError]}
               textContentType="newPassword"
               value={value}
             />
           )}
         />
-        {errors.password && <Text style={styles.fieldError}>{errors.password.message}</Text>}
 
-        <Text style={styles.label}>Confirm password</Text>
         <Controller
           control={control}
           name="confirmPassword"
           render={({ field: { onBlur, onChange, value } }) => (
-            <TextInput
+            <TextField
+              ref={confirmationRef}
               autoComplete="new-password"
+              disabled={isSubmitting}
+              errorText={errors.confirmPassword?.message}
+              label="Confirm password"
               onBlur={onBlur}
-              onChangeText={onChange}
+              onChangeText={value => {
+                clearErrors('root');
+                onChange(value);
+              }}
+              onSubmitEditing={onSubmit}
               placeholder="Repeat your password"
+              returnKeyType="done"
               secureTextEntry
-              style={[styles.input, errors.confirmPassword && styles.inputError]}
               textContentType="newPassword"
               value={value}
             />
           )}
         />
-        {errors.confirmPassword && <Text style={styles.fieldError}>{errors.confirmPassword.message}</Text>}
 
-        {errors.root && <Text style={styles.submitError}>{errors.root.message}</Text>}
-        {successMessage && <Text style={styles.successMessage}>{successMessage}</Text>}
+        {errors.root?.message && (
+          <Text accessibilityLiveRegion="polite" style={styles.formError}>
+            {errors.root.message}
+          </Text>
+        )}
 
-        <Pressable
-          accessibilityRole="button"
-          disabled={isSubmitting}
-          onPress={onSubmit}
-          style={({ pressed }) => [
-            styles.submitButton,
-            isSubmitting && styles.submitButtonDisabled,
-            pressed && !isSubmitting && styles.submitButtonPressed,
-          ]}>
-          <Text style={styles.submitButtonText}>{isSubmitting ? 'Creating account…' : 'Create account'}</Text>
-        </Pressable>
+        <Button loading={isSubmitting} loadingLabel="Creating account…" onPress={onSubmit}>
+          Create account
+        </Button>
       </View>
 
-      <Text style={styles.footer}>
-        Already have an account? <Link href="/(auth)/sign-in">Sign in</Link>
-      </Text>
-    </View>
+      <View style={styles.alternate}>
+        <Text style={styles.alternateText}>Already have an account?</Text>
+        <Button onPress={() => router.replace('/(auth)/sign-in')} variant="outlined">
+          Sign in
+        </Button>
+      </View>
+    </AuthScreen>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 24,
-  },
-  fieldError: {
-    color: '#B42318',
-    fontSize: 14,
-    marginTop: 6,
-  },
-  footer: {
-    marginTop: 24,
+const createStyles = (theme: Theme) => StyleSheet.create({
+  form: { gap: theme.spacing.xl },
+  formError: { ...theme.typography.secondary, color: theme.colors.danger },
+  alternate: { gap: theme.spacing.md, marginTop: theme.spacing.xxxl },
+  alternateText: {
+    ...theme.typography.secondary,
+    color: theme.colors.textMuted,
     textAlign: 'center',
   },
-  form: {
-    gap: 10,
-    marginTop: 32,
-  },
-  input: {
-    borderColor: '#98A2B3',
-    borderRadius: 10,
-    borderWidth: 1,
-    fontSize: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  inputError: {
-    borderColor: '#B42318',
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginTop: 6,
-  },
-  submitButton: {
-    alignItems: 'center',
-    backgroundColor: '#208AEF',
-    borderRadius: 10,
-    marginTop: 14,
-    paddingVertical: 14,
-  },
-  submitButtonDisabled: {
-    opacity: 0.6,
-  },
-  submitButtonPressed: {
-    opacity: 0.8,
-  },
-  submitButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  submitError: {
-    color: '#B42318',
-    marginTop: 6,
-    textAlign: 'center',
-  },
-  subtitle: {
-    color: '#475467',
-    fontSize: 16,
-    marginTop: 8,
-  },
-  successMessage: {
-    color: '#067647',
-    marginTop: 6,
-    textAlign: 'center',
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: '700',
-  },
+  confirmation: { gap: theme.spacing.xl },
+  confirmationText: { ...theme.typography.body, color: theme.colors.textMuted },
+  confirmationEmail: { ...theme.typography.heading, color: theme.colors.text },
 });

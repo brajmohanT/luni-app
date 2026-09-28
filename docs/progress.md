@@ -4,7 +4,7 @@ Use this document to track Luni mobile delivery, blockers, and release gates.
 
 Last updated: 2026-09-26.
 
-Status: shared UI foundations implemented; onboarding migration is next. The Expo application runs with TypeScript, Expo Router, TanStack Query, SecureStore, and SQLite. Authentication and non-streaming conversation screens are connected; migration of those screens to the approved design remains pending.
+Status: shared UI foundations and the approved Welcome/password-authentication screens are implemented; profile onboarding is next. The Expo application runs with TypeScript, Expo Router, TanStack Query, SecureStore, and SQLite. Authentication and non-streaming conversation screens are connected; chat migration remains pending.
 
 Current status: the first local Android development build installed and launched successfully on a connected physical device. The login and sign-up screens render correctly. The prior Windows CMake object-path issue was addressed by relocating the app to a shorter path and using pnpm's hoisted node-modules layout.
 
@@ -42,14 +42,14 @@ Approved visual reference: [Design library](design/index.html). Implementation a
 - [x] Complete user visual review of the preview on Android.
 - [ ] Complete TalkBack, keyboard, larger-text, and wider device checks. iOS review remains pending.
 - [ ] Select the final font family. Keep platform defaults until that decision.
-- [ ] Migrate onboarding: welcome → sign-in → preferred name → conversation style → first chat.
+- [ ] Migrate onboarding: welcome → sign-in → preferred name → conversation style → first chat. Welcome and password authentication are complete; preferred name, style, and first-chat routing remain.
 - [ ] Connect onboarding state and persistence after checking the existing auth and backend contracts. Prototype actions are simulations, not implemented services.
 - [ ] Migrate chat to the approved bubbles, supplied profile pictures, filled blue reactions, composer, and recovery states while preserving send/retry behavior.
 - [ ] Build the approved settings screens and persist the appearance preference. Current theme preferences live in memory.
 
 Validation completed for the shared UI: TypeScript, ESLint, brand geometry/logo checks, light/dark rendered accessibility checks, and an Android development bundle export. These checks do not replace native interaction or screen-reader testing.
 
-Next implementation pass: onboarding. Keep the development preview available during screen migration. Existing authentication and conversation screens still use their earlier UI.
+Next implementation pass: preferred-name onboarding. Keep the development preview available during screen migration. Conversation screens still use their earlier UI.
 
 ## Chat and memory
 
@@ -147,3 +147,12 @@ Local verification passed; live API and Android verification remain incomplete.
 - [x] Fix native AbortSignal incompatibility and static Expo environment references; add regressions against installed native/Expo implementations.
 - [x] Fix lint scope and add the repeatable, fail-fast pnpm verify:foundation command.
 
+## Welcome and password authentication UI (2026-09-26)
+
+- [x] Add the signed-out Welcome route and direct signed-out app launches to it.
+- [x] Reuse the approved welcome gradient, Luni artwork, theme tokens, Button, IconButton, and TextField controls.
+- [x] Redesign password sign-in and sign-up with keyboard-safe scrolling, field focus order, loading states, accessible errors, and retained form values.
+- [x] Preserve Supabase password authentication and handle both immediate-session and email-confirmation sign-up results.
+- [x] Keep Google, Apple, and email-link prototype simulations out of the production authentication flow.
+
+Verification: the 66-test foundation suite, full TypeScript, full-project ESLint, brand checks, shared-control light/dark checks, and diff whitespace checks passed. Android bundle and device interaction checks were not run in this step.
