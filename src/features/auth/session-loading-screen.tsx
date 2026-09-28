@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BrandBackground, LuniLogo } from '@/design-system/components';
 import { useTheme, type Theme } from '@/design-system/theme';
 
-export function SessionLoadingScreen() {
+export function SessionLoadingScreen({ message = 'Checking your saved sign-in…' }: { message?: string }) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -17,10 +17,10 @@ export function SessionLoadingScreen() {
         </BrandBackground>
         <View style={styles.copy}>
           <Text accessibilityRole="header" style={styles.title}>Opening Luni</Text>
-          <Text style={styles.message}>Checking your saved sign-in…</Text>
+          <Text style={styles.message}>{message}</Text>
         </View>
         <ActivityIndicator
-          accessibilityLabel="Opening Luni. Checking your saved sign-in."
+          accessibilityLabel={message}
           accessibilityRole="progressbar"
           color={theme.colors.primary}
           size="small"

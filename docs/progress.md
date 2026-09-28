@@ -4,7 +4,7 @@ Use this document to track Luni mobile delivery, blockers, and release gates.
 
 Last updated: 2026-09-28.
 
-Status: shared UI foundations, Welcome/password authentication, and preferred-name onboarding are implemented. Conversation-style selection and completion are implemented; Android review and continuous-chat routing remain. The Expo application runs with TypeScript, Expo Router, TanStack Query, SecureStore, and SQLite. Authentication and non-streaming conversation screens are connected; chat migration remains pending.
+Status: shared UI foundations, Welcome/password authentication, and preferred-name onboarding are implemented. Conversation-style selection, completion, and continuous-chat entry are implemented; Android review and the chat visual migration remain. The Expo application runs with TypeScript, Expo Router, TanStack Query, SecureStore, and SQLite. Authentication and non-streaming conversation screens are connected; chat migration remains pending.
 
 Current status: the first local Android development build installed and launched successfully on a connected physical device. The login and sign-up screens render correctly. The prior Windows CMake object-path issue was addressed by relocating the app to a shorter path and using pnpm's hoisted node-modules layout.
 
@@ -49,7 +49,7 @@ Approved visual reference: [Design library](design/index.html). Implementation a
 
 Validation completed for the shared UI: TypeScript, ESLint, brand geometry/logo checks, light/dark rendered accessibility checks, and an Android development bundle export. These checks do not replace native interaction or screen-reader testing.
 
-Next implementation pass: verify conversation-style onboarding on Android, then replace transitional conversation routing. Keep the development preview available during screen migration. Conversation screens still use their earlier UI.
+Next implementation pass: milestone 5 device/live-API verification, including onboarding resume, recovery, and Android Back. Keep the development preview available during screen migration. Conversation screens still use their earlier UI.
 
 ## Chat and memory
 
@@ -220,3 +220,28 @@ Verification: full TypeScript and targeted ESLint passed with native-package rea
 - [x] Add 13 workflow regression tests and include them in verify:foundation.
 
 Verification: all 79 combined API, query, chat-retry, environment, and onboarding regression tests passed. Full TypeScript, targeted ESLint with zero warnings, and diff whitespace checks passed. No live API, Android interaction, or screenshot review ran in this step. Completion returns to the existing authenticated entry; the transitional conversation list remains until milestone 5. Step 4 is Android flow review and fixes.
+
+## Continuous-chat entry: milestone 5, steps 1–3 (2026-09-28)
+
+- [x] Replace the transitional conversation list at /(app) with the existing chat renderer and composer. Remove New chat and list navigation; redirect legacy new-chat and ID routes through the authenticated entry.
+- [x] Move the server-profile guard into the authenticated layout so restored sessions and direct links follow the same name/style/completed decisions before chat mounts.
+- [x] Keep preferred-name editing available during incomplete onboarding; redirect completed profiles away from onboarding.
+- [x] Reuse companion history hooks for profile → bodyless companion PUT → messages GET. Render the saved server greeting/history without generating a local greeting.
+- [x] Remove temporary conversation-list/detail hook adapters. Add three routing regression tests to the foundation command.
+- [x] Implement milestone 5 recovery and protected back navigation (see steps 4–5 below). Native back-navigation review remains pending.
+- [ ] Verify new/returning accounts, interrupted setup, direct links, and account switching against the live API on Android.
+
+Verification: all 82 regression tests, full TypeScript with native-package read access, full-project ESLint, brand checks, and diff whitespace checks passed. Shared-control rendering remains blocked by the existing Node 24 ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING error for expo-navigation-bar. No Android bundle, live API, or native interaction test ran. The chat keeps its earlier appearance until milestone 6; the development-only Design System preview is unchanged.
+
+## Continuous-chat entry: milestone 5, steps 4–5 (2026-09-28)
+
+- [x] Add themed profile/chat loading messages and recovery screens using shared artwork, Button, TextField, and ProfileScreen.
+- [x] Retry failed initialization/history reads without repeating profile writes or onboarding completion. Reload profile after onboarding conflicts; invalidate stale companion resolution after a missing-companion response.
+- [x] Keep loaded history and the composer mounted during background network failures, with a refresh-retry banner.
+- [x] Handle invalid/expired API sessions with same-account password recovery. Guard duplicate submits and abandoned recovery; a removed Supabase session still routes to password sign-in.
+- [x] Show email-confirmation recovery separately from connection errors.
+- [x] Use protected stack entries to remove completed onboarding and legacy chat routes from navigation history. Remove signed-out entry/auth routes while signed in. Preserve name/style navigation while setup is incomplete, including the existing Android Back submission guard.
+- [x] Add query-failure/retry, available-route, error-classification, and password-recovery regression coverage.
+- [ ] Complete physical Android tests for Back, keyboard, light/dark recovery screens, expired sessions, and live API failures. This is milestone 5 step 6.
+
+Verification: 92 regression tests passed across the suite and targeted follow-up, full TypeScript and ESLint passed, brand checks passed, and Android Metro/Hermes export succeeded (1,653 modules). Shared-control rendering still encounters the documented Node 24 dependency type-stripping issue; no native screenshot or interaction review ran. The approved chat redesign remains milestone 6. The development-only Design System preview stays available.

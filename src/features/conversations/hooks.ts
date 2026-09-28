@@ -20,16 +20,6 @@ export function useCompanionMessages() {
   });
 }
 
-// Temporary adapters until list/detail routing is replaced by continuous chat.
-export function useConversations() {
-  const query = useCompanionMessages();
-  return { ...query, data: query.data ? [query.data.conversation] : undefined };
-}
-
-export function useConversationMessages(_conversationId: string | undefined) {
-  return useCompanionMessages();
-}
-
 export function useSendChatMessage() {
   const { session } = useAuth();
   const client = useQueryClient();

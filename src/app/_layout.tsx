@@ -18,7 +18,7 @@ export default function RootLayout() {
 
 function RootNavigator() {
   const pathname = usePathname();
-  const { isLoading } = useAuth();
+  const { isLoading, session } = useAuth();
 
   return (
     <>
@@ -36,6 +36,11 @@ function RootNavigator() {
           )}
           <View style={styles.navigator}>
             <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Protected guard={!session}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="(auth)" />
+              </Stack.Protected>
+              <Stack.Screen name="(app)" />
               <Stack.Protected guard={__DEV__}>
                 <Stack.Screen name="design-system" />
               </Stack.Protected>

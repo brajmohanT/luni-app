@@ -40,7 +40,7 @@ function setup(overrides = {}) {
   const conversations = load('src/lib/queries/conversations.ts', {
     '@tanstack/react-query': query, '@/lib/api/errors': errors, '@/lib/queries/profile': profile,
     '@/lib/api/conversations': {
-      putCompanionConversation: async () => { calls.push('put'); return { conversation, created: false }; },
+      putCompanionConversation: async () => { calls.push('put'); return overrides.put ? overrides.put() : { conversation, created: false }; },
       getCompanionMessages: async input => { calls.push(['messages', input.cursor]); return overrides.getMessages ? overrides.getMessages(input) : page(['greeting']); },
       sendChatMessage: async (input, options) => { calls.push(['send', input, options]); if (overrides.send) return overrides.send(input); return { conversationId: conversation.id }; },
     },
@@ -178,4 +178,40 @@ test('history works with the actual React Native AbortController polyfill', asyn
     assert.equal(data.pages[0].messages[0].id, 'greeting');
     assert.deepEqual(app.calls, ['profile', 'put', ['messages', undefined]]);
   } finally { app.client.clear(); global.AbortController = original; }
+});
+
+
+test('retry after failed initialization opens chat without repeating onboarding writes', async () => {
+  let attempts = 0;
+  const app = setup({ put: () => { if (++attempts === 1) throw new Error('offline'); return { conversation, created: false }; } });
+  const options = app.companionMessagesQueryOptions(app.client, 'a');
+  await assert.rejects(app.client.fetchInfiniteQuery(options), /offline/);
+  const result = await app.client.fetchInfiniteQuery(options);
+  assert.equal(result.pages[0].messages[0].id, 'greeting');
+  assert.deepEqual(app.calls, ['profile', 'put', 'put', ['messages', undefined]]);
+  app.client.clear();
+});
+
+test('history retry after a lost response reuses initialized companion', async () => {
+  let attempts = 0;
+  const app = setup({ getMessages: () => { if (++attempts === 1) throw new Error('offline'); return page(['greeting']); } });
+  const options = app.companionMessagesQueryOptions(app.client, 'a');
+  await assert.rejects(app.client.fetchInfiniteQuery(options), /offline/);
+  await app.client.fetchInfiniteQuery(options);
+  assert.equal(app.calls.filter(call => call === 'put').length, 1);
+  assert.ok(!app.calls.includes('patch') && !app.calls.includes('complete'));
+  app.client.clear();
+});
+
+test('a failed background refresh retains loaded messages for the recovery banner', async () => {
+  let fail = false;
+  const app = setup({ getMessages: () => { if (fail) throw new Error('offline'); return page(['greeting']); } });
+  const observer = new query.InfiniteQueryObserver(app.client, app.companionMessagesQueryOptions(app.client, 'a'));
+  await observer.refetch();
+  fail = true;
+  await observer.refetch();
+  assert.equal(observer.getCurrentResult().isError, true);
+  assert.equal(observer.getCurrentResult().data.pages[0].messages[0].id, 'greeting');
+  observer.destroy();
+  app.client.clear();
 });
