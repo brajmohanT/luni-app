@@ -2,13 +2,13 @@
 
 Use this document to track Luni mobile delivery, blockers, and release gates.
 
-Last updated: 2026-09-26.
+Last updated: 2026-09-28.
 
-Status: shared UI foundations and the approved Welcome/password-authentication screens are implemented; profile onboarding is next. The Expo application runs with TypeScript, Expo Router, TanStack Query, SecureStore, and SQLite. Authentication and non-streaming conversation screens are connected; chat migration remains pending.
+Status: shared UI foundations, Welcome/password authentication, and preferred-name onboarding are implemented. Conversation-style onboarding is next. The Expo application runs with TypeScript, Expo Router, TanStack Query, SecureStore, and SQLite. Authentication and non-streaming conversation screens are connected; chat migration remains pending.
 
 Current status: the first local Android development build installed and launched successfully on a connected physical device. The login and sign-up screens render correctly. The prior Windows CMake object-path issue was addressed by relocating the app to a shorter path and using pnpm's hoisted node-modules layout.
 
-The user has also reviewed the Design System preview on Android and confirmed that the brand artwork, controls, settings rows, and switches look good. This is a visual review, not a complete accessibility or device test pass.
+The user has reviewed the Design System preview and preferred-name behavior on an Android device. The brand artwork, controls, settings rows, switches, and name flow work as expected. This review does not cover the full accessibility or device matrix.
 
 ## Foundation
 
@@ -42,14 +42,14 @@ Approved visual reference: [Design library](design/index.html). Implementation a
 - [x] Complete user visual review of the preview on Android.
 - [ ] Complete TalkBack, keyboard, larger-text, and wider device checks. iOS review remains pending.
 - [ ] Select the final font family. Keep platform defaults until that decision.
-- [ ] Migrate onboarding: welcome → sign-in → preferred name → conversation style → first chat. Welcome and password authentication are complete; preferred name, style, and first-chat routing remain.
+- [ ] Migrate onboarding: welcome → sign-in → preferred name → conversation style → first chat. Welcome, password authentication, and preferred name are complete; style and first-chat routing remain.
 - [ ] Connect onboarding state and persistence after checking the existing auth and backend contracts. Prototype actions are simulations, not implemented services.
 - [ ] Migrate chat to the approved bubbles, supplied profile pictures, filled blue reactions, composer, and recovery states while preserving send/retry behavior.
 - [ ] Build the approved settings screens and persist the appearance preference. Current theme preferences live in memory.
 
 Validation completed for the shared UI: TypeScript, ESLint, brand geometry/logo checks, light/dark rendered accessibility checks, and an Android development bundle export. These checks do not replace native interaction or screen-reader testing.
 
-Next implementation pass: preferred-name onboarding. Keep the development preview available during screen migration. Conversation screens still use their earlier UI.
+Next implementation pass: conversation-style onboarding. Keep the development preview available during screen migration. Conversation screens still use their earlier UI.
 
 ## Chat and memory
 
@@ -165,7 +165,7 @@ Verification: the 66-test foundation suite, full TypeScript, full-project ESLint
 - [x] Route restored and newly created sessions through the same authenticated entry point without mounting auth and protected screens during restoration.
 - [x] Send sessions that expire inside protected routes to password sign-in.
 - [x] Recover from an unexpected session-storage failure instead of leaving the app on its loading screen.
-- [ ] Replace the transitional authenticated destination with the `/me` onboarding decision in the preferred-name milestone.
+- [x] Replace the transitional authenticated destination with the `/me` onboarding decision.
 
 Verification: the 66-test foundation suite, full TypeScript, full-project ESLint, brand checks, shared-control light/dark checks, and diff whitespace checks passed. The handoff is verified from route and provider state; live password-auth, app-restart, and session-expiry interaction checks remain for Android device testing.
 
@@ -179,3 +179,14 @@ Verification: the 66-test foundation suite, full TypeScript, full-project ESLint
 - [ ] Complete manual TalkBack, larger-text, keyboard/small-screen, Android back, and wider Android/iOS device review.
 
 Verification: targeted TypeScript and ESLint checks passed, and Expo resolved the navigation-bar plugin in the public app configuration. Native interaction and visual checks were left for manual review as requested.
+
+## Preferred-name onboarding (2026-09-28)
+
+- [x] Read `/me` at the authenticated entry and route profiles without a saved name to preferred-name setup.
+- [x] Build the approved preferred-name screen with the shared brand artwork, theme, `TextField`, and `Button`.
+- [x] Prefill a saved server name and validate trimmed names from 1 to 40 characters.
+- [x] Save through `PATCH /me`, prevent duplicate submissions, retain input after failures, and expose retry and request-ID details.
+- [x] Route a successful save to the conversation-style handoff. The next milestone will replace the handoff with the style selector.
+- [x] Confirm the preferred-name behavior on an Android device.
+
+Verification: regression tests, TypeScript, full-project ESLint, brand checks, and diff whitespace checks passed. The shared-control renderer reached an existing Node 24 limitation while loading TypeScript from `node_modules`; it did not report an application failure. The user completed the Android behavior check.

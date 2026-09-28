@@ -33,7 +33,17 @@ flowchart TD
   handoff --> appRoutes[Protected app route group]
 
   session -- Yes --> handoff
-  appRoutes --> appScreen[Conversation screens]
+  appRoutes --> profile[GET /me]
+  profile --> profileLoaded{Profile loaded?}
+  profileLoaded -- No --> profileRetry[Show retry without leaving protected routes]
+  profileRetry --> profile
+  profileLoaded -- Yes --> hasName{Preferred name saved?}
+  hasName -- No --> name[Preferred-name screen]
+  name --> saveName[PATCH /me]
+  saveName --> style[Conversation-style handoff]
+  hasName -- Yes --> onboardingComplete{Onboarding complete?}
+  onboardingComplete -- No --> style
+  onboardingComplete -- Yes --> appScreen[Conversation screens]
 
   appRoutes --> missingSession{Session removed?}
   missingSession -- Yes --> authRoutes
@@ -45,7 +55,8 @@ flowchart TD
 - `src/app/index.tsx` redirects to the authenticated entry route when a session exists, otherwise to Welcome.
 - `src/app/(app)/_layout.tsx` redirects a user whose session expires to sign-in.
 - `src/app/(auth)/_layout.tsx` sends an authenticated user through the same authenticated entry route used at launch.
-- `src/features/auth/routes.ts` owns these destinations. The authenticated entry remains `/(app)` until profile-based onboarding routing replaces the transitional conversation screen.
+- `src/features/auth/routes.ts` owns these destinations. The authenticated entry at `/(app)` reads `/me`, sends profiles without a name to `/(app)/onboarding/name`, and sends incomplete profiles with a name to `/(app)/onboarding/style`.
+- Preferred-name setup validates a trimmed 1–40 character value, saves it through `PATCH /me`, and retains the entered value when saving fails.
 - `AuthProvider` listens for Supabase auth-state changes, so route guards react after sign-in, sign-up with a session, or sign-out.
 - Supabase stores the session through the SecureStore adapter in `src/lib/auth/secure-storage.ts`.
 
@@ -55,4 +66,4 @@ The root layout exposes `/design-system` through `Stack.Protected` with a `__DEV
 
 The preview uses local sample data and an isolated ThemeProvider. It does not grant access to authenticated feature screens or change session state. Close it to return to the previous screen. Production builds have no preview launcher or route access.
 
-Welcome and password authentication use the approved design system. Preferred name, conversation style, and onboarding-completion persistence are the next UI integration work.
+Welcome, password authentication, and preferred-name setup use the approved design system. Conversation style and onboarding completion are the next UI integration work.

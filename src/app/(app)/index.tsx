@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import {
   ActivityIndicator,
   FlatList,
@@ -11,6 +11,11 @@ import {
 } from 'react-native';
 
 import { useConversations } from '@/features/conversations/hooks';
+import { Button } from '@/design-system/components';
+import { useTheme } from '@/design-system/theme';
+import { authRoutes } from '@/features/auth/routes';
+import { SessionLoadingScreen } from '@/features/auth/session-loading-screen';
+import { useMyProfile } from '@/features/profile/hooks';
 import { isApiClientError } from '@/lib/api/errors';
 import type { Conversation } from '@/lib/api/types';
 
@@ -51,10 +56,37 @@ function ConversationRow({ conversation }: { conversation: Conversation }) {
 // Shows the current user's conversations and their fetch states.
 export default function ConversationListScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
+  const profile = useMyProfile();
   const { data: conversations, error, isError, isPending, isRefetching, refetch } = useConversations();
   const refresh = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  if (profile.isPending) {
+    return <SessionLoadingScreen />;
+  }
+
+  if (profile.isError) {
+    const requestId = isApiClientError(profile.error) ? profile.error.requestId : null;
+
+    return (
+      <View style={[styles.centeredScreen, { backgroundColor: theme.colors.canvas }]}>
+        <Text style={[styles.errorTitle, { color: theme.colors.text }]}>We couldn’t open your profile.</Text>
+        <Text style={[styles.errorMessage, { color: theme.colors.textMuted }]}>Check your connection and try again.</Text>
+        {requestId && <Text selectable style={[styles.requestId, { color: theme.colors.textMuted }]}>Request ID: {requestId}</Text>}
+        <Button onPress={() => void profile.refetch()} style={styles.retryButtonShared}>Try again</Button>
+      </View>
+    );
+  }
+
+  if (!profile.data?.preferredName) {
+    return <Redirect href={authRoutes.preferredName} />;
+  }
+
+  if (!profile.data.onboardingCompletedAt) {
+    return <Redirect href={authRoutes.conversationStyle} />;
+  }
 
   // Keep the first load separate from refreshes so the list does not flash.
   if (isPending) {
@@ -210,6 +242,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
   },
+  retryButtonShared: { marginTop: 24 },
   retryButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
