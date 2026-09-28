@@ -291,3 +291,13 @@ Verification: all 82 regression tests, full TypeScript with native-package read 
 - [ ] Complete physical Android tests for Back, keyboard, light/dark recovery screens, expired sessions, and live API failures. This is milestone 5 step 6.
 
 Verification: 92 regression tests passed across the suite and targeted follow-up, full TypeScript and ESLint passed, brand checks passed, and Android Metro/Hermes export succeeded (1,653 modules). Shared-control rendering still encounters the documented Node 24 dependency type-stripping issue; no native screenshot or interaction review ran. The approved chat redesign remains milestone 6. The development-only Design System preview stays available.
+
+## Milestone 8: quoted-reply Android verification (2026-09-28)
+
+- [x] Select a persisted Luni message and display its quote in the composer.
+- [x] Cancel the quote while retaining the draft text; select the older greeting as a replacement target.
+- [x] Background, force-stop, and reopen the app; confirm the draft and older greeting quote restore.
+- [x] Send the restored quoted test message against the live backend; confirm the saved quote, assistant response, and cleared composer.
+- [x] Force-stop and reopen again; confirm the sent quote and response remain in history with an empty composer.
+
+Verification: exercised through Android UI controls on the connected Samsung SM-A346E. Sent one message: "Quoted test: please reply with OK"; Luni responded "OK!". No application changes were needed. Earlier checks passed 34 existing tests and four additional in-memory quote checks. The older target was the greeting within loaded history; native cross-page reply selection, pagination, larger-text, and TalkBack checks remain pending. This pass does not close those checks.
