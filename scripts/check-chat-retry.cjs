@@ -157,12 +157,22 @@ test('failure classification preserves metadata and never asserts an uncertain s
 const React = require('react');
 let alertArgs;
 function Button() {}
+const theme = {
+  colors: { canvas: '#fff', composer: '#eee', border: '#ddd', text: '#111', textMuted: '#666',
+    focus: '#05f', danger: '#b00', incomingBubble: '#eee' },
+  typography: { body: {}, caption: {}, secondary: {} },
+  spacing: { xs: 4, sm: 8, md: 12, lg: 16 },
+  sizing: { minimumTouchTarget: 44 },
+  radii: { message: 12, composer: 28, pill: 9999 },
+};
 const { ChatComposer } = load('src/features/chat/chat-composer.tsx', {
-  react: React,
+  react: { ...React, useMemo: factory => factory(), useState: initial => [initial, () => {}] },
   'react/jsx-runtime': require('react/jsx-runtime'),
-  'react-native': { Alert: { alert: (...args) => { alertArgs = args; } }, StyleSheet: { create: x => x }, Text: 'span', View: 'div', TextInput: 'input' },
-  '@/design-system/components/button': { Button },
-  '@/design-system/components/text-field': { TextField: 'input' },
+  'react-native': { ActivityIndicator: 'i', Alert: { alert: (...args) => { alertArgs = args; } },
+    Pressable: 'button', StyleSheet: { create: x => x, hairlineWidth: 1 }, Text: 'span', View: 'div', TextInput: 'input' },
+  'react-native-svg': { __esModule: true, default: 'svg', Path: 'path' },
+  '@/design-system/components': { Button, IconButton: 'button', TextField: 'input' },
+  '@/design-system/theme': { useTheme: () => ({ theme }) },
 });
 function elements(node) {
   if (!React.isValidElement(node)) return [];

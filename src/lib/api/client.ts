@@ -178,6 +178,13 @@ export async function apiRequest<T>({
   const result = responseSchema.safeParse(payload);
 
   if (!result.success) {
+    if (__DEV__) {
+      console.warn('API response validation failed', {
+        path,
+        requestId,
+        issues: result.error.issues.map(issue => ({ path: issue.path.join('.'), message: issue.message })),
+      });
+    }
     throw new ApiClientError('The service returned an invalid response.', {
       code: 'INVALID_RESPONSE',
       status: response.status,

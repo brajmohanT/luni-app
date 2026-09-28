@@ -4,11 +4,43 @@ Use this document to track Luni mobile delivery, blockers, and release gates.
 
 Last updated: 2026-09-28.
 
-Status: shared UI foundations, Welcome/password authentication, and preferred-name onboarding are implemented. Conversation-style selection, completion, and continuous-chat entry are implemented; Android review and the chat visual migration remain. The Expo application runs with TypeScript, Expo Router, TanStack Query, SecureStore, and SQLite. Authentication and non-streaming conversation screens are connected; chat migration remains pending.
+Status: shared UI foundations, password authentication, onboarding, continuous-chat entry, and approved chat milestones 6.1–6.6 are implemented. The production backend and mobile client now use API v2, and the implemented flow works on the connected physical Android device. The Expo application runs with TypeScript, Expo Router, TanStack Query, SecureStore, and SQLite. Settings and the remaining release-matrix review are still pending.
 
 Current status: the first local Android development build installed and launched successfully on a connected physical device. The login and sign-up screens render correctly. The prior Windows CMake object-path issue was addressed by relocating the app to a shorter path and using pnpm's hoisted node-modules layout.
 
-The user has reviewed the Design System preview and preferred-name behavior on an Android device. The brand artwork, controls, settings rows, switches, and name flow work as expected. This review does not cover the full accessibility or device matrix.
+The user has reviewed the Design System preview, onboarding, production-backed continuous chat, and implemented chat interactions on an Android device. The tested flow works as expected. This review does not cover the full accessibility or device matrix.
+
+## Approved chat migration: milestone 6.1 shell and header (2026-09-28)
+
+- [x] Wrap the continuous chat in a theme-aware safe area and keep the global system bars aligned with the active theme.
+- [x] Replace the temporary centered title with the approved 44px blue Luni mark, title, subtitle, and themed divider.
+- [x] Constrain the header and conversation surface on wider windows without changing the current message or composer implementation.
+- [x] Theme pull-to-refresh and preserve the development-only Design System launcher.
+- [ ] Add the settings action when its destination screen is implemented; milestone 6.1 does not ship a dead control.
+- [ ] Complete native light/dark, safe-area, rotation, and larger-text review.
+
+Verification: all 92 regression tests, full TypeScript, full-project ESLint, brand checks, and diff whitespace checks passed. The shared-control renderer reached the existing Node 24 `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING` failure while loading `expo-navigation-bar`; this remains an environment issue documented in milestone 5. No native screenshot or interaction review ran.
+
+## Approved chat migration: milestones 6.2–6.4 (2026-09-28)
+
+- [x] Replace temporary bubbles with themed Luni, user, system, date, timestamp, and quoted-message presentation using stable server message IDs.
+- [x] Extract and use the two supplied prototype portraits; keep likes absent from the interface.
+- [x] Show first-chat starters only while the server history has no user message and the draft is empty. Starter taps fill and focus the draft without sending it.
+- [x] Replace the large form with the approved rounded composer, growing 44–132px input, circular send control, late character countdown, and themed reply preview.
+- [x] Preserve the existing immutable retry payload, `Retry-After`, session recovery, validation, and edit-as-new controls below the compact composer.
+- [ ] Complete native light/dark, larger-text, long-message, starter, send, and recovery-state review.
+
+Verification: all 92 regression tests, full TypeScript, full-project ESLint, brand checks, and diff whitespace checks passed. The connected development build was unavailable to Metro, and native visual review was deferred to the final device pass at the user's request.
+
+## Approved chat migration: milestones 6.5–6.6 (2026-09-28)
+
+- [x] Add an accessible Reply action to every persisted Luni message. Selecting it stores the server message ID and content, focuses the composer, and uses the existing removable quote preview and immutable retry payload.
+- [x] Add explicit older-history pagination with loading feedback and duplicate-tap protection.
+- [x] Preserve the visible message when older pages are prepended, open returning conversations at the latest message, and return to the latest server result after a successful send.
+- [x] Confirm the implemented production-backed chat flow works on the connected physical Android device.
+- [ ] Complete native reply, pagination, scroll-position, keyboard, and screen-reader review in the final device pass.
+
+Verification: all 92 regression tests, full TypeScript, full-project ESLint, brand checks, and diff whitespace checks passed. The initial Android check exposed an older production history response. Backend API v2 commits `673a729` through `521b826` were pushed and deployed; Railway restarted successfully, and the user confirmed the conversation and implemented flow now work. Full accessibility and device-matrix review remains pending.
 
 ## Foundation
 
