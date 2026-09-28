@@ -1,5 +1,6 @@
 import { isApiClientError } from '@/lib/api/errors';
 import { chatRequestSchema, type ChatRequest, type ChatResponse, type ReplyTarget } from '@/lib/api/types';
+import type { StoredDraft, StoredPendingSend } from '@/lib/database/chat-persistence';
 
 export type RecoveryAction = 'retry' | 'edit' | 'session' | 'verify' | 'onboarding' | 'blocked';
 export type SendFailure = {
@@ -11,7 +12,23 @@ export type SendFailure = {
   removeQuote?: boolean;
 };
 
+export class ChatPersistenceError extends Error {
+  constructor(options?: { cause?: unknown }) {
+    super('Unable to save the pending message on this device.', options);
+    this.name = 'ChatPersistenceError';
+  }
+}
+
 export function classifySendFailure(error: unknown): SendFailure {
+  if (error instanceof ChatPersistenceError) {
+    return {
+      action: 'retry',
+      message: 'This device couldn’t save your message for safe recovery. Try sending it again.',
+      uncertain: false,
+      requestId: null,
+      waitSeconds: 0,
+    };
+  }
   const api = isApiClientError(error) ? error : null;
   const base = { requestId: api?.requestId ?? null, waitSeconds: api?.retryAfterSeconds ?? 0 };
   switch (api?.code) {
@@ -81,6 +98,23 @@ export class ChatSendController {
   }
   tick = () => { this.change({ now: this.clock() }); };
   setNotice = (notice: string) => { this.change({ notice }); };
+  restoreDraft = (draft: StoredDraft | null) => {
+    if (!draft || this.state.pendingRequest || this.state.draft || this.state.replyTarget) return;
+    this.change({ draft: draft.body, replyTarget: draft.replyTarget });
+  };
+  restorePending = (pending: StoredPendingSend) => {
+    if (this.state.pendingRequest || this.state.isSending) return;
+    this.change({
+      draft: pending.request.message,
+      replyTarget: pending.replyTarget,
+      pendingRequest: Object.freeze({ ...pending.request }),
+      failure: pending.failure,
+      retryAt: pending.retryAt,
+      now: this.clock(),
+      pendingMayBeSaved: pending.failure.uncertain,
+      notice: 'Your unfinished send was restored from this device.',
+    });
+  };
   updateDraft = (draft: string) => {
     if (!this.state.pendingRequest && !this.state.isSending) this.change({ draft, validationError: null, notice: null });
   };

@@ -1,5 +1,5 @@
 import { useMemo, useState, type RefObject } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { Button, IconButton, TextField } from '@/design-system/components';
@@ -84,13 +84,16 @@ export function ChatComposer({
   const [inputHeight, setInputHeight] = useState(composerMinHeight);
   const [focused, setFocused] = useState(false);
   const [sendFocused, setSendFocused] = useState(false);
+  const [isConfirmingEdit, setIsConfirmingEdit] = useState(false);
   const message = validationError ?? errorMessage;
   const sendDisabled = isSending || !draft.trim() || retrySeconds > 0;
   const edit = () => {
     if (!uncertain) { editAsNew(); return; }
-    Alert.alert('Edit as a new message?',
-      'The original message may already be saved. Sending edited text creates a separate message. Retry the original to avoid sending it twice.',
-      [{ text: 'Keep original', style: 'cancel' }, { text: 'Edit as new', onPress: editAsNew }]);
+    setIsConfirmingEdit(true);
+  };
+  const confirmEdit = () => {
+    setIsConfirmingEdit(false);
+    editAsNew();
   };
   const recoveryLabel = recoveryAction === 'session' ? 'Check sign-in'
     : recoveryAction === 'verify' ? 'Check email verification' : 'Check setup';
@@ -163,24 +166,41 @@ export function ChatComposer({
       {requestId && <Text selectable style={styles.requestId}>Request ID: {requestId}</Text>}
       {hasFailedSend && (
         <View style={styles.recoveryPanel}>
-          <View style={styles.actions}>
-            {recoveryAction === 'retry' && (
-              <Button disabled={!canRetry} onPress={onRetry}>
-                {retrySeconds > 0 ? `Retry in ${retrySeconds}s` : 'Retry original message'}
+          {isConfirmingEdit && uncertain ? (
+            <View accessibilityLiveRegion="polite" style={styles.editConfirmation}>
+              <Text accessibilityRole="header" style={styles.confirmationTitle}>Create a separate message?</Text>
+              <Text style={styles.confirmationText}>
+                The original may still appear. Editing will create a new send.
+              </Text>
+              <View style={styles.actions}>
+                <Button disabled={isSending} onPress={() => setIsConfirmingEdit(false)}>
+                  Keep original
+                </Button>
+                <Button variant="outlined" disabled={isSending} onPress={confirmEdit}>
+                  Edit separately
+                </Button>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.actions}>
+              {recoveryAction === 'retry' && (
+                <Button disabled={!canRetry} onPress={onRetry}>
+                  {retrySeconds > 0 ? `Retry in ${retrySeconds}s` : 'Retry original message'}
+                </Button>
+              )}
+              {['session', 'verify', 'onboarding'].includes(recoveryAction ?? '') && (
+                <Button disabled={isSending || retrySeconds > 0} onPress={() => { void recover(); }} loading={isSending} loadingLabel="Checking…">
+                  {retrySeconds > 0 ? `${recoveryLabel} in ${retrySeconds}s` : recoveryLabel}
+                </Button>
+              )}
+              {recoveryAction === 'session' && accountEmail && (
+                <PasswordRecovery email={accountEmail} disabled={isSending || retrySeconds > 0} recover={recover} />
+              )}
+              <Button variant="outlined" disabled={isSending} onPress={edit}>
+                {uncertain ? 'Edit as new message' : 'Edit message'}
               </Button>
-            )}
-            {['session', 'verify', 'onboarding'].includes(recoveryAction ?? '') && (
-              <Button disabled={isSending || retrySeconds > 0} onPress={() => { void recover(); }} loading={isSending} loadingLabel="Checking…">
-                {retrySeconds > 0 ? `${recoveryLabel} in ${retrySeconds}s` : recoveryLabel}
-              </Button>
-            )}
-            {recoveryAction === 'session' && accountEmail && (
-              <PasswordRecovery email={accountEmail} disabled={isSending || retrySeconds > 0} recover={recover} />
-            )}
-            <Button variant="outlined" disabled={isSending} onPress={edit}>
-              {uncertain ? 'Edit as new message' : 'Edit message'}
-            </Button>
-          </View>
+            </View>
+          )}
         </View>
       )}
     </View>
@@ -249,5 +269,13 @@ const createStyles = (theme: Theme) => StyleSheet.create({
   errorMessage: { ...theme.typography.secondary, color: theme.colors.danger, marginTop: theme.spacing.sm },
   requestId: { ...theme.typography.caption, color: theme.colors.textMuted, marginTop: theme.spacing.sm },
   recoveryPanel: { borderTopColor: theme.colors.border, borderTopWidth: StyleSheet.hairlineWidth, marginTop: theme.spacing.md, paddingTop: theme.spacing.md },
+  editConfirmation: {
+    backgroundColor: theme.colors.incomingBubble,
+    borderRadius: theme.radii.message,
+    gap: theme.spacing.sm,
+    padding: theme.spacing.md,
+  },
+  confirmationTitle: { ...theme.typography.label, color: theme.colors.text },
+  confirmationText: { ...theme.typography.secondary, color: theme.colors.textMuted },
   actions: { gap: theme.spacing.md },
 });

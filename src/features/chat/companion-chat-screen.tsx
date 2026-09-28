@@ -206,6 +206,7 @@ export default function CompanionChatScreen() {
   }, [refetch]);
   const composer = useChatComposer({
     onSuccess: refreshAfterSend,
+    messages: data?.messages,
   });
   const composerInputRef = useRef<TextInput | null>(null);
   const [startersDismissed, setStartersDismissed] = useState(false);

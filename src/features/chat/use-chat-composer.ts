@@ -1,30 +1,81 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import * as Crypto from 'expo-crypto';
 import { AppState } from 'react-native';
+import { useSQLiteContext } from 'expo-sqlite';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSendChatMessage } from '@/features/conversations/hooks';
-import { ChatSendController } from '@/features/chat/send-controller';
+import { ChatPersistenceError, ChatSendController } from '@/features/chat/send-controller';
 import { supabase } from '@/lib/auth/supabase';
 import { getMyProfile } from '@/lib/api/profile';
 import { profileKeys } from '@/lib/queries/profile';
 import { conversationKeys } from '@/lib/queries/conversations';
 import { useAuth } from '@/providers/auth-provider';
-import type { ChatResponse } from '@/lib/api/types';
+import type { ChatResponse, Message } from '@/lib/api/types';
+import {
+  clearPendingSend,
+  loadChatState,
+  saveDraft,
+  savePendingSend,
+} from '@/lib/database/chat-persistence';
 
 type UseChatComposerOptions = {
   onSuccess(response: ChatResponse): void | Promise<void>;
+  messages?: Message[];
 };
 
-export function useChatComposer({ onSuccess }: UseChatComposerOptions) {
+const restoredFailure = {
+  action: 'retry' as const,
+  message: 'We couldn’t confirm Luni’s reply. Your message may already be saved. Retry to check the same send.',
+  uncertain: true,
+  requestId: null,
+  waitSeconds: 0,
+};
+
+export function useChatComposer({ onSuccess, messages }: UseChatComposerOptions) {
   const mutation = useSendChatMessage();
   const client = useQueryClient();
+  const db = useSQLiteContext();
   const { session } = useAuth();
+  const userId = session?.user.id;
   const [controller] = useState(() => new ChatSendController(Crypto.randomUUID));
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot);
   const mounted = useRef(true);
   const recoveryLock = useRef(false);
   const [isRecovering, setIsRecovering] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(true);
+  const restoredFor = useRef<string | null>(null);
+  const writes = useRef(Promise.resolve());
+  const enqueue = useCallback((write: () => Promise<void>) => {
+    const next = writes.current.then(write, write);
+    writes.current = next.catch(() => {});
+    return next;
+  }, []);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useEffect(() => {
+    if (!userId || !messages || restoredFor.current === userId) return;
+    let cancelled = false;
+    void loadChatState(db, userId).then(async stored => {
+      if (cancelled) return;
+      restoredFor.current = userId;
+      const confirmed = stored.pending?.userMessageId
+        && messages.some(message => message.id === stored.pending?.userMessageId);
+      if (confirmed) {
+        await enqueue(async () => {
+          await clearPendingSend(db, userId);
+          await saveDraft(db, userId, { body: '', replyTarget: null });
+        });
+      } else if (stored.pending) {
+        controller.restorePending(stored.pending);
+      } else {
+        controller.restoreDraft(stored.draft);
+      }
+    }).catch(() => {
+      controller.setNotice('This device couldn’t restore your saved draft.');
+    }).finally(() => {
+      if (!cancelled && mounted.current) setIsRestoring(false);
+    });
+    return () => { cancelled = true; };
+  }, [controller, db, enqueue, messages, userId]);
   useEffect(() => {
     if (!state.retryAt || state.now >= state.retryAt) return;
     const timer = setInterval(controller.tick, 1000);
@@ -34,12 +85,94 @@ export function useChatComposer({ onSuccess }: UseChatComposerOptions) {
 
   const finish = useCallback(async (response: ChatResponse | null) => {
     if (!response || !mounted.current) return;
+    if (userId) {
+      try {
+        await enqueue(async () => {
+          await clearPendingSend(db, userId);
+          await saveDraft(db, userId, { body: '', replyTarget: null });
+        });
+      } catch {
+        controller.setNotice('Your message was sent, but this device couldn’t clear its recovery copy.');
+      }
+    }
     try { await onSuccess(response); }
     catch { if (mounted.current) controller.setNotice('Your message was sent. Refresh the conversation to see the reply.'); }
-  }, [controller, onSuccess]);
+  }, [controller, db, enqueue, onSuccess, userId]);
 
-  const startSend = () => { if (!recoveryLock.current) void controller.start(mutation.mutateAsync).then(finish); };
-  const retrySend = () => { if (!recoveryLock.current) void controller.retry(mutation.mutateAsync).then(finish); };
+  const persistedSend = useCallback(async (request: Parameters<typeof mutation.mutateAsync>[0]) => {
+    if (!userId) return mutation.mutateAsync(request);
+    const snapshot = controller.getSnapshot();
+    try {
+      await enqueue(() => savePendingSend(db, userId, {
+        request,
+        replyTarget: snapshot.replyTarget,
+        failure: snapshot.failure ?? { ...restoredFailure, requestId: request.clientRequestId },
+        retryAt: snapshot.retryAt,
+      }));
+    } catch (cause) {
+      throw new ChatPersistenceError({ cause });
+    }
+    const response = await mutation.mutateAsync(request);
+    void enqueue(() => savePendingSend(db, userId, {
+      request,
+      replyTarget: snapshot.replyTarget,
+      failure: snapshot.failure ?? { ...restoredFailure, requestId: request.clientRequestId },
+      retryAt: snapshot.retryAt,
+      userMessageId: response.userMessageId,
+    })).catch(() => {});
+    return response;
+  }, [controller, db, enqueue, mutation, userId]);
+
+  useEffect(() => {
+    if (isRestoring || !userId) return;
+    const timer = setTimeout(() => {
+      const snapshot = controller.getSnapshot();
+      void enqueue(async () => {
+        await saveDraft(db, userId, { body: snapshot.draft, replyTarget: snapshot.replyTarget });
+        if (snapshot.pendingRequest && snapshot.failure) {
+          await savePendingSend(db, userId, {
+            request: snapshot.pendingRequest,
+            replyTarget: snapshot.replyTarget,
+            failure: snapshot.failure,
+            retryAt: snapshot.retryAt,
+          });
+        } else if (!snapshot.pendingRequest) {
+          await clearPendingSend(db, userId);
+        }
+      });
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [controller, db, enqueue, isRestoring, state.draft, state.failure, state.pendingRequest,
+    state.replyTarget, state.retryAt, userId]);
+  useEffect(() => {
+    if (isRestoring || !userId) return;
+    const flush = () => {
+      const snapshot = controller.getSnapshot();
+      void enqueue(async () => {
+        await saveDraft(db, userId, { body: snapshot.draft, replyTarget: snapshot.replyTarget });
+        if (snapshot.pendingRequest && snapshot.failure) {
+          await savePendingSend(db, userId, {
+            request: snapshot.pendingRequest,
+            replyTarget: snapshot.replyTarget,
+            failure: snapshot.failure,
+            retryAt: snapshot.retryAt,
+          });
+        } else if (!snapshot.pendingRequest) {
+          await clearPendingSend(db, userId);
+        }
+      });
+    };
+    const subscription = AppState.addEventListener('change', next => {
+      if (next !== 'active') flush();
+    });
+    return () => {
+      subscription.remove();
+      flush();
+    };
+  }, [controller, db, enqueue, isRestoring, userId]);
+
+  const startSend = () => { if (!recoveryLock.current && !isRestoring) void controller.start(persistedSend).then(finish); };
+  const retrySend = () => { if (!recoveryLock.current && !isRestoring) void controller.retry(persistedSend).then(finish); };
   const recover = async (password?: string) => {
     if (recoveryLock.current || state.isSending || !state.failure) return;
     recoveryLock.current = true;
@@ -64,7 +197,7 @@ export function useChatComposer({ onSuccess }: UseChatComposerOptions) {
         return;
       }
       await client.invalidateQueries({ queryKey: conversationKeys.companion(session.user.id), refetchType: 'none' });
-      if (mounted.current) await finish(await controller.retry(mutation.mutateAsync, true));
+      if (mounted.current) await finish(await controller.retry(persistedSend, true));
     } catch {
       if (mounted.current) controller.setNotice('We couldn’t verify your account and setup. Complete the required step, then try this check again.');
     } finally {
@@ -81,8 +214,8 @@ export function useChatComposer({ onSuccess }: UseChatComposerOptions) {
     errorMessage: state.failure?.message ?? null,
     notice: state.notice,
     hasFailedSend: Boolean(state.failure),
-    isSending: state.isSending || isRecovering,
-    isEditable: !state.pendingRequest && !state.isSending && !isRecovering,
+    isSending: state.isSending || isRecovering || isRestoring,
+    isEditable: !state.pendingRequest && !state.isSending && !isRecovering && !isRestoring,
     canRetry: state.failure?.action === 'retry' && retrySeconds === 0 && !state.isSending && !isRecovering,
     recoveryAction: state.failure?.action ?? null,
     uncertain: state.failure?.uncertain ?? false,

@@ -39,7 +39,7 @@ function setup(respond, session = { data: { session: { access_token: 'test-token
     '@/lib/api/types': types,
     '@/lib/auth/supabase': { supabase: { auth: { getSession: async () => session } } },
     '@/lib/config/env': { env: { apiUrl: 'https://example.test' } },
-  }, { fetch: async (...args) => { calls.push(args); return respond(...args); } });
+  }, { __DEV__: false, fetch: async (...args) => { calls.push(args); return respond(...args); } });
   return { apiRequest, calls, generated: () => generated };
 }
 const options = { path: '/me', responseSchema: z.object({ ok: z.boolean() }) };

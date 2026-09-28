@@ -6,6 +6,7 @@ The app uses non-streaming API v2 chat. The query layer checks the saved profile
 
 - ChatSendController validates the trimmed draft, freezes the request, and locks text/quote editing while it is pending.
 - The send hook uses clientRequestId as X-Request-Id. Retries retain both IDs and the original text/quote target.
+- Before the network request starts, SQLite stores the account ID, frozen payload, quote, request ID, and retry deadline.
 - Synchronous guards prevent overlapping send/retry taps. TanStack mutations do not retry automatically.
 - Confirmed success clears the pending send and refreshes history. Display/navigation failures after success do not turn it back into a retryable send.
 
@@ -17,12 +18,14 @@ The app uses non-streaming API v2 chat. The query layer checks the saved profile
 - Authentication recovery can refresh the session or use the existing account email and a password entered in the composer. A different account cannot replay the request. Email/setup recovery checks the server profile before allowing replay. Onboarding screen navigation remains part of the screen migration.
 - Editing an uncertain send requires confirmation that the original may already exist. The next send uses a new ID. Editing does not bypass an outstanding server cooldown.
 - A later error cannot erase uncertainty from an earlier failed attempt.
+- On app restart, the app loads server history before restoring local state. A persisted confirmed user-message ID clears the pending row when that message appears in history. Otherwise, the UI restores the frozen send and offers the same idempotent request for retry.
+- Drafts, selected quotes, and pending sends are keyed by Supabase user ID. Signing out hides them; signing back into the same account restores them.
 
-## Current limits
+## Persistence limits
 
-The controller stores pending state only while its composer remains mounted. App restart, leaving the screen, or an account change can discard it. SQLite persistence and recovery across those boundaries remain later work. The existing new-chat/detail routes are transitional; continuous-chat routing is still pending.
+The backend has no request-status endpoint. If a response is lost before the app stores the returned user-message ID, history cannot prove which request created a same-content message. The app keeps the pending request and uses an idempotent `/chat` retry rather than guessing from message text. Recent server history caching remains separate work.
 
 ## Checks
 
-Run `node --test scripts/check-chat-retry.cjs scripts/check-query-hooks.cjs scripts/check-api-client.cjs`.
+Run `node --test scripts/check-chat-retry.cjs scripts/check-chat-persistence.cjs scripts/check-query-hooks.cjs scripts/check-api-client.cjs`.
 The retry suite checks state transitions and composer action props with mocked native controls. It does not replace native keyboard, alert, authentication, or screen-reader tests.

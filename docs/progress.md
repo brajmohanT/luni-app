@@ -4,7 +4,7 @@ Use this document to track Luni mobile delivery, blockers, and release gates.
 
 Last updated: 2026-09-28.
 
-Status: shared UI foundations, password authentication, onboarding, continuous-chat entry, and approved chat milestones 6.1–6.6 are implemented. The production backend and mobile client now use API v2, and the implemented flow works on the connected physical Android device. The Expo application runs with TypeScript, Expo Router, TanStack Query, SecureStore, and SQLite. Settings and the remaining release-matrix review are still pending.
+Status: shared UI foundations, password authentication, onboarding, continuous-chat entry, approved chat milestones 6.1–6.6, and account-scoped draft/pending-send recovery are implemented. The production backend and mobile client use API v2, and the implemented flow works on the connected physical Android device. Settings and the remaining release-matrix review are still pending.
 
 Current status: the first local Android development build installed and launched successfully on a connected physical device. The login and sign-up screens render correctly. The prior Windows CMake object-path issue was addressed by relocating the app to a shorter path and using pnpm's hoisted node-modules layout.
 
@@ -89,14 +89,14 @@ Next implementation pass: milestone 5 device/live-API verification, including on
 - [x] Build conversation detail with chronological message rendering, refresh, and recovery states.
 - [x] Build new chat with non-streaming send, idempotency keys, and explicit retry.
 - [x] Share the composer between new and existing conversations, including send and retry state.
-- [ ] Build onboarding, cached chat, drafts, and app-restart recovery.
+- [ ] Build onboarding, cached chat, drafts, and app-restart recovery. Onboarding plus account-scoped draft and pending-send recovery are implemented; recent chat caching remains.
 - [ ] Define streaming events, cancellation, reconnect, partial output, duplicate requests, and failed requests.
 - [ ] Implement response streaming.
 - [ ] Add memory view, correction, and deletion controls.
 
 ## External beta gate
 
-- [ ] Store drafts, pending messages, and recent chat in SQLite. Keep the server as the source of truth.
+- [ ] Store drafts, pending messages, and recent chat in SQLite. Drafts and pending messages are implemented; recent chat caching remains. The server stays the source of truth.
 - [ ] Configure EAS Update channels, rollout percentages, and `runtimeVersion`.
 - [ ] Send privacy-safe Sentry and analytics events from the mobile app and API.
 - [ ] Add Jest, `jest-expo`, React Native Testing Library, and end-to-end coverage for onboarding, message retry, app restart, memory deletion, and purchase restore.
@@ -105,6 +105,20 @@ Next implementation pass: milestone 5 device/live-API verification, including on
 
 - [ ] Add RevenueCat after paid-plan and support flows are ready.
 - [ ] Add notifications after the team defines consent timing, private payload rules, token handling, and deep-link fallback.
+
+## Chat persistence and restart reconciliation (2026-09-28)
+
+- [x] Migrate the placeholder SQLite tables to account-scoped drafts and pending sends without retaining the unused version-1 placeholder rows.
+- [x] Persist draft text and selected reply targets; retain them across composer unmount and app restart without exposing them to another account.
+- [x] Write the immutable message, client/request ID, reply target, retry deadline, failure state, and uncertainty before sending or retrying.
+- [x] Persist the server's confirmed user-message ID before clearing local state.
+- [x] Load server history before restoring local state. Clear a confirmed pending send only when its server message ID appears; otherwise restore the original request for an idempotent retry.
+- [x] Clear local draft/pending rows after confirmed success or edit-as-new while retaining the original server cooldown.
+- [x] Confirm Android draft restart, quoted-draft restart, failed-send restart, background countdown, account isolation, and confirmed-send restart behavior.
+- [x] Replace the OEM edit-as-new alert with a themed inline confirmation that keeps the original request until the user chooses to edit separately.
+- [ ] Recheck the inline edit-as-new confirmation on Android, then complete larger-text and TalkBack recovery review.
+
+Verification: 97 regression tests, full TypeScript, full-project ESLint, brand checks, and diff whitespace checks passed. The shared-control renderer reached the existing Node 24 `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING` failure while loading `expo-navigation-bar`. Native restart testing remains pending.
 
 ## API v2 migration: types and validation (2026-09-26)
 

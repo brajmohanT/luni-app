@@ -4,7 +4,7 @@ const { spawnSync } = require('node:child_process');
 const path = require('node:path');
 const projectRoot = path.resolve(__dirname, '..');
 const checks = [
-  ['Regression tests', ['--test', '--test-reporter=dot', 'scripts/check-api-client.cjs', 'scripts/check-query-hooks.cjs', 'scripts/check-chat-retry.cjs', 'scripts/check-environment.cjs', 'scripts/check-onboarding-completion.cjs', 'scripts/check-onboarding-routing.cjs']],
+  ['Regression tests', ['--test', '--test-reporter=dot', 'scripts/check-api-client.cjs', 'scripts/check-query-hooks.cjs', 'scripts/check-chat-retry.cjs', 'scripts/check-chat-persistence.cjs', 'scripts/check-environment.cjs', 'scripts/check-onboarding-completion.cjs', 'scripts/check-onboarding-routing.cjs']],
   ['TypeScript', [require.resolve('typescript/bin/tsc'), '--noEmit']],
   ['ESLint', [path.join(path.dirname(require.resolve('eslint/package.json')), 'bin/eslint.js'), '.', '--max-warnings=0']],
   ['Brand assets', ['scripts/check-brand.cjs']],

@@ -18,7 +18,7 @@ function load(file, deps) {
 }
 const errors = load('src/lib/api/errors.ts', {});
 const types = load('src/lib/api/types.ts', { zod: { z } });
-const { ChatSendController, classifySendFailure } = load('src/features/chat/send-controller.ts', {
+const { ChatPersistenceError, ChatSendController, classifySendFailure } = load('src/features/chat/send-controller.ts', {
   '@/lib/api/errors': errors, '@/lib/api/types': types,
 });
 const id = '11111111-1111-4111-8111-111111111111';
@@ -143,6 +143,23 @@ test('a later display failure cannot resurrect a successful send', async () => {
   assert.equal(calls, 0);
   assert.equal(controller.getSnapshot().failure, null);
 });
+test('restored pending sends keep their frozen payload and retry deadline', async () => {
+  const { controller } = setup();
+  controller.restorePending({
+    request: { message: 'Saved message', clientRequestId: id, replyToMessageId: quoteId },
+    replyTarget: { id: quoteId, role: 'assistant', content: 'Saved quote' },
+    failure: { action: 'retry', message: 'Restored', uncertain: true, requestId: id, waitSeconds: 0 },
+    retryAt: 5000,
+    userMessageId: null,
+  });
+  const state = controller.getSnapshot();
+  assert.ok(Object.isFrozen(state.pendingRequest));
+  assert.equal(state.pendingRequest.clientRequestId, id);
+  assert.equal(state.replyTarget.content, 'Saved quote');
+  let calls = 0;
+  await controller.retry(async () => { calls++; return response; });
+  assert.equal(calls, 0);
+});
 test('failure classification preserves metadata and never asserts an uncertain send was not saved', () => {
   for (const error of [failure('NETWORK_ERROR'), failure('INVALID_RESPONSE', 200), failure('INTERNAL_ERROR', 500), new Error('timeout')]) {
     const result = classifySendFailure(error);
@@ -153,9 +170,17 @@ test('failure classification preserves metadata and never asserts an uncertain s
   assert.equal(classifySendFailure(failure('CONVERSATION_BUSY', 409)).waitSeconds, 3);
   assert.equal(classifySendFailure(failure('SERVICE_DRAINING', 503, 7)).waitSeconds, 7);
 });
+test('local persistence failures remain retryable without claiming the server saved them', () => {
+  const result = classifySendFailure(new ChatPersistenceError());
+  assert.equal(result.action, 'retry');
+  assert.equal(result.uncertain, false);
+  assert.doesNotMatch(result.message, /may already be saved/);
+});
 
 const React = require('react');
-let alertArgs;
+let hookIndex = 0;
+let hookOverrides = new Map();
+let hookSetters = [];
 function Button() {}
 const theme = {
   colors: { canvas: '#fff', composer: '#eee', border: '#ddd', text: '#111', textMuted: '#666',
@@ -166,9 +191,13 @@ const theme = {
   radii: { message: 12, composer: 28, pill: 9999 },
 };
 const { ChatComposer } = load('src/features/chat/chat-composer.tsx', {
-  react: { ...React, useMemo: factory => factory(), useState: initial => [initial, () => {}] },
+  react: { ...React, useMemo: factory => factory(), useState: initial => {
+    const index = hookIndex++;
+    return [hookOverrides.has(index) ? hookOverrides.get(index) : initial,
+      value => { hookSetters[index] = value; }];
+  } },
   'react/jsx-runtime': require('react/jsx-runtime'),
-  'react-native': { ActivityIndicator: 'i', Alert: { alert: (...args) => { alertArgs = args; } },
+  'react-native': { ActivityIndicator: 'i',
     Pressable: 'button', StyleSheet: { create: x => x, hairlineWidth: 1 }, Text: 'span', View: 'div', TextInput: 'input' },
   'react-native-svg': { __esModule: true, default: 'svg', Path: 'path' },
   '@/design-system/components': { Button, IconButton: 'button', TextField: 'input' },
@@ -178,22 +207,33 @@ function elements(node) {
   if (!React.isValidElement(node)) return [];
   return [node, ...React.Children.toArray(node.props.children).flatMap(elements)];
 }
+function renderComposer(componentProps, overrides = new Map()) {
+  hookIndex = 0;
+  hookOverrides = overrides;
+  hookSetters = [];
+  return elements(ChatComposer(componentProps));
+}
 const props = { draft: 'Hello', errorMessage: 'Unconfirmed', notice: null, hasFailedSend: true, isSending: false, isEditable: false, canRetry: false, retrySeconds: 3, recoveryAction: 'retry', uncertain: true, replyTarget: null, onChangeDraft() {}, onRetry() {}, onSend() {}, recover() {}, editAsNew() {}, selectReply() {}, requestId: id, validationError: null };
 test('composer disables countdown retry and locks pending text', () => {
-  const nodes = elements(ChatComposer(props));
+  const nodes = renderComposer(props);
   assert.equal(nodes.find(x => x.type === 'input').props.editable, false);
   const retry = nodes.find(x => x.type === Button && x.props.children === 'Retry in 3s');
   assert.equal(retry.props.disabled, true);
 });
-test('uncertain editing requires explicit native confirmation', () => {
+test('uncertain editing uses themed inline confirmation before discarding retry identity', () => {
   let edits = 0;
-  const nodes = elements(ChatComposer({ ...props, editAsNew: () => { edits++; } }));
+  const componentProps = { ...props, editAsNew: () => { edits++; } };
+  let nodes = renderComposer(componentProps);
   nodes.find(x => x.type === Button && x.props.children === 'Edit as new message').props.onPress();
   assert.equal(edits, 0);
-  assert.match(alertArgs[1], /may already be saved/);
-  alertArgs[2][1].onPress(); assert.equal(edits, 1);
+  assert.equal(hookSetters[3], true);
+  nodes = renderComposer(componentProps, new Map([[3, true]]));
+  assert.ok(nodes.find(x => x.type === 'span' && x.props.children === 'Create a separate message?'));
+  assert.ok(nodes.find(x => x.type === Button && x.props.children === 'Keep original'));
+  nodes.find(x => x.type === Button && x.props.children === 'Edit separately').props.onPress();
+  assert.equal(edits, 1);
 });
 test('blocked errors expose editing but no retry button', () => {
-  const nodes = elements(ChatComposer({ ...props, recoveryAction: 'blocked' }));
+  const nodes = renderComposer({ ...props, recoveryAction: 'blocked' });
   assert.equal(nodes.filter(x => x.type === Button).length, 1);
 });
