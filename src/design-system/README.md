@@ -37,7 +37,8 @@ and status bars. The provider does not change global native appearance.
 
 Use `colors.reaction` for filled blue reaction icons in both modes; `focus`
 is a separate color. Use `settingsBorder` for the stronger dark settings
-separator. Preserve the supplied logo and profile photos during migration.
+separator. Preserve the approved connection mark and profile photos during
+migration.
 
 Font family remains provisional; typography uses the platform default.
 Keep text scaling enabled, use minimum control heights, and calculate composer
@@ -50,10 +51,10 @@ Keep chat/settings behavior and business logic under `src/features/`.
 
 ## Brand artwork
 
-Use `BrandBackground` for brand moments and `LuniLogo` for the supplied white
-mark. The `identity` background matches the layered gradient and seeded grain
-in the system specimen. The `welcome` background matches onboarding and has
-no grain. Both retain their colors in light and dark mode.
+Use `BrandBackground` for brand moments and `LuniLogo` for the approved white
+connection mark. The `identity` background matches the layered gradient and
+seeded grain in the system specimen. The `welcome` background matches
+onboarding and has no grain. Both retain their colors in light and dark mode.
 
 ```tsx
 import { BrandBackground, LuniLogo } from '@/design-system/components';
@@ -74,8 +75,10 @@ identifies Luni. Its default accessible label is “Luni”. Use the white mark 
 blue or dark surfaces, preserve its proportions, and do not recolor it.
 
 `tokens/brand.ts` holds CSS angles, gradient stops, and ellipse centers.
-`assets/brand/luni-logo.svg` preserves the supplied source artwork;
-`src/design-system/assets/luni-logo.ts` contains the same paths for native SVG.
+`assets/brand/luni-logo.svg` is the canonical source artwork;
+`src/design-system/assets/luni-logo.ts` contains the same geometry for native SVG.
+`scripts/generate-brand-assets.ps1` creates the launcher, adaptive, monochrome,
+splash, and favicon PNGs from that geometry using the approved deep teal.
 `assets/brand/grain.png` reproduces the specimen's 600 × 600 seeded noise
 (seed 13, multiplier 16807, modulus 2147483647, alpha 200), composited with
 soft-light at 13% opacity. Texture blending requires the New Architecture.

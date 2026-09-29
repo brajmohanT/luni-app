@@ -25,7 +25,7 @@ Luni is a mobile AI companion. The first release is native-feeling text chat wit
 | Chat rendering | React Native lists currently; FlashList after profiling | Keep current conversation rendering until profiling shows a need for FlashList. |
 | Motion and gestures | react-native-reanimated + react-native-gesture-handler | Native-feeling transitions and interactions. Use them selectively. |
 | Visual system | Custom Luni components, React Native StyleSheet, and theme context | Tokens and shared controls are implemented; migrate screens using the approved design library. |
-| Brand vectors and gradients | react-native-svg 15.15.4 | Renders the supplied logo paths and layered identity/welcome gradients. The identity background also uses the extracted grain asset. |
+| Brand vectors and gradients | react-native-svg 15.15.4 | Renders the canonical connection-mark geometry and layered identity/welcome gradients. The identity background also uses the extracted grain asset. |
 | Notifications | expo-notifications, later | Add after notification consent, retention rules, and user benefit are designed. |
 | Crash reporting | Sentry, before public beta | Error reporting and release health. Do not attach private conversation content. |
 | Product analytics | PostHog, before public beta | Privacy-conscious product events; never record raw messages, memories, or authentication data. |

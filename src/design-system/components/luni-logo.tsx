@@ -1,5 +1,5 @@
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 
 import { luniLogo } from '../assets/luni-logo';
 
@@ -10,7 +10,7 @@ export type LuniLogoProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-/** Supplied white mark. Place on blue or dark surfaces; never recolor the paths. */
+/** Canonical white connection mark. Place on blue or dark brand surfaces. */
 export function LuniLogo({ size = 70, decorative = false, accessibilityLabel = 'Luni', style }: LuniLogoProps) {
   return (
     <View
@@ -21,7 +21,22 @@ export function LuniLogo({ size = 70, decorative = false, accessibilityLabel = '
       importantForAccessibility={decorative ? 'no-hide-descendants' : 'yes'}
       style={[styles.container, { width: size, height: size }, style]}>
       <Svg width="100%" height="100%" viewBox={luniLogo.viewBox} preserveAspectRatio="xMidYMid meet" accessible={false}>
-        {luniLogo.paths.map((path, index) => <Path key={index} d={path} fill={luniLogo.fill} />)}
+        <Circle {...luniLogo.head} fill={luniLogo.fill} />
+        <Circle
+          cx={luniLogo.presence.cx}
+          cy={luniLogo.presence.cy}
+          r={luniLogo.presence.r}
+          fill="none"
+          stroke={luniLogo.fill}
+          strokeWidth={luniLogo.presence.strokeWidth}
+        />
+        <Path
+          d={luniLogo.connection.d}
+          fill="none"
+          stroke={luniLogo.fill}
+          strokeWidth={luniLogo.connection.strokeWidth}
+          strokeLinecap="round"
+        />
       </Svg>
     </View>
   );

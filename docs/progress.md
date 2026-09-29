@@ -67,7 +67,7 @@ Approved visual reference: [Design library](design/index.html). Implementation a
 - [x] Add color, typography, spacing, sizing, radii, and motion tokens under `src/design-system/tokens/`.
 - [x] Mount `ThemeProvider` with light/dark/system preference and `useTheme()`.
 - [x] Preserve chat blue `#0054FD`, dark incoming bubbles `#282A30`, and filled blue reaction color tokens.
-- [x] Extract the supplied logo and approved identity/welcome gradients; add `LuniLogo`, `BrandBackground`, and identity grain texture.
+- [x] Integrate the approved connection mark and identity/welcome gradients; add `LuniLogo`, `BrandBackground`, generated platform assets, and identity grain texture.
 - [x] Add Button, IconButton, and TextField with disabled, loading, focus, and error states where applicable.
 - [x] Add SettingsRow navigation/toggle/info variants and controlled Switch.
 - [x] Add `/design-system` with an **Open Design System · Dev** launcher, isolated theme switching, and local interactive examples. Production builds disable the launcher and route access.

@@ -14,9 +14,9 @@ This `luni-app` directory contains an initialized Expo application and project d
 
 ## UI delivery status
 
-As of 2026-09-23, the shared design-system foundation is implemented and the user has reviewed its development preview on Android. It includes tokens, light/dark/system theming, the supplied logo, identity/welcome backgrounds, Button, IconButton, TextField, SettingsRow, and Switch.
+As of 2026-09-29, the shared design-system foundation is implemented and the user has reviewed its development preview on Android. It includes tokens, light/dark/system theming, the approved connection mark, identity/welcome backgrounds, Button, IconButton, TextField, SettingsRow, and Switch.
 
-The approved source is [docs/design/index.html](design/index.html), including its system specimen and current onboarding/chat/settings prototypes. Preserve chat blue `#0054FD`, dark incoming bubbles `#282A30`, supplied logo and profile photos, and filled blue reactions. Font family remains provisional.
+The approved source is [docs/design/index.html](design/index.html), including its system specimen and current onboarding/chat/settings prototypes. Preserve chat blue `#0054FD`, dark incoming bubbles `#282A30`, the connection mark and profile photos, and filled blue reactions. Font family remains provisional.
 
 `/design-system` is a development-only preview with a launcher above regular screens. It uses local sample state and a nested theme provider. It does not save account settings or schedule notifications. The user approved its appearance; full accessibility and device coverage remain pending.
 
