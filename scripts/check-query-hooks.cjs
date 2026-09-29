@@ -113,16 +113,33 @@ test('profile writes update only their account and never downgrade a newer versi
   assert.equal(app.client.getQueryData(app.profileKeys.detail('a')).preferredName, 'Newest');
   app.client.clear();
 });
-test('send invalidates only the sending account history and reuses its request ID', async () => {
+test('send leaves history stable for explicit optimistic reconciliation and reuses its request ID', async () => {
   const app = setup();
   for (const user of ['a', 'b']) app.client.setQueryData(app.conversationKeys.messages(user), { pages: [page(['greeting'])], pageParams: [undefined] });
   const input = { message: 'Hello', clientRequestId: 'same-id' };
   await mutate(app, app.sendChatMutationOptions(app.client, 'a'), input);
-  assert.equal(app.client.getQueryState(app.conversationKeys.messages('a')).isInvalidated, true);
+  assert.equal(app.client.getQueryState(app.conversationKeys.messages('a')).isInvalidated, false);
   assert.equal(app.client.getQueryState(app.conversationKeys.messages('b')).isInvalidated, false);
   const call = app.calls.find(x => Array.isArray(x) && x[0] === 'send');
   assert.equal(call[2].requestId, input.clientRequestId);
   assert.equal(call[1], input);
+  app.client.clear();
+});
+test('completed send is appended without refetching or duplicating server IDs', () => {
+  const app = setup();
+  app.client.setQueryData(app.conversationKeys.messages('a'), { pages: [page(['greeting'])], pageParams: [undefined] });
+  const request = { message: 'Hello', clientRequestId: 'request', replyToMessageId: 'greeting' };
+  const replyTarget = { id: 'greeting', role: 'assistant', content: 'greeting' };
+  const response = {
+    conversationId: conversation.id, userMessageId: 'user', assistantMessageId: 'assistant',
+    reply: 'Hi', responseId: null, userMessageCreatedAt: time, assistantMessageCreatedAt: time,
+  };
+  app.addCompletedSendToCache(app.client, 'a', request, replyTarget, response);
+  app.addCompletedSendToCache(app.client, 'a', request, replyTarget, response);
+  const cached = app.client.getQueryData(app.conversationKeys.messages('a'));
+  assert.deepEqual(Array.from(cached.pages[0].messages, item => item.id), ['greeting', 'user', 'assistant']);
+  assert.equal(cached.pages[0].messages[1].replyToMessage.content, 'greeting');
+  assert.equal(app.calls.length, 0);
   app.client.clear();
 });
 test('failed writes do not auto-retry or replace confirmed profile data', async () => {

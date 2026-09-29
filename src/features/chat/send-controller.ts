@@ -70,6 +70,7 @@ type ComposerState = {
   draft: string;
   replyTarget: ReplyTarget | null;
   pendingRequest: Readonly<ChatRequest> | null;
+  pendingCreatedAt: string | null;
   failure: SendFailure | null;
   isSending: boolean;
   validationError: string | null;
@@ -84,7 +85,7 @@ export class ChatSendController {
   private state: ComposerState;
   private listeners = new Set<() => void>();
   constructor(private uuid: () => string, private clock: () => number = Date.now) {
-    this.state = { draft: '', replyTarget: null, pendingRequest: null, failure: null,
+    this.state = { draft: '', replyTarget: null, pendingRequest: null, pendingCreatedAt: null, failure: null,
       isSending: false, validationError: null, retryAt: 0, now: clock(), notice: null, pendingMayBeSaved: false };
   }
   getSnapshot = () => this.state;
@@ -108,6 +109,7 @@ export class ChatSendController {
       draft: pending.request.message,
       replyTarget: pending.replyTarget,
       pendingRequest: Object.freeze({ ...pending.request }),
+      pendingCreatedAt: new Date(this.clock()).toISOString(),
       failure: pending.failure,
       retryAt: pending.retryAt,
       now: this.clock(),
@@ -123,7 +125,7 @@ export class ChatSendController {
   };
   editAsNew = () => {
     if (this.state.isSending || !this.state.failure) return;
-    this.change({ pendingRequest: null, failure: null, validationError: null, pendingMayBeSaved: false,
+    this.change({ pendingRequest: null, pendingCreatedAt: null, failure: null, validationError: null, pendingMayBeSaved: false,
       replyTarget: this.state.failure.removeQuote ? null : this.state.replyTarget,
       notice: 'You’re editing a new message. Sending will create a new request.' });
     // Keep the server deadline even if the user chooses to edit.
@@ -137,7 +139,7 @@ export class ChatSendController {
       return null;
     }
     const request = Object.freeze(parsed.data);
-    this.change({ pendingRequest: request });
+    this.change({ pendingRequest: request, pendingCreatedAt: new Date(this.clock()).toISOString() });
     return this.run(request, send);
   };
   retry = async (send: (request: ChatRequest) => Promise<ChatResponse>, recovered = false) => {
@@ -151,7 +153,7 @@ export class ChatSendController {
     this.change({ isSending: true, failure: null, validationError: null, notice: null });
     try {
       const response = await send(request);
-      this.change({ isSending: false, draft: '', replyTarget: null, pendingRequest: null,
+      this.change({ isSending: false, draft: '', replyTarget: null, pendingRequest: null, pendingCreatedAt: null,
         failure: null, retryAt: 0, now: this.clock(), pendingMayBeSaved: false });
       return response;
     } catch (error) {

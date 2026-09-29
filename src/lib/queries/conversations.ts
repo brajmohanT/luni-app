@@ -4,7 +4,12 @@ import {
 } from '@tanstack/react-query';
 import { getCompanionMessages, putCompanionConversation, sendChatMessage } from '@/lib/api/conversations';
 import { ApiClientError } from '@/lib/api/errors';
-import type { ChatRequest, CompanionMessagesResponse } from '@/lib/api/types';
+import type {
+  ChatRequest,
+  ChatResponse,
+  CompanionMessagesResponse,
+  ReplyTarget,
+} from '@/lib/api/types';
 import { profileQueryOptions, requireAccount } from '@/lib/queries/profile';
 
 export const conversationKeys = {
@@ -66,6 +71,53 @@ export function flattenCompanionMessages(data: InfiniteData<CompanionMessagesRes
   };
 }
 
+export function addCompletedSendToCache(
+  client: QueryClient,
+  userId: string,
+  request: Readonly<ChatRequest>,
+  replyTarget: ReplyTarget | null,
+  response: ChatResponse,
+) {
+  client.setQueryData<InfiniteData<CompanionMessagesResponse>>(
+    conversationKeys.messages(userId),
+    current => {
+      if (!current?.pages.length) return current;
+      const knownIds = new Set(current.pages.flatMap(page => page.messages.map(message => message.id)));
+      const messages: CompanionMessagesResponse['messages'] = [];
+      if (!knownIds.has(response.userMessageId)) {
+        messages.push({
+          id: response.userMessageId,
+          role: 'user',
+          content: request.message,
+          replyToMessageId: request.replyToMessageId ?? null,
+          replyToMessage: replyTarget,
+          createdAt: response.userMessageCreatedAt,
+        });
+      }
+      if (!knownIds.has(response.assistantMessageId)) {
+        messages.push({
+          id: response.assistantMessageId,
+          role: 'assistant',
+          content: response.reply,
+          replyToMessageId: null,
+          replyToMessage: null,
+          createdAt: response.assistantMessageCreatedAt,
+        });
+      }
+      if (!messages.length) return current;
+      const [newest, ...older] = current.pages;
+      return {
+        ...current,
+        pages: [{
+          ...newest,
+          conversation: { ...newest.conversation, updatedAt: response.assistantMessageCreatedAt },
+          messages: [...newest.messages, ...messages],
+        }, ...older],
+      };
+    },
+  );
+}
+
 export function sendChatMutationOptions(client: QueryClient, userId: string | undefined) {
   return mutationOptions({
     retry: false,
@@ -73,11 +125,6 @@ export function sendChatMutationOptions(client: QueryClient, userId: string | un
       requireAccount(userId);
       await client.fetchQuery(companionQueryOptions(client, userId));
       return sendChatMessage(request, { requestId: request.clientRequestId, expectedUserId: userId });
-    },
-    onSuccess: async () => {
-      requireAccount(userId);
-      // Refetch loaded pages from the newest cursor, preserving server IDs/quotes.
-      await client.invalidateQueries({ queryKey: conversationKeys.messages(userId) });
     },
   });
 }

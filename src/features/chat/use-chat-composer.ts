@@ -10,7 +10,7 @@ import { getMyProfile } from '@/lib/api/profile';
 import { profileKeys } from '@/lib/queries/profile';
 import { conversationKeys } from '@/lib/queries/conversations';
 import { useAuth } from '@/providers/auth-provider';
-import type { ChatResponse, Message } from '@/lib/api/types';
+import type { ChatRequest, ChatResponse, Message } from '@/lib/api/types';
 import {
   clearPendingSend,
   loadChatState,
@@ -19,7 +19,7 @@ import {
 } from '@/lib/database/chat-persistence';
 
 type UseChatComposerOptions = {
-  onSuccess(response: ChatResponse): void | Promise<void>;
+  onSuccess(response: ChatResponse, request: Readonly<ChatRequest>, replyTarget: Message['replyToMessage']): void | Promise<void>;
   messages?: Message[];
 };
 
@@ -45,6 +45,10 @@ export function useChatComposer({ onSuccess, messages }: UseChatComposerOptions)
   const [isRestoring, setIsRestoring] = useState(true);
   const restoredFor = useRef<string | null>(null);
   const writes = useRef(Promise.resolve());
+  const completedSend = useRef<{
+    request: Readonly<Parameters<typeof mutation.mutateAsync>[0]>;
+    replyTarget: Message['replyToMessage'];
+  } | null>(null);
   const enqueue = useCallback((write: () => Promise<void>) => {
     const next = writes.current.then(write, write);
     writes.current = next.catch(() => {});
@@ -85,6 +89,8 @@ export function useChatComposer({ onSuccess, messages }: UseChatComposerOptions)
 
   const finish = useCallback(async (response: ChatResponse | null) => {
     if (!response || !mounted.current) return;
+    const completed = completedSend.current;
+    completedSend.current = null;
     if (userId) {
       try {
         await enqueue(async () => {
@@ -95,7 +101,11 @@ export function useChatComposer({ onSuccess, messages }: UseChatComposerOptions)
         controller.setNotice('Your message was sent, but this device couldn’t clear its recovery copy.');
       }
     }
-    try { await onSuccess(response); }
+    if (!completed) {
+      controller.setNotice('Your message was sent. Refresh the conversation to see the reply.');
+      return;
+    }
+    try { await onSuccess(response, completed.request, completed.replyTarget); }
     catch { if (mounted.current) controller.setNotice('Your message was sent. Refresh the conversation to see the reply.'); }
   }, [controller, db, enqueue, onSuccess, userId]);
 
@@ -113,6 +123,7 @@ export function useChatComposer({ onSuccess, messages }: UseChatComposerOptions)
       throw new ChatPersistenceError({ cause });
     }
     const response = await mutation.mutateAsync(request);
+    completedSend.current = { request, replyTarget: snapshot.replyTarget };
     void enqueue(() => savePendingSend(db, userId, {
       request,
       replyTarget: snapshot.replyTarget,
@@ -207,7 +218,15 @@ export function useChatComposer({ onSuccess, messages }: UseChatComposerOptions)
   };
   const retrySeconds = Math.max(0, Math.ceil((state.retryAt - state.now) / 1000));
   return {
-    draft: state.draft,
+    draft: state.pendingRequest ? '' : state.draft,
+    optimisticMessage: state.pendingRequest && state.pendingCreatedAt ? {
+      id: state.pendingRequest.clientRequestId,
+      role: 'user' as const,
+      content: state.pendingRequest.message,
+      replyToMessageId: state.pendingRequest.replyToMessageId ?? null,
+      replyToMessage: state.replyTarget,
+      createdAt: state.pendingCreatedAt,
+    } : null,
     accountEmail: session?.user.email ?? null,
     replyTarget: state.replyTarget,
     selectReply: controller.selectReply,

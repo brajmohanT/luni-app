@@ -65,6 +65,19 @@ test('repeated send and retry taps never overlap', async () => {
   assert.equal(calls, 2);
   resolve(response); await retry;
 });
+test('send exposes a stable optimistic timestamp until the request settles', async () => {
+  const { controller } = setup();
+  let resolve;
+  const pending = controller.start(() => new Promise(done => { resolve = done; }));
+  const sending = controller.getSnapshot();
+  assert.equal(sending.pendingRequest.message, 'Hello');
+  assert.equal(sending.pendingCreatedAt, '1970-01-01T00:00:01.000Z');
+  controller.tick();
+  assert.equal(controller.getSnapshot().pendingCreatedAt, sending.pendingCreatedAt);
+  resolve(response);
+  await pending;
+  assert.equal(controller.getSnapshot().pendingCreatedAt, null);
+});
 test('Retry-After blocks early retries and uses elapsed time after backgrounding', async () => {
   const { controller, advance } = setup();
   await controller.start(async () => { throw failure('CONVERSATION_BUSY', 409, 5); });

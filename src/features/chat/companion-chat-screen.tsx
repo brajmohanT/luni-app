@@ -12,7 +12,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LuniLogo } from '@/design-system/components';
 import { type Theme, useTheme } from '@/design-system/theme';
@@ -25,9 +25,9 @@ import { SessionLoadingScreen } from '@/features/auth/session-loading-screen';
 import { useMyProfile } from '@/features/profile/hooks';
 import { useAuth } from '@/providers/auth-provider';
 import { useQueryClient } from '@tanstack/react-query';
-import { conversationKeys } from '@/lib/queries/conversations';
+import { addCompletedSendToCache, conversationKeys } from '@/lib/queries/conversations';
 import { isApiClientError } from '@/lib/api/errors';
-import type { ChatResponse, Message, ReplyTarget } from '@/lib/api/types';
+import type { ChatRequest, ChatResponse, Message, ReplyTarget } from '@/lib/api/types';
 
 const luniAvatar = require('../../../assets/brand/luni-chat-avatar.png');
 const userAvatar = require('../../../assets/brand/user-chat-avatar.png');
@@ -151,7 +151,6 @@ function FirstChatStarters({ onSelect }: { onSelect(value: string): void }) {
   );
 }
 
-// Render only server-persisted messages, including the first greeting.
 export default function CompanionChatScreen() {
   const {
     data,
@@ -165,7 +164,9 @@ export default function CompanionChatScreen() {
     refetch,
   } = useCompanionMessages();
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const chatStyles = useMemo(() => createChatStyles(theme), [theme]);
+  const keyboardVerticalOffset = __DEV__ ? insets.top + theme.sizing.minimumTouchTarget : 0;
   const profile = useMyProfile();
   const client = useQueryClient();
   const { session } = useAuth();
@@ -198,14 +199,18 @@ export default function CompanionChatScreen() {
   }, [refetch]);
   const listRef = useRef<FlatList<Message> | null>(null);
   const shouldScrollToEnd = useRef(true);
-  // Reloads the server-persisted messages after a successful send.
-  const refreshAfterSend = useCallback(async (_response: ChatResponse) => {
+  const showCompletedSend = useCallback((
+    response: ChatResponse,
+    request: Readonly<ChatRequest>,
+    replyTarget: ReplyTarget | null,
+  ) => {
+    if (!session) return;
     shouldScrollToEnd.current = true;
-    await refetch();
+    addCompletedSendToCache(client, session.user.id, request, replyTarget, response);
     requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
-  }, [refetch]);
+  }, [client, session]);
   const composer = useChatComposer({
-    onSuccess: refreshAfterSend,
+    onSuccess: showCompletedSend,
     messages: data?.messages,
   });
   const composerInputRef = useRef<TextInput | null>(null);
@@ -219,6 +224,9 @@ export default function CompanionChatScreen() {
   if (!data) {
     return null;
   }
+  const messages = composer.optimisticMessage
+    ? [...data.messages, composer.optimisticMessage]
+    : data.messages;
   const showStarters = !startersDismissed && !composer.replyTarget
     && !data.messages.some(message => message.role === 'user')
     && !composer.draft.trim() && !composer.hasFailedSend && !composer.isSending;
@@ -240,7 +248,8 @@ export default function CompanionChatScreen() {
   return (
     <SafeAreaView style={chatStyles.safeArea}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
+        keyboardVerticalOffset={keyboardVerticalOffset}
         style={chatStyles.screen}>
         <View style={chatStyles.header}>
           <View style={chatStyles.headerContent}>
@@ -258,11 +267,12 @@ export default function CompanionChatScreen() {
           {isError && <EntryRecovery error={error} target="chat" onRetry={recover} compact />}
 
           <FlatList
-            contentContainerStyle={data.messages.length ? styles.messageList : styles.emptyList}
-            data={data.messages}
+            contentContainerStyle={messages.length ? styles.messageList : styles.emptyList}
+            data={messages}
+            keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
             keyboardShouldPersistTaps="handled"
             keyExtractor={({ id }) => id}
-            ListHeaderComponent={data.messages.length && hasNextPage ? (
+            ListHeaderComponent={messages.length && hasNextPage ? (
               <Pressable
                 accessibilityLabel={isFetchingNextPage ? 'Loading earlier messages' : 'Load earlier messages'}
                 accessibilityRole="button"
@@ -305,9 +315,10 @@ export default function CompanionChatScreen() {
                 canReply={composer.isEditable}
                 message={item}
                 onReply={selectReply}
-                showDay={index === 0 || calendarDay(data.messages[index - 1].createdAt) !== calendarDay(item.createdAt)}
+                showDay={index === 0 || calendarDay(messages[index - 1].createdAt) !== calendarDay(item.createdAt)}
               />
             )}
+            style={chatStyles.messages}
           />
 
           {showStarters && <FirstChatStarters onSelect={selectStarter} />}
@@ -340,6 +351,7 @@ const createChatStyles = (theme: Theme) => StyleSheet.create({
   screen: {
     backgroundColor: theme.colors.canvas,
     flex: 1,
+    overflow: 'hidden',
   },
   header: {
     borderBottomColor: theme.colors.border,
@@ -383,7 +395,12 @@ const createChatStyles = (theme: Theme) => StyleSheet.create({
     alignSelf: 'center',
     flex: 1,
     maxWidth: 720,
+    minHeight: 0,
     width: '100%',
+  },
+  messages: {
+    flex: 1,
+    minHeight: 0,
   },
   loadEarlier: {
     alignItems: 'center',
