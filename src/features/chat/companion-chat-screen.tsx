@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 
 import { LuniLogo } from '@/design-system/components';
 import { type Theme, useTheme } from '@/design-system/theme';
@@ -198,7 +199,36 @@ export default function CompanionChatScreen() {
     void refetch();
   }, [refetch]);
   const listRef = useRef<FlatList<Message> | null>(null);
+  const messageKeys = useRef(new Map<string, string>());
+  const lastScrolledMessage = useRef<string | null>(null);
+  const latestMessageId = useRef<string | null>(null);
   const shouldScrollToEnd = useRef(true);
+  const scrollFrame = useRef<number | null>(null);
+  const cancelScheduledScroll = useCallback(() => {
+    if (scrollFrame.current !== null) cancelAnimationFrame(scrollFrame.current);
+    scrollFrame.current = null;
+  }, []);
+  const scrollToLatest = useCallback(() => {
+    cancelScheduledScroll();
+    if (!shouldScrollToEnd.current || !latestMessageId.current
+      || lastScrolledMessage.current === latestMessageId.current) return;
+    scrollFrame.current = requestAnimationFrame(() => {
+      scrollFrame.current = null;
+      if (shouldScrollToEnd.current) {
+        listRef.current?.scrollToOffset({ offset: 0, animated: false });
+        lastScrolledMessage.current = latestMessageId.current;
+      }
+    });
+  }, [cancelScheduledScroll]);
+  useFocusEffect(useCallback(() => {
+    shouldScrollToEnd.current = true;
+    lastScrolledMessage.current = null;
+    scrollToLatest();
+    return () => {
+      shouldScrollToEnd.current = false;
+      cancelScheduledScroll();
+    };
+  }, [cancelScheduledScroll, scrollToLatest]));
   const showCompletedSend = useCallback((
     response: ChatResponse,
     request: Readonly<ChatRequest>,
@@ -206,8 +236,8 @@ export default function CompanionChatScreen() {
   ) => {
     if (!session) return;
     shouldScrollToEnd.current = true;
+    messageKeys.current.set(response.userMessageId, request.clientRequestId);
     addCompletedSendToCache(client, session.user.id, request, replyTarget, response);
-    requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
   }, [client, session]);
   const composer = useChatComposer({
     onSuccess: showCompletedSend,
@@ -215,6 +245,10 @@ export default function CompanionChatScreen() {
   });
   const composerInputRef = useRef<TextInput | null>(null);
   const [startersDismissed, setStartersDismissed] = useState(false);
+  const newestId = composer.optimisticMessage?.id ?? data?.messages.at(-1)?.id ?? null;
+  useLayoutEffect(() => {
+    latestMessageId.current = newestId;
+  }, [newestId]);
 
   if (isPending) return <SessionLoadingScreen message="Opening your conversation…" />;
   if (isError && (!data || entryFailure(error, 'chat').action !== 'retry')) {
@@ -224,9 +258,11 @@ export default function CompanionChatScreen() {
   if (!data) {
     return null;
   }
-  const messages = composer.optimisticMessage
+  // Offset zero is the newest message, so opening chat never requires estimating
+  // the heights of all the older, unmeasured rows in the virtualized list.
+  const messages = (composer.optimisticMessage
     ? [...data.messages, composer.optimisticMessage]
-    : data.messages;
+    : [...data.messages]).reverse();
   const showStarters = !startersDismissed && !composer.replyTarget
     && !data.messages.some(message => message.role === 'user')
     && !composer.draft.trim() && !composer.hasFailedSend && !composer.isSending;
@@ -269,10 +305,12 @@ export default function CompanionChatScreen() {
           <FlatList
             contentContainerStyle={messages.length ? styles.messageList : styles.emptyList}
             data={messages}
+            inverted
             keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
             keyboardShouldPersistTaps="handled"
-            keyExtractor={({ id }) => id}
-            ListHeaderComponent={messages.length && hasNextPage ? (
+            keyExtractor={({ id }) => messageKeys.current.get(id) ?? id}
+            removeClippedSubviews={false}
+            ListFooterComponent={messages.length && hasNextPage ? (
               <Pressable
                 accessibilityLabel={isFetchingNextPage ? 'Loading earlier messages' : 'Load earlier messages'}
                 accessibilityRole="button"
@@ -294,11 +332,10 @@ export default function CompanionChatScreen() {
                 <Text style={styles.emptyTitle}>No messages yet</Text>
               </View>
             }
-            maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
-            onContentSizeChange={() => {
-              if (!shouldScrollToEnd.current) return;
+            onContentSizeChange={scrollToLatest}
+            onScrollBeginDrag={() => {
               shouldScrollToEnd.current = false;
-              listRef.current?.scrollToEnd({ animated: false });
+              cancelScheduledScroll();
             }}
             ref={listRef}
             refreshControl={(
@@ -315,7 +352,7 @@ export default function CompanionChatScreen() {
                 canReply={composer.isEditable}
                 message={item}
                 onReply={selectReply}
-                showDay={index === 0 || calendarDay(messages[index - 1].createdAt) !== calendarDay(item.createdAt)}
+                showDay={index === messages.length - 1 || calendarDay(messages[index + 1].createdAt) !== calendarDay(item.createdAt)}
               />
             )}
             style={chatStyles.messages}
@@ -332,6 +369,7 @@ export default function CompanionChatScreen() {
             onRetry={composer.retrySend}
             onSend={() => {
               setStartersDismissed(true);
+              shouldScrollToEnd.current = true;
               composer.startSend();
             }}
             requestId={composer.requestId}

@@ -45,10 +45,7 @@ export function useChatComposer({ onSuccess, messages }: UseChatComposerOptions)
   const [isRestoring, setIsRestoring] = useState(true);
   const restoredFor = useRef<string | null>(null);
   const writes = useRef(Promise.resolve());
-  const completedSend = useRef<{
-    request: Readonly<Parameters<typeof mutation.mutateAsync>[0]>;
-    replyTarget: Message['replyToMessage'];
-  } | null>(null);
+  const [confirmedMessageId, setConfirmedMessageId] = useState<string | null>(null);
   const enqueue = useCallback((write: () => Promise<void>) => {
     const next = writes.current.then(write, write);
     writes.current = next.catch(() => {});
@@ -89,8 +86,6 @@ export function useChatComposer({ onSuccess, messages }: UseChatComposerOptions)
 
   const finish = useCallback(async (response: ChatResponse | null) => {
     if (!response || !mounted.current) return;
-    const completed = completedSend.current;
-    completedSend.current = null;
     if (userId) {
       try {
         await enqueue(async () => {
@@ -101,17 +96,12 @@ export function useChatComposer({ onSuccess, messages }: UseChatComposerOptions)
         controller.setNotice('Your message was sent, but this device couldn’t clear its recovery copy.');
       }
     }
-    if (!completed) {
-      controller.setNotice('Your message was sent. Refresh the conversation to see the reply.');
-      return;
-    }
-    try { await onSuccess(response, completed.request, completed.replyTarget); }
-    catch { if (mounted.current) controller.setNotice('Your message was sent. Refresh the conversation to see the reply.'); }
-  }, [controller, db, enqueue, onSuccess, userId]);
+  }, [controller, db, enqueue, userId]);
 
   const persistedSend = useCallback(async (request: Parameters<typeof mutation.mutateAsync>[0]) => {
     if (!userId) return mutation.mutateAsync(request);
     const snapshot = controller.getSnapshot();
+    setConfirmedMessageId(null);
     try {
       await enqueue(() => savePendingSend(db, userId, {
         request,
@@ -123,7 +113,13 @@ export function useChatComposer({ onSuccess, messages }: UseChatComposerOptions)
       throw new ChatPersistenceError({ cause });
     }
     const response = await mutation.mutateAsync(request);
-    completedSend.current = { request, replyTarget: snapshot.replyTarget };
+    // Publish the confirmed rows before the controller removes the pending row.
+    // Disk cleanup must not create an intermediate history-only render.
+    setConfirmedMessageId(response.userMessageId);
+    if (mounted.current) {
+      try { await onSuccess(response, request, snapshot.replyTarget); }
+      catch { controller.setNotice('Your message was sent. Refresh the conversation to see the reply.'); }
+    }
     void enqueue(() => savePendingSend(db, userId, {
       request,
       replyTarget: snapshot.replyTarget,
@@ -132,7 +128,7 @@ export function useChatComposer({ onSuccess, messages }: UseChatComposerOptions)
       userMessageId: response.userMessageId,
     })).catch(() => {});
     return response;
-  }, [controller, db, enqueue, mutation, userId]);
+  }, [controller, db, enqueue, mutation, onSuccess, userId]);
 
   useEffect(() => {
     if (isRestoring || !userId) return;
@@ -219,7 +215,8 @@ export function useChatComposer({ onSuccess, messages }: UseChatComposerOptions)
   const retrySeconds = Math.max(0, Math.ceil((state.retryAt - state.now) / 1000));
   return {
     draft: state.pendingRequest ? '' : state.draft,
-    optimisticMessage: state.pendingRequest && state.pendingCreatedAt ? {
+    optimisticMessage: state.pendingRequest && state.pendingCreatedAt
+      && !messages?.some(message => message.id === confirmedMessageId) ? {
       id: state.pendingRequest.clientRequestId,
       role: 'user' as const,
       content: state.pendingRequest.message,
