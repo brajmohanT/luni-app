@@ -3,6 +3,7 @@ import {
   companionQueryOptions, companionMessagesQueryOptions, flattenCompanionMessages,
   sendChatMutationOptions,
 } from '@/lib/queries/conversations';
+import { reportAssistantMessageMutationOptions } from '@/lib/queries/message-reports';
 import { useAuth } from '@/providers/auth-provider';
 
 export function useCompanionConversation() {
@@ -24,6 +25,11 @@ export function useSendChatMessage() {
   const { session } = useAuth();
   const client = useQueryClient();
   return useMutation(sendChatMutationOptions(client, session?.user.id));
+}
+
+export function useReportAssistantMessage() {
+  const { session } = useAuth();
+  return useMutation(reportAssistantMessageMutationOptions(session?.user.id));
 }
 
 export { conversationKeys } from '@/lib/queries/conversations';

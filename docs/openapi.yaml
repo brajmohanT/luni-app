@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Luni API
-  version: 2.0.0
+  version: 2.2.0
   description: |
     API contract for the forced-update Luni mobile application. This version uses one canonical companion conversation per user.
     Any unmatched route returns 404 ROUTE_NOT_FOUND with the ApiError schema.
@@ -79,6 +79,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/EmailNotConfirmed'
+        '423':
+          $ref: '#/components/responses/AccountDeletionInProgress'
         '500':
           $ref: '#/components/responses/InternalError'
         '503':
@@ -116,6 +118,36 @@ paths:
           $ref: '#/components/responses/EmailNotConfirmed'
         '413':
           $ref: '#/components/responses/PayloadTooLarge'
+        '423':
+          $ref: '#/components/responses/AccountDeletionInProgress'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceDraining'
+    delete:
+      operationId: deleteMyAccount
+      summary: Request permanent deletion of the authenticated account
+      description: Starting deletion requires an interactive Supabase sign-in within the previous 10 minutes. Repeated requests return the original request time.
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/AppVersion'
+        - $ref: '#/components/parameters/AppBuild'
+        - $ref: '#/components/parameters/Platform'
+        - $ref: '#/components/parameters/PlatformVersion'
+      responses:
+        '202':
+          description: Account deletion was accepted for asynchronous processing
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountDeletionAccepted'
+        '401':
+          $ref: '#/components/responses/AccountDeletionAuthentication'
+        '403':
+          $ref: '#/components/responses/EmailNotConfirmed'
         '500':
           $ref: '#/components/responses/InternalError'
         '503':
@@ -146,6 +178,8 @@ paths:
           $ref: '#/components/responses/EmailNotConfirmed'
         '409':
           $ref: '#/components/responses/OnboardingProfileIncomplete'
+        '423':
+          $ref: '#/components/responses/AccountDeletionInProgress'
         '500':
           $ref: '#/components/responses/InternalError'
         '503':
@@ -176,6 +210,8 @@ paths:
           $ref: '#/components/responses/EmailNotConfirmed'
         '409':
           $ref: '#/components/responses/OnboardingRequired'
+        '423':
+          $ref: '#/components/responses/AccountDeletionInProgress'
         '500':
           $ref: '#/components/responses/InternalError'
         '503':
@@ -210,6 +246,75 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '404':
           $ref: '#/components/responses/CompanionConversationNotFound'
+        '423':
+          $ref: '#/components/responses/AccountDeletionInProgress'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceDraining'
+  /messages/{messageId}/reports:
+    post:
+      operationId: reportAssistantMessage
+      summary: Report an assistant message in the authenticated user's companion conversation
+      description: |
+        The server verifies ownership and the assistant role, and snapshots the stored message text
+        and available generation metadata. No automatic action is taken on the message or account.
+        Reports are reviewed and resolved manually. Reports, including resolved reports, are
+        intended to be manually deleted 30 days after submission; the API does not enforce expiry.
+        Account deletion deletes all reports submitted by that account, including their text
+        snapshots and optional explanations. Reports from active accounts remain until manual deletion.
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/AppVersion'
+        - $ref: '#/components/parameters/AppBuild'
+        - $ref: '#/components/parameters/Platform'
+        - $ref: '#/components/parameters/PlatformVersion'
+        - name: messageId
+          in: path
+          required: true
+          description: Persisted ID of an assistant message, including the initial companion greeting.
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageReportRequest'
+      responses:
+        '201':
+          description: Report received
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageReportReceipt'
+        '200':
+          description: Original receipt replayed for the same client request ID and payload
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageReportReceipt'
+        '400':
+          $ref: '#/components/responses/InvalidReportRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/EmailNotConfirmed'
+        '404':
+          $ref: '#/components/responses/ReportMessageNotFound'
+        '409':
+          $ref: '#/components/responses/ReportRequestConflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '423':
+          $ref: '#/components/responses/AccountDeletionInProgress'
         '500':
           $ref: '#/components/responses/InternalError'
         '503':
@@ -252,6 +357,8 @@ paths:
           $ref: '#/components/responses/ChatConflict'
         '413':
           $ref: '#/components/responses/PayloadTooLarge'
+        '423':
+          $ref: '#/components/responses/AccountDeletionInProgress'
         '500':
           $ref: '#/components/responses/InternalError'
         '503':
@@ -349,6 +456,18 @@ components:
             oneOf:
               - $ref: '#/components/schemas/MissingAccessTokenError'
               - $ref: '#/components/schemas/InvalidAccessTokenError'
+    AccountDeletionAuthentication:
+      description: Bearer authentication failed or the user must sign in again before deleting the account
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/MissingAccessTokenError'
+              - $ref: '#/components/schemas/InvalidAccessTokenError'
+              - $ref: '#/components/schemas/RecentAuthenticationRequiredError'
     EmailNotConfirmed:
       description: The authenticated Supabase account has no confirmed email address
       headers:
@@ -358,6 +477,15 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/EmailNotConfirmedError'
+    AccountDeletionInProgress:
+      description: The account has an active deletion request and cannot access application data
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AccountDeletionInProgressError'
     ChatResourceNotFound:
       description: A stored retry conversation or requested reply target was not found
       headers:
@@ -369,6 +497,24 @@ components:
             oneOf:
               - $ref: '#/components/schemas/ConversationNotFoundError'
               - $ref: '#/components/schemas/ReplyTargetNotFoundError'
+    ReportMessageNotFound:
+      description: Message does not exist, is not an assistant message, or is not owned by the authenticated user
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ReportMessageNotFoundError'
+    ReportRequestConflict:
+      description: The client request ID was already used for a different message, reason, or explanation
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ReportRequestPayloadMismatchError'
     CompanionConversationNotFound:
       description: The authenticated user has no companion conversation
       headers:
@@ -389,6 +535,17 @@ components:
             $ref: '#/components/schemas/ValidationError'
     InvalidChatRequest:
       description: Invalid JSON or a chat request that failed validation
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/InvalidJsonError'
+              - $ref: '#/components/schemas/ValidationError'
+    InvalidReportRequest:
+      description: Invalid JSON, message ID, or report request body
       headers:
         X-Request-Id:
           $ref: '#/components/headers/RequestId'
@@ -515,6 +672,17 @@ components:
           description: The server trims whitespace before validating and saving this value.
         conversationStyle:
           $ref: '#/components/schemas/ConversationStyle'
+    AccountDeletionAccepted:
+      type: object
+      additionalProperties: false
+      required: [status, requestedAt]
+      properties:
+        status:
+          type: string
+          const: pending
+        requestedAt:
+          type: string
+          format: date-time
     Conversation:
       type: object
       additionalProperties: false
@@ -593,6 +761,40 @@ components:
         createdAt:
           type: string
           format: date-time
+    MessageReportReason:
+      type: string
+      enum: [unsafe_content, sexual_content, hate_or_harassment, self_harm, privacy, other]
+    MessageReportRequest:
+      type: object
+      additionalProperties: false
+      required: [reason, clientRequestId]
+      properties:
+        reason:
+          $ref: '#/components/schemas/MessageReportReason'
+        details:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: Optional explanation. The server trims whitespace before validation and saving. Retained as written, subject to trimming.
+        clientRequestId:
+          type: string
+          format: uuid
+          description: Generate one UUID per report submission. Reuse only to retry the same message ID, reason, and explanation.
+    MessageReportReceipt:
+      type: object
+      additionalProperties: false
+      required: [id, status, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          const: open
+          description: Receipt status at submission, not a moderation decision.
+        createdAt:
+          type: string
+          format: date-time
     ChatRequest:
       type: object
       additionalProperties: false
@@ -653,6 +855,8 @@ components:
             - MISSING_ACCESS_TOKEN
             - INVALID_ACCESS_TOKEN
             - EMAIL_NOT_CONFIRMED
+            - RECENT_AUTHENTICATION_REQUIRED
+            - ACCOUNT_DELETION_IN_PROGRESS
             - VALIDATION_ERROR
             - INVALID_JSON
             - PAYLOAD_TOO_LARGE
@@ -664,6 +868,8 @@ components:
             - ONBOARDING_PROFILE_INCOMPLETE
             - ONBOARDING_REQUIRED
             - REPLY_TARGET_NOT_FOUND
+            - REPORT_MESSAGE_NOT_FOUND
+            - REPORT_REQUEST_PAYLOAD_MISMATCH
             - SERVICE_DRAINING
             - SERVICE_UNAVAILABLE
             - ROUTE_NOT_FOUND
@@ -703,6 +909,20 @@ components:
           properties:
             code:
               const: EMAIL_NOT_CONFIRMED
+    RecentAuthenticationRequiredError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              const: RECENT_AUTHENTICATION_REQUIRED
+    AccountDeletionInProgressError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              const: ACCOUNT_DELETION_IN_PROGRESS
     ConversationNotFoundError:
       allOf:
         - $ref: '#/components/schemas/ApiError'
@@ -724,6 +944,20 @@ components:
           properties:
             code:
               const: REPLY_TARGET_NOT_FOUND
+    ReportMessageNotFoundError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              const: REPORT_MESSAGE_NOT_FOUND
+    ReportRequestPayloadMismatchError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            code:
+              const: REPORT_REQUEST_PAYLOAD_MISMATCH
     ValidationError:
       allOf:
         - $ref: '#/components/schemas/ApiError'

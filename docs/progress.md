@@ -2,13 +2,24 @@
 
 Use this document to track Luni mobile delivery, blockers, and release gates.
 
-Last updated: 2026-09-28.
+Last updated: 2026-10-02.
 
-Status: shared UI foundations, password authentication, onboarding, continuous-chat entry, approved chat milestones 6.1–6.6, and account-scoped draft/pending-send recovery are implemented. The production backend and mobile client use API v2, and the implemented flow works on the connected physical Android device. Settings and the remaining release-matrix review are still pending.
+Status: shared UI foundations, password authentication, onboarding, continuous-chat entry, approved chat milestones 6.1–6.6, account-scoped draft/pending-send recovery, and in-app AI response reporting are implemented. The production backend and mobile client use API v2, and the previously reviewed chat flow works on the connected physical Android device. Settings, account deletion UI, message-reporting device review, and the remaining release matrix are still pending.
 
 Current status: the first local Android development build installed and launched successfully on a connected physical device. The login and sign-up screens render correctly. The prior Windows CMake object-path issue was addressed by relocating the app to a shorter path and using pnpm's hoisted node-modules layout.
 
 The user has reviewed the Design System preview, onboarding, production-backed continuous chat, and implemented chat interactions on an Android device. The tested flow works as expected. This review does not cover the full accessibility or device matrix.
+
+## AI response reporting (2026-10-02)
+
+- [x] Match the API v2.2 report reasons, request, receipt, and error codes with strict Zod schemas.
+- [x] Add authenticated `POST /messages/{messageId}/reports` support with message-ID validation, account binding, and `clientRequestId` reuse through `X-Request-Id`.
+- [x] Add a non-retrying TanStack mutation and an immutable report lifecycle that blocks duplicate taps, preserves the original payload for explicit retry, and clears account-scoped state after an account change.
+- [x] Add Report beside Reply on Luni messages, with six reasons, optional details up to 1,000 characters, controlled error/retry states, and a session-level Reported state after server confirmation.
+- [x] Add modal focus, radio semantics, live error/success announcements, Android Back handling, themed light/dark presentation, and minimum touch targets.
+- [ ] Complete live-backend Android review for success, offline retry, timeout, duplicate taps, large text, and TalkBack.
+
+Verification: all 106 regression tests, targeted ESLint, and diff whitespace checks passed. The report coverage checks request validation, account isolation, idempotent receipt replay, explicit retry with the same payload, offline execution, and timeout cancellation. Native interaction review remains pending.
 
 ## Approved chat migration: milestone 6.1 shell and header (2026-09-28)
 

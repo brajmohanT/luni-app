@@ -4,6 +4,8 @@ export const apiErrorCodeSchema = z.enum([
   'MISSING_ACCESS_TOKEN',
   'INVALID_ACCESS_TOKEN',
   'EMAIL_NOT_CONFIRMED',
+  'RECENT_AUTHENTICATION_REQUIRED',
+  'ACCOUNT_DELETION_IN_PROGRESS',
   'VALIDATION_ERROR',
   'INVALID_JSON',
   'PAYLOAD_TOO_LARGE',
@@ -15,6 +17,8 @@ export const apiErrorCodeSchema = z.enum([
   'ONBOARDING_PROFILE_INCOMPLETE',
   'ONBOARDING_REQUIRED',
   'REPLY_TARGET_NOT_FOUND',
+  'REPORT_MESSAGE_NOT_FOUND',
+  'REPORT_REQUEST_PAYLOAD_MISMATCH',
   'SERVICE_DRAINING',
   'SERVICE_UNAVAILABLE',
   'ROUTE_NOT_FOUND',
@@ -76,6 +80,27 @@ export const messageSchema = z.strictObject({
   createdAt: timestampSchema,
 });
 
+export const messageReportReasonSchema = z.enum([
+  'unsafe_content',
+  'sexual_content',
+  'hate_or_harassment',
+  'self_harm',
+  'privacy',
+  'other',
+]);
+
+export const messageReportRequestSchema = z.strictObject({
+  reason: messageReportReasonSchema,
+  details: z.string().trim().min(1).max(1000).optional(),
+  clientRequestId: z.uuid(),
+});
+
+export const messageReportReceiptSchema = z.strictObject({
+  id: z.uuid(),
+  status: z.literal('open'),
+  createdAt: timestampSchema,
+});
+
 export const chatRequestSchema = z.strictObject({
   message: z.string().trim().min(1).max(4000),
   clientRequestId: z.uuid(),
@@ -117,6 +142,9 @@ export type UpdateProfileRequest = z.infer<typeof updateProfileRequestSchema>;
 export type Conversation = z.infer<typeof conversationSchema>;
 export type ReplyTarget = z.infer<typeof replyTargetSchema>;
 export type Message = z.infer<typeof messageSchema>;
+export type MessageReportReason = z.infer<typeof messageReportReasonSchema>;
+export type MessageReportRequest = z.infer<typeof messageReportRequestSchema>;
+export type MessageReportReceipt = z.infer<typeof messageReportReceiptSchema>;
 export type ChatRequest = z.infer<typeof chatRequestSchema>;
 export type ChatResponse = z.infer<typeof chatResponseSchema>;
 export type CompanionConversationResponse = z.infer<typeof companionConversationResponseSchema>;

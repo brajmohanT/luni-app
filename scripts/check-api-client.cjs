@@ -299,6 +299,56 @@ test('conversation functions validate responses and preserve API errors', async 
   }
 });
 
+const reportReceipt = { id: serverId, status: 'open', createdAt: conversation.createdAt };
+function setupMessageReports(respond, session) {
+  const app = session ? setup(respond, session) : setup(respond);
+  const reports = load('src/lib/api/message-reports.ts', {
+    zod: { z },
+    '@/lib/api/client': { apiRequest: app.apiRequest },
+    '@/lib/api/types': types,
+  });
+  return { ...app, ...reports };
+}
+test('message report sends the validated payload with one request identity', async () => {
+  const app = setupMessageReports(
+    () => Response.json(reportReceipt, { status: 201 }),
+    { data: { session: { access_token: 'test-token', user: { id: 'account' } } }, error: null },
+  );
+  const signal = new AbortController().signal;
+  const input = { reason: 'privacy', details: ' Personal information ', clientRequestId: sentId };
+  assert.deepEqual(
+    await app.reportAssistantMessage(serverId, input, { expectedUserId: 'account', signal }),
+    reportReceipt,
+  );
+  const [url, request] = app.calls[0];
+  assert.equal(url, `https://example.test/messages/${serverId}/reports`);
+  assert.equal(request.method, 'POST');
+  assert.deepEqual(JSON.parse(request.body), { ...input, details: 'Personal information' });
+  assert.equal(request.headers['X-Request-Id'], sentId);
+  assert.equal(request.signal, signal);
+});
+test('message report rejects invalid IDs and payloads before fetching', () => {
+  const app = setupMessageReports(() => Response.json(reportReceipt));
+  const valid = { reason: 'unsafe_content', clientRequestId: sentId };
+  assert.throws(() => app.reportAssistantMessage('not-a-uuid', valid), error => error instanceof z.ZodError);
+  assert.throws(() => app.reportAssistantMessage(serverId, { ...valid, reason: 'unknown' }), error => error instanceof z.ZodError);
+  assert.throws(() => app.reportAssistantMessage(serverId, { ...valid, details: '   ' }), error => error instanceof z.ZodError);
+  assert.equal(app.calls.length, 0);
+});
+test('message report accepts an idempotent receipt replay and preserves report errors', async () => {
+  const replay = setupMessageReports(() => Response.json(reportReceipt, { status: 200 }));
+  assert.deepEqual(await replay.reportAssistantMessage(serverId, {
+    reason: 'other', clientRequestId: sentId,
+  }), reportReceipt);
+
+  const failure = setupMessageReports(() => Response.json({
+    code: 'REPORT_MESSAGE_NOT_FOUND', message: 'Message not found.',
+  }, { status: 404 }));
+  await assert.rejects(failure.reportAssistantMessage(serverId, {
+    reason: 'other', clientRequestId: sentId,
+  }), error => error.code === 'REPORT_MESSAGE_NOT_FOUND');
+});
+
 test('account-bound request refuses another account token before fetching', async () => {
   const app = setup(ok, { data: { session: { access_token: 'other-token', user: { id: 'other' } } }, error: null });
   await assert.rejects(app.apiRequest({ ...options, expectedUserId: 'original' }), error => error.code === 'MISSING_SESSION');

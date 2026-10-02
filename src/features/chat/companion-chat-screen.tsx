@@ -18,7 +18,9 @@ import { useFocusEffect } from 'expo-router';
 import { LuniLogo } from '@/design-system/components';
 import { type Theme, useTheme } from '@/design-system/theme';
 import { ChatComposer } from '@/features/chat/chat-composer';
+import { MessageReportModal } from '@/features/chat/message-report-modal';
 import { useChatComposer } from '@/features/chat/use-chat-composer';
+import { useMessageReport } from '@/features/chat/use-message-report';
 import { useCompanionMessages } from '@/features/conversations/hooks';
 import { EntryRecovery } from '@/features/auth/entry-recovery';
 import { entryFailure } from '@/features/auth/entry-failure';
@@ -28,7 +30,13 @@ import { useAuth } from '@/providers/auth-provider';
 import { useQueryClient } from '@tanstack/react-query';
 import { addCompletedSendToCache, conversationKeys } from '@/lib/queries/conversations';
 import { isApiClientError } from '@/lib/api/errors';
-import type { ChatRequest, ChatResponse, Message, ReplyTarget } from '@/lib/api/types';
+import type {
+  ChatRequest,
+  ChatResponse,
+  Message,
+  MessageReportReason,
+  ReplyTarget,
+} from '@/lib/api/types';
 
 const luniAvatar = require('../../../assets/brand/luni-chat-avatar.png');
 const userAvatar = require('../../../assets/brand/user-chat-avatar.png');
@@ -60,14 +68,53 @@ function formatTime(value: string) {
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
 
+function reportFailure(error: unknown) {
+  if (!error) return { message: null, canRetry: false };
+  if (!isApiClientError(error)) {
+    return { message: 'Couldn’t send your report. Check your connection and try again.', canRetry: true };
+  }
+  switch (error.code) {
+    case 'REPORT_MESSAGE_NOT_FOUND':
+      return { message: 'This response is no longer available to report.', canRetry: false };
+    case 'REPORT_REQUEST_PAYLOAD_MISMATCH':
+      return { message: 'This report cannot be retried. Close it and submit a new report.', canRetry: false };
+    case 'VALIDATION_ERROR':
+    case 'INVALID_JSON':
+    case 'INVALID_REQUEST':
+    case 'PAYLOAD_TOO_LARGE':
+      return { message: 'Check the report details and submit it again.', canRetry: false };
+    case 'MISSING_SESSION':
+    case 'MISSING_ACCESS_TOKEN':
+    case 'INVALID_ACCESS_TOKEN':
+      return { message: 'Sign in again before reporting this response.', canRetry: false };
+    case 'EMAIL_NOT_CONFIRMED':
+      return { message: 'Confirm your email before reporting this response.', canRetry: false };
+    case 'ACCOUNT_DELETION_IN_PROGRESS':
+      return { message: 'Your account is being deleted, so it cannot submit new reports.', canRetry: false };
+    default:
+      if (error.code === 'NETWORK_ERROR' || error.code === 'INVALID_RESPONSE'
+        || error.code === 'SERVICE_DRAINING' || error.code === 'SERVICE_UNAVAILABLE'
+        || (error.status ?? 0) >= 500 || error.status === 429) {
+        return { message: 'Couldn’t send your report. Check your connection and try again.', canRetry: true };
+      }
+      return { message: 'Couldn’t send this report. Close it and try again.', canRetry: false };
+  }
+}
+
 function MessageRow({
   canReply,
+  isReported,
+  isReporting,
   message,
+  onReport,
   onReply,
   showDay,
 }: {
   canReply: boolean;
+  isReported: boolean;
+  isReporting: boolean;
   message: Message;
+  onReport(messageId: string): void;
   onReply(reply: ReplyTarget): void;
   showDay: boolean;
 }) {
@@ -106,20 +153,38 @@ function MessageRow({
               </Text>
             </View>
             {!isUserMessage && (
-              <Pressable
-                accessibilityHint="Quotes this message in your next message"
-                accessibilityLabel="Reply to this message from Luni"
-                accessibilityRole="button"
-                accessibilityState={{ disabled: !canReply }}
-                disabled={!canReply}
-                onPress={() => onReply({ id: message.id, role: 'assistant', content: message.content })}
-                style={({ pressed }) => [
-                  styles.replyAction,
-                  !canReply && styles.replyActionDisabled,
-                  pressed && canReply && styles.replyActionPressed,
-                ]}>
-                <Text style={styles.replyActionText}>Reply</Text>
-              </Pressable>
+              <View style={styles.messageActions}>
+                <Pressable
+                  accessibilityHint="Quotes this message in your next message"
+                  accessibilityLabel="Reply to this message from Luni"
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: !canReply }}
+                  disabled={!canReply}
+                  onPress={() => onReply({ id: message.id, role: 'assistant', content: message.content })}
+                  style={({ pressed }) => [
+                    styles.messageAction,
+                    !canReply && styles.messageActionDisabled,
+                    pressed && canReply && styles.messageActionPressed,
+                  ]}>
+                  <Text style={styles.messageActionText}>Reply</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityHint={isReported ? undefined : 'Opens options for reporting unsafe or inappropriate content'}
+                  accessibilityLabel={isReported ? 'This message from Luni has been reported' : 'Report this message from Luni'}
+                  accessibilityRole="button"
+                  accessibilityState={{ busy: isReporting, disabled: isReported || isReporting }}
+                  disabled={isReported || isReporting}
+                  onPress={() => onReport(message.id)}
+                  style={({ pressed }) => [
+                    styles.messageAction,
+                    (isReported || isReporting) && styles.messageActionDisabled,
+                    pressed && !isReported && !isReporting && styles.messageActionPressed,
+                  ]}>
+                  <Text style={styles.messageActionText}>
+                    {isReported ? 'Reported' : isReporting ? 'Reporting…' : 'Report'}
+                  </Text>
+                </Pressable>
+              </View>
             )}
           </View>
         </View>
@@ -243,6 +308,11 @@ export default function CompanionChatScreen() {
     onSuccess: showCompletedSend,
     messages: data?.messages,
   });
+  const reporting = useMessageReport();
+  const [reportMessageId, setReportMessageId] = useState<string | null>(null);
+  const [reportReason, setReportReason] = useState<MessageReportReason | null>(null);
+  const [reportDetails, setReportDetails] = useState('');
+  const reportError = reportFailure(reporting.error);
   const composerInputRef = useRef<TextInput | null>(null);
   const [startersDismissed, setStartersDismissed] = useState(false);
   const newestId = composer.optimisticMessage?.id ?? data?.messages.at(-1)?.id ?? null;
@@ -273,6 +343,27 @@ export default function CompanionChatScreen() {
   const selectReply = (reply: ReplyTarget) => {
     composer.selectReply(reply);
     requestAnimationFrame(() => composerInputRef.current?.focus());
+  };
+  const openReport = (messageId: string) => {
+    reporting.discardReport();
+    setReportMessageId(messageId);
+    setReportReason(null);
+    setReportDetails('');
+  };
+  const closeReport = () => {
+    if (reporting.isSubmitting) return;
+    reporting.discardReport();
+    setReportMessageId(null);
+    setReportReason(null);
+    setReportDetails('');
+  };
+  const submitReport = () => {
+    if (!reportMessageId || !reportReason) return;
+    void reporting.submitReport({
+      messageId: reportMessageId,
+      reason: reportReason,
+      details: reportDetails,
+    });
   };
   const loadEarlierMessages = () => {
     if (!hasNextPage || isFetchingNextPage) return;
@@ -350,7 +441,10 @@ export default function CompanionChatScreen() {
             renderItem={({ item, index }) => (
               <MessageRow
                 canReply={composer.isEditable}
+                isReported={reporting.isReported(item.id)}
+                isReporting={reporting.isSubmitting && reporting.pendingMessageId === item.id}
                 message={item}
+                onReport={openReport}
                 onReply={selectReply}
                 showDay={index === messages.length - 1 || calendarDay(messages[index + 1].createdAt) !== calendarDay(item.createdAt)}
               />
@@ -377,6 +471,21 @@ export default function CompanionChatScreen() {
           />
         </View>
       </KeyboardAvoidingView>
+      <MessageReportModal
+        canRetry={reportError.canRetry}
+        details={reportDetails}
+        errorMessage={reportError.message}
+        isSubmitted={Boolean(reportMessageId && reporting.isReported(reportMessageId))}
+        isSubmitting={reporting.isSubmitting}
+        onChangeDetails={setReportDetails}
+        onChangeReason={setReportReason}
+        onClose={closeReport}
+        onRetry={() => { void reporting.retryReport(); }}
+        onSubmit={submitReport}
+        reason={reportReason}
+        validationError={reporting.validationError}
+        visible={reportMessageId !== null}
+      />
     </SafeAreaView>
   );
 }
@@ -494,17 +603,21 @@ const createMessageStyles = (theme: Theme) => StyleSheet.create({
   outgoingBubble: { backgroundColor: theme.colors.outgoingBubble },
   messageText: { ...theme.typography.message, color: theme.colors.text },
   outgoingText: { color: theme.colors.onPrimary },
-  replyAction: {
+  messageActions: {
+    flexDirection: 'row',
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.xs,
+  },
+  messageAction: {
     alignItems: 'center',
     borderRadius: theme.radii.pill,
     justifyContent: 'center',
-    marginTop: theme.spacing.xs,
     minHeight: theme.sizing.minimumTouchTarget,
     paddingHorizontal: theme.spacing.md,
   },
-  replyActionDisabled: { opacity: 0.45 },
-  replyActionPressed: { backgroundColor: theme.colors.composer },
-  replyActionText: { ...theme.typography.caption, color: theme.colors.textMuted },
+  messageActionDisabled: { opacity: 0.45 },
+  messageActionPressed: { backgroundColor: theme.colors.composer },
+  messageActionText: { ...theme.typography.caption, color: theme.colors.textMuted },
   quote: {
     borderLeftColor: theme.colors.textMuted,
     borderLeftWidth: StyleSheet.hairlineWidth,

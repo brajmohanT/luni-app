@@ -8,13 +8,13 @@ const { test } = require('node:test');
 const ts = require('typescript');
 const query = require('@tanstack/react-query');
 
-function load(file, dependencies) {
+function load(file, dependencies, globals = {}) {
   const filename = path.resolve(__dirname, '..', file);
   const source = ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
   }).outputText;
   const exports = {};
-  vm.runInNewContext(source, { exports, require: name => {
+  vm.runInNewContext(source, { exports, AbortController, setTimeout, clearTimeout, ...globals, require: name => {
     if (Object.hasOwn(dependencies, name)) return dependencies[name];
     throw new Error(`Unexpected import ${name}`);
   } }, { filename });
@@ -45,7 +45,18 @@ function setup(overrides = {}) {
       sendChatMessage: async (input, options) => { calls.push(['send', input, options]); if (overrides.send) return overrides.send(input); return { conversationId: conversation.id }; },
     },
   });
-  return { client, calls, ...profile, ...conversations };
+  const reports = load('src/lib/queries/message-reports.ts', {
+    '@tanstack/react-query': query,
+    '@/lib/api/message-reports': {
+      reportAssistantMessage: async (messageId, request, options) => {
+        calls.push(['report', messageId, request, options]);
+        if (overrides.report) return overrides.report(messageId, request, options);
+        return { id: 'report', status: 'open', createdAt: time };
+      },
+    },
+    '@/lib/queries/profile': profile,
+  }, overrides.reportGlobals);
+  return { client, calls, ...profile, ...conversations, ...reports };
 }
 function mutate(app, options, input) {
   return app.client.getMutationCache().build(app.client, options).execute(input);
@@ -183,6 +194,82 @@ test('send failure is not automatically retried', async () => {
   const app = setup({ send: () => { throw new Error('busy'); } });
   await assert.rejects(mutate(app, app.sendChatMutationOptions(app.client, 'a'), { message: 'Hi', clientRequestId: 'id' }), /busy/);
   assert.equal(app.calls.filter(x => Array.isArray(x) && x[0] === 'send').length, 1);
+  app.client.clear();
+});
+
+test('message report mutation stays account-bound and does not retry', async () => {
+  const app = setup();
+  const input = {
+    messageId: 'message',
+    request: { reason: 'privacy', clientRequestId: 'request' },
+  };
+  await mutate(app, app.reportAssistantMessageMutationOptions('a'), input);
+  assert.equal(app.calls.length, 1);
+  assert.equal(app.calls[0][0], 'report');
+  assert.equal(app.calls[0][1], 'message');
+  assert.equal(app.calls[0][2], input.request);
+  assert.equal(app.calls[0][3].expectedUserId, 'a');
+
+  const failure = new Error('offline');
+  const failed = setup({ report: () => { throw failure; } });
+  await assert.rejects(
+    mutate(failed, failed.reportAssistantMessageMutationOptions('a'), input),
+    failure,
+  );
+  assert.equal(failed.calls.filter(call => Array.isArray(call) && call[0] === 'report').length, 1);
+  app.client.clear();
+  failed.client.clear();
+});
+
+test('message reports fail promptly offline instead of pausing', async () => {
+  const failure = new Error('offline');
+  const app = setup({ report: () => { throw failure; } });
+  query.onlineManager.setOnline(false);
+  try {
+    const options = app.reportAssistantMessageMutationOptions('a');
+    assert.equal(options.networkMode, 'always');
+    await assert.rejects(mutate(app, options, {
+      messageId: 'message', request: { reason: 'other', clientRequestId: 'request' },
+    }), failure);
+    assert.equal(app.calls.length, 1);
+  } finally {
+    query.onlineManager.setOnline(true);
+    app.client.clear();
+  }
+});
+
+test('stalled reports time out, abort, and can retry the same payload', async () => {
+  let expire;
+  let cleared = 0;
+  let attempt = 0;
+  const app = setup({
+    reportGlobals: {
+      setTimeout: (callback, delay) => { assert.equal(delay, 20_000); expire = callback; return 123; },
+      clearTimeout: timer => { assert.equal(timer, 123); cleared++; },
+    },
+    report: () => ++attempt === 1 ? new Promise(() => {}) : { id: 'report' },
+  });
+  const input = { messageId: 'message', request: { reason: 'other', clientRequestId: 'request' } };
+  const pending = mutate(app, app.reportAssistantMessageMutationOptions('a'), input);
+  const rejected = assert.rejects(pending, /Report request timed out/);
+  await new Promise(resolve => setImmediate(resolve));
+  expire();
+  await rejected;
+  assert.equal(app.calls[0][3].signal.aborted, true);
+  assert.equal(cleared, 1);
+  await mutate(app, app.reportAssistantMessageMutationOptions('a'), input);
+  assert.equal(app.calls[1][2], input.request);
+  assert.equal(app.calls[1][3].signal.aborted, false);
+  assert.equal(cleared, 2);
+  app.client.clear();
+});
+
+test('signed-out message reports cannot reach the API', async () => {
+  const app = setup();
+  await assert.rejects(mutate(app, app.reportAssistantMessageMutationOptions(undefined), {
+    messageId: 'message', request: { reason: 'other', clientRequestId: 'request' },
+  }), error => error.code === 'MISSING_SESSION');
+  assert.deepEqual(app.calls, []);
   app.client.clear();
 });
 
