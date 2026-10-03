@@ -53,6 +53,7 @@ function setup(overrides = {}) {
   });
   const reports = load('src/lib/queries/message-reports.ts', {
     '@tanstack/react-query': query,
+    '@/lib/api/with-request-timeout': load('src/lib/api/with-request-timeout.ts', {}, overrides.reportGlobals),
     '@/lib/api/message-reports': {
       reportAssistantMessage: async (messageId, request, options) => {
         calls.push(['report', messageId, request, options]);
@@ -334,7 +335,7 @@ test('stalled reports time out, abort, and can retry the same payload', async ()
   });
   const input = { messageId: 'message', request: { reason: 'other', clientRequestId: 'request' } };
   const pending = mutate(app, app.reportAssistantMessageMutationOptions('a'), input);
-  const rejected = assert.rejects(pending, /Report request timed out/);
+  const rejected = assert.rejects(pending, /Request timed out/);
   await new Promise(resolve => setImmediate(resolve));
   expire();
   await rejected;

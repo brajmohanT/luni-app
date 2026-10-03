@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from 'react';
-import { useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useMemo } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { BackHandler, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
@@ -36,6 +37,14 @@ export function SettingsScreen({
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const titleRef = useScreenReaderFocus(title);
+
+  useFocusEffect(useCallback(() => {
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (!backDisabled) onBack();
+      return true;
+    });
+    return () => subscription.remove();
+  }, [backDisabled, onBack]));
 
   return (
     <SafeAreaView style={styles.safeArea}>

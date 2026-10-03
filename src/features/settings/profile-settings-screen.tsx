@@ -1,8 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { BackHandler, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { Button, SettingsRow, TextField } from '@/design-system/components';
 import { type Theme, useTheme } from '@/design-system/theme';
@@ -52,27 +51,15 @@ export function ProfileSettingsScreen({ profile, onClose }: { profile: Profile; 
     if (!saveController.isBusy()) onClose();
   }, [onClose, saveController]);
 
-  useFocusEffect(useCallback(() => {
-    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      close();
-      return true;
-    });
-    return () => subscription.remove();
-  }, [close]));
-
   const saveValidName = useCallback(async ({ preferredName }: PreferredNameFormValues) => {
     if (preferredName === profile.preferredName) {
       onClose();
       return;
     }
-    try {
-      await saveController.run(
-        () => updateProfile.mutateAsync({ preferredName }),
-        onClose,
-      );
-    } catch {
-      // Mutation state keeps the error visible and preserves the edited value.
-    }
+    await saveController.run(
+      () => updateProfile.mutateAsync({ preferredName }),
+      onClose,
+    );
   }, [onClose, profile.preferredName, saveController, updateProfile]);
   const save = handleSubmit(saveValidName);
 

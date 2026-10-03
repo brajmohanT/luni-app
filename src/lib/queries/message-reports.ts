@@ -2,6 +2,7 @@ import { mutationOptions } from '@tanstack/react-query';
 
 import { reportAssistantMessage } from '@/lib/api/message-reports';
 import type { MessageReportRequest } from '@/lib/api/types';
+import { withRequestTimeout } from '@/lib/api/with-request-timeout';
 import { requireAccount } from '@/lib/queries/profile';
 
 export type ReportAssistantMessageInput = {
@@ -15,23 +16,9 @@ export function reportAssistantMessageMutationOptions(userId: string | undefined
     networkMode: 'always',
     mutationFn: async ({ messageId, request }: ReportAssistantMessageInput) => {
       requireAccount(userId);
-      const controller = new AbortController();
-      let timeout: ReturnType<typeof setTimeout> | undefined;
-      try {
-        return await Promise.race([
-          reportAssistantMessage(messageId, request, {
-            expectedUserId: userId, signal: controller.signal,
-          }),
-          new Promise<never>((_, reject) => {
-            timeout = setTimeout(() => {
-              reject(new Error('Report request timed out.'));
-              controller.abort();
-            }, 20_000);
-          }),
-        ]);
-      } finally {
-        clearTimeout(timeout);
-      }
+      return withRequestTimeout(signal => reportAssistantMessage(messageId, request, {
+        expectedUserId: userId, signal,
+      }));
     },
   });
 }

@@ -1,7 +1,6 @@
 import { useSQLiteContext } from 'expo-sqlite';
-import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { BackHandler, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { Button, SettingsRow, TextField } from '@/design-system/components';
 import { type Theme, useTheme } from '@/design-system/theme';
@@ -17,6 +16,10 @@ import { useAuth } from '@/providers/auth-provider';
 
 type Phase = 'review' | 'confirm' | 'reauthenticate' | 'accepted';
 type Failure = { message: string; requestId: string | null } | null;
+const cleanupFailure: Failure = {
+  message: 'Your deletion request was accepted, but Luni couldn’t finish signing out. Try again.',
+  requestId: null,
+};
 
 function deletionFailure(error: unknown): Failure {
   const requestId = isApiClientError(error) ? error.requestId : null;
@@ -59,36 +62,24 @@ export function DeleteAccountScreen({ profile, onBack }: { profile: Profile; onB
     if (!controller.isBusy() && phase !== 'accepted') onBack();
   }, [controller, onBack, phase]);
 
-  useFocusEffect(useCallback(() => {
-    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      back();
-      return true;
-    });
-    return () => subscription.remove();
-  }, [back]));
+  const clearAndSignOut = async () => {
+    if (!userId) return;
+    await clearAccountChatState(db, userId);
+    await withRequestTimeout(() => signOut());
+  };
 
   const finishAcceptedDeletion = async () => {
     if (!userId) return;
     setBusy(true);
     setFailure(null);
-    try {
-      await controller.run(
-        async () => {
-          await clearAccountChatState(db, userId);
-          await withRequestTimeout(() => signOut());
-        },
-        () => { setBusy(false); },
-        () => {
-          setBusy(false);
-          setFailure({
-            message: 'Your deletion request was accepted, but Luni couldn’t finish signing out. Try again.',
-            requestId: null,
-          });
-        },
-      );
-    } catch {
-      // Keep the accepted state available for another local cleanup and sign-out attempt.
-    }
+    await controller.run(
+      clearAndSignOut,
+      () => { setBusy(false); },
+      () => {
+        setBusy(false);
+        setFailure(cleanupFailure);
+      },
+    );
   };
 
   const requestDeletion = async (reauthenticate: boolean) => {
@@ -101,48 +92,39 @@ export function DeleteAccountScreen({ profile, onBack }: { profile: Profile; onB
     setBusy(true);
     setFailure(null);
     let receipt: AccountDeletionAccepted | null = null;
-    let stage: 'reauthenticate' | 'delete' | 'finish' = reauthenticate ? 'reauthenticate' : 'delete';
-    try {
-      await controller.run(
-        async () => {
-          if (reauthenticate) {
-            await withRequestTimeout(() => signInWithPassword({ email: session.user.email!, password }));
-            setPassword('');
-            stage = 'delete';
-          }
-          receipt = await deletion.mutateAsync();
-          stage = 'finish';
-          await clearAccountChatState(db, userId);
-          await withRequestTimeout(() => signOut());
-        },
-        () => { setBusy(false); },
-        error => {
-          setBusy(false);
-          if (receipt) {
-            setAccepted(receipt);
-            setPhase('accepted');
-            setFailure({
-              message: 'Your deletion request was accepted, but Luni couldn’t finish signing out. Try again.',
-              requestId: null,
-            });
-            return;
-          }
-          if (stage === 'reauthenticate') {
-            setFailure({ message: 'We couldn’t sign you in. Check your password and connection, then try again.', requestId: null });
-            return;
-          }
-          if (isApiClientError(error) && error.code === 'RECENT_AUTHENTICATION_REQUIRED') {
-            setPhase('reauthenticate');
-            setFailure(null);
-            return;
-          }
-          setFailure(deletionFailure(error));
-          setPhase(reauthenticate ? 'reauthenticate' : 'confirm');
-        },
-      );
-    } catch {
-      // The active phase displays the controlled recovery action.
-    }
+    let authenticating = reauthenticate;
+    await controller.run(
+      async () => {
+        if (reauthenticate) {
+          await withRequestTimeout(() => signInWithPassword({ email: session.user.email!, password }));
+          setPassword('');
+          authenticating = false;
+        }
+        receipt = await deletion.mutateAsync();
+        await clearAndSignOut();
+      },
+      () => { setBusy(false); },
+      error => {
+        setBusy(false);
+        if (receipt) {
+          setAccepted(receipt);
+          setPhase('accepted');
+          setFailure(cleanupFailure);
+          return;
+        }
+        if (authenticating) {
+          setFailure({ message: 'We couldn’t sign you in. Check your password and connection, then try again.', requestId: null });
+          return;
+        }
+        if (isApiClientError(error) && error.code === 'RECENT_AUTHENTICATION_REQUIRED') {
+          setPhase('reauthenticate');
+          setFailure(null);
+          return;
+        }
+        setFailure(deletionFailure(error));
+        setPhase(reauthenticate ? 'reauthenticate' : 'confirm');
+      },
+    );
   };
 
   return (

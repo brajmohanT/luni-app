@@ -19,7 +19,7 @@ export class SettingsSaveController {
       if (generation === this.generation) onSuccess();
     } catch (error) {
       if (generation === this.generation) onError?.(error);
-      throw error;
+      // Mutation state or onError owns the failure; callers need no second catch.
     } finally {
       if (generation === this.generation) this.busy = false;
     }

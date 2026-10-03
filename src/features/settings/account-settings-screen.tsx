@@ -37,18 +37,14 @@ export function AccountSettingsScreen({
   const confirmSignOut = async () => {
     setSigningOut(true);
     setSignOutError(null);
-    try {
-      await signOutController.run(
-        () => withRequestTimeout(() => signOut()),
-        () => { setSigningOut(false); },
-        () => {
-          setSigningOut(false);
-          setSignOutError('We couldn’t sign you out. Check your connection and try again.');
-        },
-      );
-    } catch {
-      // The confirmation remains open so the same action can be retried.
-    }
+    await signOutController.run(
+      () => withRequestTimeout(() => signOut()),
+      () => { setSigningOut(false); },
+      () => {
+        setSigningOut(false);
+        setSignOutError('We couldn’t sign you out. Check your connection and try again.');
+      },
+    );
   };
 
   return (

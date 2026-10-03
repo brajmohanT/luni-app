@@ -16,7 +16,9 @@ The user has reviewed the Design System preview, onboarding, production-backed c
 - [x] Clear local chat data before sign-out from deletion-in-progress recovery after restart; retain retry when cleanup fails.
 - [x] Bound Settings profile/deletion API calls and authentication waits to 20 seconds. Abort API requests on timeout, avoid offline-paused profile saves, and refresh chat in the background after a confirmed profile save.
 
-Verification: all 131 regression tests, TypeScript, ESLint for `src` and `scripts`, brand checks, and diff whitespace checks passed. Native and destructive live-account testing remain pending.
+- [x] Simplify save-error handling, share Settings Back behavior and radio rows, reuse style labels and report timeouts, and consolidate deletion cleanup without removing safety guards.
+
+Verification after cleanup: all 134 regression tests, TypeScript, full-project ESLint, brand checks, and diff whitespace checks passed. Native and destructive live-account testing remain pending.
 
 ## Settings account deletion (2026-10-02)
 

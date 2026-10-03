@@ -14,6 +14,69 @@ const source = ts.transpileModule(
 vm.runInNewContext(source, { exports: exportsObject });
 const { SettingsSaveController } = exportsObject;
 
+function loadSettingsUI(file, native = {}, dependencies = {}) {
+  const exports = {};
+  const source = ts.transpileModule(
+    fs.readFileSync(path.join(__dirname, '..', file), 'utf8'),
+    { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } },
+  ).outputText;
+  const mocks = {
+    'react/jsx-runtime': require('react/jsx-runtime'),
+    react: { useMemo: fn => fn(), useCallback: fn => fn, useState: value => [value, () => {}] },
+    'react-native': { View: 'view', Text: 'text', Pressable: 'pressable', StyleSheet: { create: value => value }, ...native },
+    '@/design-system/theme': { useTheme: () => ({ theme: { colors: {}, spacing: {}, sizing: {}, typography: {}, radii: {} } }) },
+    ...dependencies,
+  };
+  vm.runInNewContext(source, { exports, require: name => {
+    assert.ok(Object.hasOwn(mocks, name), name);
+    return mocks[name];
+  } });
+  return exports;
+}
+
+for (const disabled of [false, true]) {
+  test(`shared Settings back handler respects disabled=${disabled} and removes its listener`, () => {
+    let back;
+    let cleanup;
+    let removed = false;
+    let navigations = 0;
+    const { SettingsScreen } = loadSettingsUI('src/features/settings/settings-screen.tsx', {
+      BackHandler: { addEventListener: (event, handler) => {
+        assert.equal(event, 'hardwareBackPress');
+        back = handler;
+        return { remove: () => { removed = true; } };
+      } },
+      ScrollView: 'scroll',
+    }, {
+      'expo-router': { useFocusEffect: effect => { cleanup = effect(); } },
+      'react-native-safe-area-context': { SafeAreaView: 'safe-area' },
+      'react-native-svg': { default: 'svg', Path: 'path' },
+      '@/design-system/components': { IconButton: 'button' },
+      '@/features/auth/use-screen-reader-focus': { useScreenReaderFocus: () => ({ current: null }) },
+    });
+    SettingsScreen({ title: 'Settings', backDisabled: disabled, onBack: () => { navigations++; } });
+    assert.equal(back(), true);
+    assert.equal(navigations, disabled ? 0 : 1);
+    cleanup();
+    assert.equal(removed, true);
+  });
+}
+
+test('shared radio row retains selection, disabled state, hints and descriptions', () => {
+  const { SettingsRadioRow } = loadSettingsUI('src/features/settings/settings-radio-row.tsx');
+  const onPress = () => {};
+  const row = SettingsRadioRow({ label: 'System', description: 'Match your phone', selected: true, disabled: true, onPress });
+  assert.equal(row.props.accessibilityRole, 'radio');
+  assert.equal(row.props.accessibilityState.checked, true);
+  assert.equal(row.props.disabled, true);
+  assert.equal(row.props.accessibilityHint, 'Match your phone');
+  assert.equal(row.props.onPress, onPress);
+  assert.equal(row.props.children[1].props.children[1].props.children, 'Match your phone');
+  const styleRow = SettingsRadioRow({ label: 'Warm', accessibilityHint: 'Sample reply', selected: false, disabled: false, onPress });
+  assert.equal(styleRow.props.accessibilityHint, 'Sample reply');
+  assert.equal(styleRow.props.children[1].props.children[1], undefined);
+});
+
 function deferred() {
   let resolve;
   let reject;
@@ -50,9 +113,8 @@ test('a stalled sign-out releases the settings lock and publishes recovery', asy
     () => { successes++; },
     () => { failures++; },
   );
-  const rejected = assert.rejects(pending, /timed out/);
   timeout.expire();
-  await rejected;
+  await pending;
   assert.equal(controller.isBusy(), false);
   assert.equal(failures, 1);
   request.resolve();
@@ -97,10 +159,10 @@ test('settings saves block duplicate taps and navigate once after success', asyn
 test('a failed settings save can be retried', async () => {
   const controller = new SettingsSaveController();
   let attempts = 0;
-  await assert.rejects(controller.run(async () => {
+  await controller.run(async () => {
     attempts++;
     throw new Error('offline');
-  }, () => {}));
+  }, () => {});
   await controller.run(async () => { attempts++; }, () => {});
   assert.equal(attempts, 2);
 });
@@ -120,11 +182,11 @@ test('settings operations publish a retryable error once', async () => {
   const controller = new SettingsSaveController();
   let successes = 0;
   let failures = 0;
-  await assert.rejects(controller.run(
+  await controller.run(
     async () => { throw new Error('offline'); },
     () => { successes++; },
-    () => { failures++; },
-  ));
+    error => { assert.equal(error.message, 'offline'); failures++; },
+  );
   assert.equal(successes, 0);
   assert.equal(failures, 1);
 });
@@ -140,6 +202,6 @@ test('abandoned settings operations suppress late errors', async () => {
   );
   controller.cancel();
   request.reject(new Error('offline'));
-  await assert.rejects(pending);
+  await pending;
   assert.equal(failures, 0);
 });
