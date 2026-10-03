@@ -64,7 +64,7 @@ Existing Luni API
 
 ## Design-system implementation
 
-The implementation lives under `src/design-system/`: `tokens/` defines shared values, `theme/` resolves light/dark/system preference, and `components/` holds reusable controls. Feature behavior remains under `src/features/`. Theme preference is in memory; saved appearance settings remain pending.
+The implementation lives under `src/design-system/`: `tokens/` defines shared values, `theme/` resolves light/dark/system preference, and `components/` holds reusable controls. Feature behavior remains under `src/features/`. The System, Light, or Dark theme preference persists device-wide in SQLite and loads before the app theme mounts.
 
 Implemented components: BrandBackground, LuniLogo, Button, IconButton, TextField, SettingsRow, and Switch. The development-only `/design-system` screen demonstrates their states without changing account data. Existing product screens still need migration.
 

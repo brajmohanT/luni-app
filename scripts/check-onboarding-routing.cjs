@@ -10,7 +10,7 @@ function load(file, dependencies = {}) {
   const source = ts.transpileModule(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
-  vm.runInNewContext(source, { exports, require: name => {
+  vm.runInNewContext(source, { exports, AbortController, setTimeout, clearTimeout, require: name => {
     assert.ok(Object.hasOwn(dependencies, name), name);
     return dependencies[name];
   } });
@@ -50,7 +50,15 @@ test('completion removes onboarding and legacy routes from the available stack',
   const before = available(AppStack({ profile }));
   assert.deepEqual(before, ['index', 'onboarding/name', 'onboarding/style']);
   const after = available(AppStack({ profile: { ...profile, onboardingCompletedAt: 'done' } }));
-  assert.deepEqual(after, ['index']);
+  assert.deepEqual(after, [
+    'index',
+    'settings/index',
+    'settings/profile',
+    'settings/style',
+    'settings/appearance',
+    'settings/account',
+    'settings/delete-account',
+  ]);
 });
 test('style is unavailable until a name exists; name editing remains available afterward', () => {
   assert.deepEqual(available(AppStack({ profile: { ...profile, preferredName: null } })), ['index', 'onboarding/name']);
@@ -65,13 +73,14 @@ test('expired sessions require password sign-in; offline errors retain retry', (
   }
   assert.equal(entryFailure(error('NETWORK_ERROR'), 'chat').action, 'retry');
 });
-test('verification and onboarding conflicts receive their own recovery actions', () => {
+test('verification, deletion, and onboarding conflicts receive their own recovery actions', () => {
   assert.equal(entryFailure(error('EMAIL_NOT_CONFIRMED'), 'profile').action, 'verify');
+  assert.equal(entryFailure(error('ACCOUNT_DELETION_IN_PROGRESS'), 'profile').action, 'sign-out');
   assert.equal(entryFailure(error('ONBOARDING_REQUIRED'), 'chat').action, 'profile');
   assert.equal(entryFailure(error('ONBOARDING_PROFILE_INCOMPLETE'), 'chat').action, 'profile');
 });
 
-function recoveryHarness(signIn, retry) {
+function recoveryHarness(signIn, retry, code = 'INVALID_ACCESS_TOKEN', signOut = async () => {}, cleanup = async () => {}) {
   const state = [];
   const refs = [];
   let stateIndex = 0;
@@ -85,12 +94,15 @@ function recoveryHarness(signIn, retry) {
       useEffect: effect => { const cleanup = effect(); if (cleanup) cleanups.push(cleanup); },
     },
     'react-native': { Text: 'text', View: 'view' },
+    'expo-sqlite': { useSQLiteContext: () => ({}) },
+    '@/lib/database/chat-persistence': { clearAccountChatState: cleanup },
+    '@/lib/api/with-request-timeout': load('src/lib/api/with-request-timeout.ts'),
     '@/design-system/components': { Button: 'button', TextField: 'input' },
     '@/design-system/theme': { useTheme: () => ({ theme: { colors: {}, typography: {}, spacing: {} } }) },
     '@/features/auth/entry-failure': { entryFailure },
     '@/features/profile/profile-screen': { ProfileScreen: 'screen' },
     '@/lib/api/errors': errors,
-    '@/providers/auth-provider': { useAuth: () => ({ session: { user: { email: 'sam@example.com' } }, signInWithPassword: signIn }) },
+    '@/providers/auth-provider': { useAuth: () => ({ session: { user: { id: 'account', email: 'sam@example.com' } }, signInWithPassword: signIn, signOut }) },
   });
   function find(node, type) {
     if (!node) return undefined;
@@ -99,7 +111,7 @@ function recoveryHarness(signIn, retry) {
   }
   function render() {
     stateIndex = 0; refIndex = 0;
-    return EntryRecovery({ error: error('INVALID_ACCESS_TOKEN'), target: 'chat', onRetry: retry });
+    return EntryRecovery({ error: error(code), target: 'chat', onRetry: retry });
   }
   return {
     enterPassword(value) { find(render(), 'input').props.onChangeText(value); },
@@ -135,4 +147,33 @@ test('abandoned password recovery cannot retry for a different account', async (
   finish();
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(retries, 0);
+});
+
+test('an account being deleted clears local data before sign-out without retrying protected data', async () => {
+  const calls = [];
+  let signOuts = 0;
+  let retries = 0;
+  const harness = recoveryHarness(async () => {}, async () => { retries++; },
+    'ACCOUNT_DELETION_IN_PROGRESS', async () => { calls.push('sign-out'); signOuts++; },
+    async (_db, userId) => { calls.push('cleanup'); assert.equal(userId, 'account'); });
+  harness.submit();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(signOuts, 1);
+  assert.equal(retries, 0);
+  assert.deepEqual(calls, ['cleanup', 'sign-out']);
+});
+
+test('deletion recovery retries failed local cleanup before signing out', async () => {
+  let cleanups = 0;
+  let signOuts = 0;
+  const harness = recoveryHarness(async () => {}, async () => {},
+    'ACCOUNT_DELETION_IN_PROGRESS', async () => { signOuts++; },
+    async () => { if (++cleanups === 1) throw new Error('disk error'); });
+  harness.submit();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(signOuts, 0);
+  harness.submit();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(cleanups, 2);
+  assert.equal(signOuts, 1);
 });

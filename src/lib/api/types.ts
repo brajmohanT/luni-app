@@ -58,6 +58,11 @@ export const updateProfileRequestSchema = z.strictObject({
   { message: 'Provide a preferred name or conversation style.' },
 );
 
+export const accountDeletionAcceptedSchema = z.strictObject({
+  status: z.literal('pending'),
+  requestedAt: timestampSchema,
+});
+
 // Onboarding completion has no request body and returns profileSchema.
 export const conversationSchema = z.strictObject({
   id: z.uuid(),
@@ -139,6 +144,7 @@ export type ApiError = z.infer<typeof apiErrorSchema>;
 export type ConversationStyle = z.infer<typeof conversationStyleSchema>;
 export type Profile = z.infer<typeof profileSchema>;
 export type UpdateProfileRequest = z.infer<typeof updateProfileRequestSchema>;
+export type AccountDeletionAccepted = z.infer<typeof accountDeletionAcceptedSchema>;
 export type Conversation = z.infer<typeof conversationSchema>;
 export type ReplyTarget = z.infer<typeof replyTargetSchema>;
 export type Message = z.infer<typeof messageSchema>;

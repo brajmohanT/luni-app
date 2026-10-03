@@ -10,7 +10,7 @@ Android is the first test platform, followed by iOS.
 
 ## Current repository state
 
-This `luni-app` directory contains an initialized Expo application and project documentation. The app has TypeScript, Expo Router, TanStack Query, SecureStore, a versioned SQLite persistence foundation, and a Supabase session provider with protected auth and app route groups. Email/password sign-in and sign-up forms use React Hook Form and Zod, and persist Supabase sessions in SecureStore. The first local Android development build has installed and launched on a connected device, where the login and sign-up screens render correctly. A typed Luni API client sends authenticated requests, correlation IDs, and app metadata. The protected conversation-list screen loads and refreshes the authenticated user's conversations. A conversation-detail screen loads chronological messages with refresh and recovery states. A shared composer serves new and existing conversations. It sends messages with idempotency keys and supports explicit retry; local drafts and cached chat remain unimplemented. EAS development builds and mobile deep-link completion flows are not configured yet.
+This `luni-app` directory contains an initialized Expo application and project documentation. The app has TypeScript, Expo Router, TanStack Query, SecureStore, a versioned SQLite persistence foundation, and a Supabase session provider with protected auth and app route groups. Email/password sign-in and sign-up forms use React Hook Form and Zod, and persist Supabase sessions in SecureStore. The first local Android development build has installed and launched on a connected device, where the login and sign-up screens render correctly. A typed Luni API client sends authenticated requests, correlation IDs, and app metadata. The protected conversation-list screen loads and refreshes the authenticated user's conversations. A conversation-detail screen loads chronological messages with refresh and recovery states. A shared composer serves new and existing conversations. It sends messages with idempotency keys and supports explicit retry. Account-scoped drafts and pending sends survive app restarts; recent-chat caching remains unimplemented. Settings lets users edit their preferred name and conversation style, persist a device-wide System, Light, or Dark appearance, sign out, and request permanent account deletion with recent password authentication when required. EAS development builds and mobile deep-link completion flows are not configured yet.
 
 ## UI delivery status
 
@@ -20,7 +20,7 @@ The approved source is [docs/design/index.html](design/index.html), including it
 
 `/design-system` is a development-only preview with a launcher above regular screens. It uses local sample state and a nested theme provider. It does not save account settings or schedule notifications. The user approved its appearance; full accessibility and device coverage remain pending.
 
-Existing auth and conversation screens have not yet migrated to the approved UI. Next: onboarding, then chat, then settings and persisted theme preference. See [design-system usage](../src/design-system/README.md).
+Authentication, onboarding, chat, and Settings use the approved UI. Profile editing and asynchronous account deletion are connected to the backend, the device-wide theme preference persists in SQLite, and confirmed sign-out is implemented. See [design-system usage](../src/design-system/README.md).
 
 ## Architecture
 

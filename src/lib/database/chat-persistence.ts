@@ -84,7 +84,37 @@ export async function loadChatState(db: SQLiteDatabase, userId: string) {
   };
 }
 
-export async function saveDraft(
+// Keep the deletion guard for this database's lifetime, including late unmount flushes.
+const accountWrites = new WeakMap<SQLiteDatabase, Map<string, {
+  deleting: boolean;
+  active: Set<Promise<unknown>>;
+}>>();
+
+function writesFor(db: SQLiteDatabase, userId: string) {
+  let accounts = accountWrites.get(db);
+  if (!accounts) accountWrites.set(db, accounts = new Map());
+  let state = accounts.get(userId);
+  if (!state) accounts.set(userId, state = { deleting: false, active: new Set() });
+  return state;
+}
+
+async function persistForAccount(db: SQLiteDatabase, userId: string, write: () => Promise<void>) {
+  const state = writesFor(db, userId);
+  if (state.deleting) return;
+  const pending = write();
+  state.active.add(pending);
+  try {
+    await pending;
+  } finally {
+    state.active.delete(pending);
+  }
+}
+
+export function saveDraft(db: SQLiteDatabase, userId: string, draft: StoredDraft) {
+  return persistForAccount(db, userId, () => writeDraft(db, userId, draft));
+}
+
+async function writeDraft(
   db: SQLiteDatabase,
   userId: string,
   draft: StoredDraft,
@@ -108,7 +138,15 @@ export async function saveDraft(
   );
 }
 
-export async function savePendingSend(
+export function savePendingSend(
+  db: SQLiteDatabase,
+  userId: string,
+  pending: Omit<StoredPendingSend, 'userMessageId'> & { userMessageId?: string | null },
+) {
+  return persistForAccount(db, userId, () => writePendingSend(db, userId, pending));
+}
+
+async function writePendingSend(
   db: SQLiteDatabase,
   userId: string,
   pending: Omit<StoredPendingSend, 'userMessageId'> & { userMessageId?: string | null },
@@ -152,4 +190,14 @@ export async function savePendingSend(
 
 export async function clearPendingSend(db: SQLiteDatabase, userId: string) {
   await db.runAsync('DELETE FROM pending_messages WHERE user_id = ?', userId);
+}
+
+export async function clearAccountChatState(db: SQLiteDatabase, userId: string) {
+  const state = writesFor(db, userId);
+  state.deleting = true;
+  await Promise.allSettled([...state.active]);
+  await db.withTransactionAsync(async () => {
+    await db.runAsync('DELETE FROM drafts WHERE user_id = ?', userId);
+    await db.runAsync('DELETE FROM pending_messages WHERE user_id = ?', userId);
+  });
 }

@@ -4,11 +4,74 @@ Use this document to track Luni mobile delivery, blockers, and release gates.
 
 Last updated: 2026-10-02.
 
-Status: shared UI foundations, password authentication, onboarding, continuous-chat entry, approved chat milestones 6.1–6.6, account-scoped draft/pending-send recovery, and in-app AI response reporting are implemented. The production backend and mobile client use API v2, and the previously reviewed chat flow works on the connected physical Android device. Settings, account deletion UI, message-reporting device review, and the remaining release matrix are still pending.
+Status: shared UI foundations, password authentication, onboarding, continuous-chat entry, approved chat milestones 6.1–6.6, account-scoped draft/pending-send recovery, in-app AI response reporting, and the complete planned Settings account flow are implemented. The production backend and mobile client use API v2, and the previously reviewed chat flow works on the connected physical Android device. Account-deletion device review, message-reporting device review, and the remaining release matrix are still pending.
 
 Current status: the first local Android development build installed and launched successfully on a connected physical device. The login and sign-up screens render correctly. The prior Windows CMake object-path issue was addressed by relocating the app to a shorter path and using pnpm's hoisted node-modules layout.
 
 The user has reviewed the Design System preview, onboarding, production-backed continuous chat, and implemented chat interactions on an Android device. The tested flow works as expected. This review does not cover the full accessibility or device matrix.
+
+## Settings review fixes (2026-10-02)
+
+- [x] Block new chat persistence writes for a deleting account and drain active writes before clearing local rows, including late chat-unmount flushes.
+- [x] Clear local chat data before sign-out from deletion-in-progress recovery after restart; retain retry when cleanup fails.
+- [x] Bound Settings profile/deletion API calls and authentication waits to 20 seconds. Abort API requests on timeout, avoid offline-paused profile saves, and refresh chat in the background after a confirmed profile save.
+
+Verification: all 131 regression tests, TypeScript, ESLint for `src` and `scripts`, brand checks, and diff whitespace checks passed. Native and destructive live-account testing remain pending.
+
+## Settings account deletion (2026-10-02)
+
+- [x] Match the API v2.2 `DELETE /me` request, accepted receipt, and recent-authentication error with strict client schemas.
+- [x] Add an account-bound, bodyless, non-retrying deletion mutation that fails promptly offline.
+- [x] Add account-deletion review and destructive confirmation screens with irreversible-data copy and request-ID errors.
+- [x] Request deletion first, prompt for the current password only when the server requires recent authentication, then retry against the same account.
+- [x] After acceptance, clear account-scoped drafts and pending sends, sign out, and clear in-memory account queries through the existing provider remount.
+- [x] Preserve a recovery screen if local cleanup or sign-out fails after acceptance, and sign out sessions that later receive `ACCOUNT_DELETION_IN_PROGRESS`.
+- [ ] Complete live-backend Android review with a disposable account: acceptance, reauthentication, offline retry, duplicate taps, restart recovery, larger text, and TalkBack.
+
+Verification: all 131 regression tests, TypeScript, ESLint, brand checks, and an Android Metro/Hermes export passed. The shared-control renderer reached the documented Node 24 `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING` failure while loading `expo-navigation-bar`. No destructive live-account or native interaction test ran.
+
+## Settings account and sign-out (2026-10-02)
+
+- [x] Replace the read-only account summary with the authenticated email and a Sign out action.
+- [x] Add a themed confirmation dialog with heading focus, Android Back handling, loading lock, and retryable failure state.
+- [x] Call Supabase sign-out once per confirmed action and let protected routing return the user to authentication after session removal.
+- [x] Clear the prior account’s in-memory query cache through the existing account-keyed provider remount.
+- [x] Retain account-scoped draft and pending-send recovery on sign-out; another account cannot read those rows.
+- [ ] Complete live Android review for success, offline failure, duplicate taps, Back, larger text, and TalkBack.
+
+Verification: all 115 regression tests, TypeScript, ESLint, brand checks, and an Android Metro/Hermes export passed. The shared-control renderer reached the documented Node 24 `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING` failure while loading `expo-navigation-bar`. No native interaction review ran.
+
+## Settings persisted appearance (2026-10-02)
+
+- [x] Replace the read-only appearance summary with System, Light, and Dark choices.
+- [x] Add a version-3 SQLite migration for one device-wide appearance preference.
+- [x] Read the saved preference synchronously before mounting the app theme, and persist a choice before applying it.
+- [x] Keep the development Design System preview isolated from the persisted app preference.
+- [x] Apply the restored theme to app screens, status bar, Android navigation bar, and native root background.
+- [ ] Complete Android restart, System-mode device change, larger-text, and TalkBack review.
+
+Verification: all 113 regression tests, TypeScript, ESLint, brand checks, and an Android Metro/Hermes export passed. The shared-control renderer reached the documented Node 24 `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING` failure while loading `expo-navigation-bar`. No native interaction review ran.
+
+## Settings profile and conversation-style editing (2026-10-02)
+
+- [x] Replace the read-only preferred-name summary with a validated editor connected to `PATCH /me`.
+- [x] Replace the read-only conversation-style summary with the four approved choices, live sample copy, and confirmed server save.
+- [x] Preserve edits and selections after failures, expose request IDs, block duplicate taps, and prevent completed requests from navigating after unmount.
+- [x] Disable explicit and Android Back navigation while a save is active, then return to Settings only after server confirmation.
+- [ ] Complete live-backend Android review for saves, failures, duplicate taps, Back, larger text, and TalkBack.
+
+Verification: all 109 regression tests, TypeScript, ESLint, brand checks, and an Android Metro/Hermes export passed. The shared-control renderer reached the documented Node 24 `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING` failure while loading `expo-navigation-bar`. No native interaction review ran.
+
+## Settings navigation shell (2026-10-02)
+
+- [x] Add an accessible Settings action to the chat header.
+- [x] Add completed-onboarding-only routes for the Settings hub, profile, conversation style, appearance, account, and account deletion.
+- [x] Build a shared safe-area Settings layout with explicit Back behavior, screen-reader heading focus, themed separators, and constrained wide-screen content.
+- [x] Show server-backed profile values and the current in-memory appearance preference in the hub and read-only detail shells.
+- [x] Add preferred-name and conversation-style editing, persisted System, Light, and Dark appearance, confirmed sign-out, and account deletion. Memory and reminders remain hidden until backend contracts exist.
+- [ ] Complete native light/dark, Back, larger-text, and TalkBack review.
+
+Verification: all 106 regression tests, TypeScript, ESLint, brand checks, routing checks, and an Android Metro/Hermes export passed. The shared-control renderer reached the documented Node 24 `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING` failure while loading `expo-navigation-bar`. No native interaction review ran.
 
 ## AI response reporting (2026-10-02)
 

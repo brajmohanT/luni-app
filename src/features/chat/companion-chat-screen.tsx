@@ -13,9 +13,10 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
+import Svg, { Circle, Path } from 'react-native-svg';
 
-import { LuniLogo } from '@/design-system/components';
+import { IconButton, LuniLogo } from '@/design-system/components';
 import { type Theme, useTheme } from '@/design-system/theme';
 import { ChatComposer } from '@/features/chat/chat-composer';
 import { MessageReportModal } from '@/features/chat/message-report-modal';
@@ -46,6 +47,15 @@ const chatStarters = [
   'Let’s talk about something light',
   'I’m not sure where to start',
 ] as const;
+
+function SettingsIcon({ color, size }: { color: string; size: number }) {
+  return (
+    <Svg accessible={false} height={size} viewBox="0 0 24 24" width={size}>
+      <Circle cx="12" cy="12" fill="none" r="3" stroke={color} strokeWidth={1.8} />
+      <Path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.55v-.1A1.7 1.7 0 0 0 8.5 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.86-2.86.06-.06A1.7 1.7 0 0 0 4.1 15a1.7 1.7 0 0 0-1.5-1H2.5v-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.34-1.88l-.06-.06L6.56 4.2l.06.06A1.7 1.7 0 0 0 8.5 4.6a1.7 1.7 0 0 0 1-1.5V3h4v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.88-.34l.06-.06 2.86 2.86-.06.06A1.7 1.7 0 0 0 18.9 9a1.7 1.7 0 0 0 1.5 1h.1v4h-.1a1.7 1.7 0 0 0-1 .6Z" fill="none" stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} />
+    </Svg>
+  );
+}
 
 function calendarDay(value: string) {
   const date = new Date(value);
@@ -218,6 +228,7 @@ function FirstChatStarters({ onSelect }: { onSelect(value: string): void }) {
 }
 
 export default function CompanionChatScreen() {
+  const router = useRouter();
   const {
     data,
     error,
@@ -387,6 +398,8 @@ export default function CompanionChatScreen() {
               <Text accessibilityRole="header" style={chatStyles.headerTitle}>Luni</Text>
               <Text style={chatStyles.headerSubtitle}>Your AI companion</Text>
             </View>
+            <IconButton accessibilityLabel="Open settings" icon={SettingsIcon}
+              onPress={() => router.push('/(app)/settings')} />
           </View>
         </View>
 

@@ -1,7 +1,9 @@
 import { apiRequest } from '@/lib/api/client';
 import {
+  accountDeletionAcceptedSchema,
   profileSchema,
   updateProfileRequestSchema,
+  type AccountDeletionAccepted,
   type Profile,
   type UpdateProfileRequest,
 } from '@/lib/api/types';
@@ -45,6 +47,19 @@ export function completeMyOnboarding(options: ProfileRequestOptions = {}): Promi
     path: '/me/onboarding/complete',
     method: 'POST',
     responseSchema: profileSchema,
+    signal: options.signal,
+    expectedUserId: options.expectedUserId,
+    requestId: options.requestId,
+  });
+}
+
+export function deleteMyAccount(
+  options: ProfileRequestOptions = {},
+): Promise<AccountDeletionAccepted> {
+  return apiRequest({
+    path: '/me',
+    method: 'DELETE',
+    responseSchema: accountDeletionAcceptedSchema,
     signal: options.signal,
     expectedUserId: options.expectedUserId,
     requestId: options.requestId,

@@ -1,6 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-const DATABASE_VERSION = 2;
+const DATABASE_VERSION = 3;
 
 export async function migrateDatabase(db: SQLiteDatabase) {
   const result = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
@@ -84,6 +84,16 @@ export async function migrateDatabase(db: SQLiteDatabase) {
       CREATE INDEX pending_messages_user_id ON pending_messages (user_id);
     `);
     currentVersion = 2;
+  }
+
+  if (currentVersion === 2) {
+    await db.execAsync(`
+      CREATE TABLE app_preferences (
+        key TEXT PRIMARY KEY NOT NULL,
+        value TEXT NOT NULL
+      );
+    `);
+    currentVersion = 3;
   }
 
   await db.execAsync(`PRAGMA user_version = ${currentVersion}`);

@@ -1,7 +1,8 @@
 import { queryOptions, mutationOptions, type QueryClient } from '@tanstack/react-query';
-import { getMyProfile, updateMyProfile, completeMyOnboarding } from '@/lib/api/profile';
+import { completeMyOnboarding, deleteMyAccount, getMyProfile, updateMyProfile } from '@/lib/api/profile';
 import { ApiClientError } from '@/lib/api/errors';
 import type { Profile, UpdateProfileRequest } from '@/lib/api/types';
+import { withRequestTimeout } from '@/lib/api/with-request-timeout';
 
 export const profileKeys = {
   detail: (userId: string) => ['account', userId, 'profile'] as const,
@@ -44,7 +45,8 @@ function profileWriteOptions(client: QueryClient, userId: string | undefined) {
         current && current.profileVersion > profile.profileVersion ? current : profile,
       );
       // Restart queries previously blocked by incomplete onboarding.
-      await client.invalidateQueries({ queryKey: ['account', userId, 'conversations'] });
+      // A confirmed profile save must not wait for an unrelated chat refresh.
+      void client.invalidateQueries({ queryKey: ['account', userId, 'conversations'] });
     },
   };
 }
@@ -52,9 +54,10 @@ function profileWriteOptions(client: QueryClient, userId: string | undefined) {
 export function updateProfileMutationOptions(client: QueryClient, userId: string | undefined) {
   return mutationOptions({
     ...profileWriteOptions(client, userId),
+    networkMode: 'always',
     mutationFn: (request: UpdateProfileRequest) => {
       requireAccount(userId);
-      return updateMyProfile(request, { expectedUserId: userId });
+      return withRequestTimeout(signal => updateMyProfile(request, { expectedUserId: userId, signal }));
     },
   });
 }
@@ -65,6 +68,23 @@ export function completeOnboardingMutationOptions(client: QueryClient, userId: s
     mutationFn: () => {
       requireAccount(userId);
       return completeMyOnboarding({ expectedUserId: userId });
+    },
+  });
+}
+
+export function deleteMyAccountMutationOptions(client: QueryClient, userId: string | undefined) {
+  const accountKey = ['account', userId ?? 'anonymous'] as const;
+  return mutationOptions({
+    scope: { id: `profile:${userId ?? 'anonymous'}` },
+    retry: false,
+    networkMode: 'always',
+    onMutate: async () => {
+      requireAccount(userId);
+      await client.cancelQueries({ queryKey: accountKey });
+    },
+    mutationFn: () => {
+      requireAccount(userId);
+      return withRequestTimeout(signal => deleteMyAccount({ expectedUserId: userId, signal }));
     },
   });
 }

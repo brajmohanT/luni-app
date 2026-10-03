@@ -1,4 +1,4 @@
-import { createContext, type PropsWithChildren, useContext, useMemo, useState } from 'react';
+import { createContext, type PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react';
 import { useColorScheme } from 'react-native';
 
 import { resolveThemeMode, themes, type Theme, type ThemePreference } from './theme';
@@ -6,7 +6,7 @@ import { resolveThemeMode, themes, type Theme, type ThemePreference } from './th
 type ThemeContextValue = {
   theme: Theme;
   preference: ThemePreference;
-  setPreference: (preference: ThemePreference) => void;
+  setPreference: (preference: ThemePreference) => Promise<void>;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -14,13 +14,21 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function ThemeProvider({
   children,
   initialPreference = 'system',
-}: PropsWithChildren<{ initialPreference?: ThemePreference }>) {
+  onPreferenceChange,
+}: PropsWithChildren<{
+  initialPreference?: ThemePreference;
+  onPreferenceChange?: (preference: ThemePreference) => Promise<void> | void;
+}>) {
   const systemScheme = useColorScheme();
-  const [preference, setPreference] = useState<ThemePreference>(initialPreference);
+  const [preference, setPreferenceState] = useState<ThemePreference>(initialPreference);
+  const setPreference = useCallback(async (nextPreference: ThemePreference) => {
+    await onPreferenceChange?.(nextPreference);
+    setPreferenceState(nextPreference);
+  }, [onPreferenceChange]);
   const mode = resolveThemeMode(preference, systemScheme);
   const value = useMemo(
     () => ({ theme: themes[mode], preference, setPreference }),
-    [mode, preference],
+    [mode, preference, setPreference],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

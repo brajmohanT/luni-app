@@ -1,3 +1,4 @@
+import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import { Button, TextField } from '@/design-system/components';
@@ -5,6 +6,8 @@ import { useTheme } from '@/design-system/theme';
 import { entryFailure } from '@/features/auth/entry-failure';
 import { ProfileScreen } from '@/features/profile/profile-screen';
 import { isApiClientError } from '@/lib/api/errors';
+import { withRequestTimeout } from '@/lib/api/with-request-timeout';
+import { clearAccountChatState } from '@/lib/database/chat-persistence';
 import { useAuth } from '@/providers/auth-provider';
 
 type Props = { error: unknown; target: 'profile' | 'chat'; onRetry(): Promise<unknown>; compact?: boolean };
@@ -12,7 +15,8 @@ type Props = { error: unknown; target: 'profile' | 'chat'; onRetry(): Promise<un
 // Keep reauthentication in the current account's screen so its draft survives.
 export function EntryRecovery({ error, target, onRetry, compact = false }: Props) {
   const { theme } = useTheme();
-  const { session, signInWithPassword } = useAuth();
+  const db = useSQLiteContext();
+  const { session, signInWithPassword, signOut } = useAuth();
   const failure = entryFailure(error, target);
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -35,11 +39,20 @@ export function EntryRecovery({ error, target, onRetry, compact = false }: Props
         if (!mounted.current) return;
         setPassword('');
       }
+      if (failure.action === 'sign-out') {
+        if (!session?.user.id) return;
+        await clearAccountChatState(db, session.user.id);
+        if (!mounted.current) return;
+        await withRequestTimeout(() => signOut());
+        return;
+      }
       await onRetry();
     } catch {
       if (mounted.current) setNotice(failure.action === 'sign-in'
         ? 'Couldn’t sign in. Check your password and connection, then try again.'
-        : 'Couldn’t reload. Check your connection and try again.');
+        : failure.action === 'sign-out'
+          ? 'Couldn’t sign out. Check your connection and try again.'
+          : 'Couldn’t reload. Check your connection and try again.');
     } finally {
       locked.current = false;
       if (mounted.current) setBusy(false);
@@ -57,8 +70,11 @@ export function EntryRecovery({ error, target, onRetry, compact = false }: Props
       </>}
       {notice && <Text accessibilityRole="alert" style={{ ...theme.typography.secondary, color: theme.colors.danger }}>{notice}</Text>}
       {requestId && <Text selectable style={{ ...theme.typography.caption, color: theme.colors.textMuted }}>Request ID: {requestId}</Text>}
-      <Button loading={busy} loadingLabel={failure.action === 'sign-in' ? 'Signing in…' : 'Loading…'} onPress={() => void run()}>
-        {failure.action === 'sign-in' ? 'Sign in' : failure.action === 'profile' ? 'Reload profile' : 'Try again'}
+      <Button
+        loading={busy}
+        loadingLabel={failure.action === 'sign-in' ? 'Signing in…' : failure.action === 'sign-out' ? 'Signing out…' : 'Loading…'}
+        onPress={() => void run()}>
+        {failure.action === 'sign-in' ? 'Sign in' : failure.action === 'sign-out' ? 'Sign out' : failure.action === 'profile' ? 'Reload profile' : 'Try again'}
       </Button>
     </View>
   );

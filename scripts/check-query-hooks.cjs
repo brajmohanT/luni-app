@@ -31,10 +31,16 @@ function setup(overrides = {}) {
   const client = new query.QueryClient({ defaultOptions: { queries: { gcTime: Infinity }, mutations: { gcTime: Infinity } } });
   const profile = load('src/lib/queries/profile.ts', {
     '@tanstack/react-query': query, '@/lib/api/errors': errors,
+    '@/lib/api/with-request-timeout': load('src/lib/api/with-request-timeout.ts', {}, overrides.timeoutGlobals),
     '@/lib/api/profile': {
       getMyProfile: async options => { calls.push('profile'); return overrides.getProfile ? overrides.getProfile(options) : complete; },
-      updateMyProfile: async input => { calls.push('patch'); return overrides.update ? overrides.update(input) : { ...complete, ...input, profileVersion: 3 }; },
+      updateMyProfile: async (input, options) => { calls.push('patch'); return overrides.update ? overrides.update(input, options) : { ...complete, ...input, profileVersion: 3 }; },
       completeMyOnboarding: async () => { calls.push('complete'); return complete; },
+      deleteMyAccount: async options => {
+        calls.push(['delete', options]);
+        if (overrides.deleteAccount) return overrides.deleteAccount(options);
+        return { status: 'pending', requestedAt: time };
+      },
     },
   });
   const conversations = load('src/lib/queries/conversations.ts', {
@@ -86,6 +92,7 @@ test('signed-out queries stay disabled and manual execution cannot hit APIs', as
   assert.equal(app.profileQueryOptions(undefined).enabled, false);
   await assert.rejects(app.client.fetchInfiniteQuery(opts), e => e.code === 'MISSING_SESSION');
   await assert.rejects(mutate(app, app.updateProfileMutationOptions(app.client, undefined), { preferredName: 'Sam' }), e => e.code === 'MISSING_SESSION');
+  await assert.rejects(mutate(app, app.deleteMyAccountMutationOptions(app.client, undefined)), e => e.code === 'MISSING_SESSION');
   assert.deepEqual(app.calls, []);
   app.client.clear();
 });
@@ -190,6 +197,82 @@ test('profile writes share a serial scope so completion cannot overtake saving',
   assert.equal(app.client.getQueryData(app.profileKeys.detail('a')).profileVersion, 2);
   app.client.clear();
 });
+test('account deletion stays account-bound and does not retry', async () => {
+  const app = setup();
+  const receipt = await mutate(app, app.deleteMyAccountMutationOptions(app.client, 'a'));
+  assert.equal(receipt.status, 'pending');
+  assert.equal(app.calls.length, 1);
+  assert.equal(app.calls[0][0], 'delete');
+  assert.equal(app.calls[0][1].expectedUserId, 'a');
+
+  const failure = new Error('offline');
+  const failed = setup({ deleteAccount: () => { throw failure; } });
+  await assert.rejects(
+    mutate(failed, failed.deleteMyAccountMutationOptions(failed.client, 'a')),
+    failure,
+  );
+  assert.equal(failed.calls.length, 1);
+  app.client.clear();
+  failed.client.clear();
+});
+
+test('profile saves attempt once offline rather than pausing with navigation locked', async () => {
+  const app = setup({ update: () => { throw new Error('offline'); } });
+  query.onlineManager.setOnline(false);
+  try {
+    const options = app.updateProfileMutationOptions(app.client, 'a');
+    assert.equal(options.networkMode, 'always');
+    await assert.rejects(mutate(app, options, { preferredName: 'New name' }), /offline/);
+    assert.deepEqual(app.calls, ['patch']);
+  } finally {
+    query.onlineManager.setOnline(true);
+    app.client.clear();
+  }
+});
+
+for (const operation of ['update', 'deleteAccount']) {
+  test(`${operation} times out, aborts, and ignores late results`, async () => {
+    let expire;
+    let signal;
+    let finish;
+    let cleared = false;
+    const stall = options => {
+      signal = options.signal;
+      return new Promise(resolve => { finish = resolve; });
+    };
+    const app = setup({
+      timeoutGlobals: {
+        setTimeout: (fn, delay) => { assert.equal(delay, 20_000); expire = fn; return 1; },
+        clearTimeout: () => { cleared = true; },
+      },
+      update: (_input, options) => stall(options),
+      deleteAccount: stall,
+    });
+    const options = operation === 'update'
+      ? app.updateProfileMutationOptions(app.client, 'a')
+      : app.deleteMyAccountMutationOptions(app.client, 'a');
+    const pending = mutate(app, options, { preferredName: 'New name' });
+    const rejected = assert.rejects(pending, /timed out/);
+    await new Promise(resolve => setImmediate(resolve));
+    expire();
+    await rejected;
+    assert.equal(signal.aborted, true);
+    assert.equal(cleared, true);
+    finish(complete);
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(app.client.getQueryData(app.profileKeys.detail('a')), undefined);
+    app.client.clear();
+  });
+}
+
+test('confirmed profile saves do not wait for a stalled chat refresh', async () => {
+  const app = setup();
+  app.client.invalidateQueries = () => new Promise(() => {});
+  await mutate(app, app.updateProfileMutationOptions(app.client, 'a'), { preferredName: 'New name' });
+  assert.equal(app.client.getQueryData(app.profileKeys.detail('a')).preferredName, 'New name');
+  app.client.clear();
+});
+
 test('send failure is not automatically retried', async () => {
   const app = setup({ send: () => { throw new Error('busy'); } });
   await assert.rejects(mutate(app, app.sendChatMutationOptions(app.client, 'a'), { message: 'Hi', clientRequestId: 'id' }), /busy/);

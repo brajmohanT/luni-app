@@ -56,7 +56,7 @@ export function DesignSystemPreview() {
             {(['light', 'dark', 'system'] as ThemePreference[]).map(mode => (
               <Button key={mode} variant={preference === mode ? 'primary' : 'outlined'}
                 accessibilityState={{ selected: preference === mode }}
-                onPress={() => setPreference(mode)}>{mode[0].toUpperCase() + mode.slice(1)}</Button>
+                onPress={() => { void setPreference(mode); }}>{mode[0].toUpperCase() + mode.slice(1)}</Button>
             ))}
           </View>
 
@@ -109,7 +109,7 @@ export function DesignSystemPreview() {
             {appearanceOpen && <View style={styles.row}>
               {(['light', 'dark', 'system'] as ThemePreference[]).map(mode => (
                 <Button key={mode} variant={preference === mode ? 'primary' : 'outlined'} onPress={() => {
-                  setPreference(mode); setAppearanceOpen(false);
+                  void setPreference(mode); setAppearanceOpen(false);
                 }}>{mode[0].toUpperCase() + mode.slice(1)}</Button>
               ))}
             </View>}

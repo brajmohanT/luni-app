@@ -73,3 +73,62 @@ test('empty drafts and completed pending sends delete only the active account ro
   assert.match(calls[0][0], /DELETE FROM drafts/);
   assert.match(calls[1][0], /DELETE FROM pending_messages/);
 });
+
+test('deletion drains active writes and blocks late unmount writes only for that account', async () => {
+  const calls = [];
+  let finishWrite;
+  const db = {
+    async withTransactionAsync(task) { calls.push('cleanup'); await task(); },
+    async runAsync(sql, id) {
+      calls.push([sql, id]);
+      if (sql.includes('INSERT INTO drafts') && id === userId) {
+        await new Promise(resolve => { finishWrite = resolve; });
+      }
+    },
+  };
+  const write = persistence.saveDraft(db, userId, { body: 'Private draft', replyTarget: null });
+  const cleanup = persistence.clearAccountChatState(db, userId);
+  assert.equal(calls.length, 1);
+  finishWrite();
+  await Promise.all([write, cleanup]);
+  assert.equal(calls[1], 'cleanup');
+  const count = calls.length;
+  await persistence.saveDraft(db, userId, { body: 'Unmount flush', replyTarget: null });
+  await persistence.savePendingSend(db, userId, {});
+  assert.equal(calls.length, count);
+  await persistence.saveDraft(db, 'other-account', { body: 'Keep me', replyTarget: null });
+  assert.equal(calls.at(-1)[1], 'other-account');
+});
+
+test('failed deletion cleanup remains write-blocked and can be retried', async () => {
+  let fails = true;
+  let writes = 0;
+  const db = {
+    async withTransactionAsync(task) {
+      if (fails) throw new Error('disk error');
+      await task();
+    },
+    async runAsync() { writes++; },
+  };
+  await assert.rejects(persistence.clearAccountChatState(db, userId), /disk error/);
+  await persistence.saveDraft(db, userId, { body: 'Late write', replyTarget: null });
+  assert.equal(writes, 0);
+  fails = false;
+  await persistence.clearAccountChatState(db, userId);
+  assert.equal(writes, 2);
+});
+
+test('accepted account deletion clears all account-scoped chat recovery in one transaction', async () => {
+  const calls = [];
+  const db = {
+    async withTransactionAsync(task) { calls.push('begin'); await task(); calls.push('commit'); },
+    async runAsync(...args) { calls.push(args); },
+  };
+  await persistence.clearAccountChatState(db, userId);
+  assert.equal(calls[0], 'begin');
+  assert.match(calls[1][0], /DELETE FROM drafts/);
+  assert.equal(calls[1][1], userId);
+  assert.match(calls[2][0], /DELETE FROM pending_messages/);
+  assert.equal(calls[2][1], userId);
+  assert.equal(calls[3], 'commit');
+});

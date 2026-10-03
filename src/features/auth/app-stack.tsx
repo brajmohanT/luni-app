@@ -6,6 +6,14 @@ export function AppStack({ profile }: { profile: Profile }) {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
+      <Stack.Protected guard={complete}>
+        <Stack.Screen name="settings/index" />
+        <Stack.Screen name="settings/profile" />
+        <Stack.Screen name="settings/style" />
+        <Stack.Screen name="settings/appearance" />
+        <Stack.Screen name="settings/account" />
+        <Stack.Screen name="settings/delete-account" />
+      </Stack.Protected>
       <Stack.Protected guard={!complete}>
         <Stack.Screen name="onboarding/name" />
         <Stack.Protected guard={Boolean(profile.preferredName)}>

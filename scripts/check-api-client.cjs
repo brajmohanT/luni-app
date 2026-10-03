@@ -45,7 +45,7 @@ function setup(respond, session = { data: { session: { access_token: 'test-token
 const options = { path: '/me', responseSchema: z.object({ ok: z.boolean() }) };
 const ok = () => Response.json({ ok: true });
 
-for (const method of ['GET', 'POST', 'PUT']) {
+for (const method of ['GET', 'POST', 'PUT', 'DELETE']) {
   test(`${method} supports bodyless requests`, async () => {
     const app = setup(ok);
     const signal = new AbortController().signal;
@@ -141,6 +141,7 @@ const firstProfile = {
   email: 'sam@example.com', preferredName: null, conversationStyle: 'warm_balanced',
   onboardingCompletedAt: null, profileVersion: 0,
 };
+const deletionAccepted = { status: 'pending', requestedAt: '2026-09-26T12:00:00Z' };
 function setupProfiles(respond) {
   const app = setup(respond);
   const profiles = load('src/lib/api/profile.ts', {
@@ -184,13 +185,40 @@ test('completion is bodyless and returns the server completion timestamp', async
   assert.equal(request.body, undefined);
   assert.equal(request.headers['Content-Type'], undefined);
 });
+test('account deletion is bodyless and validates the accepted receipt', async () => {
+  const app = setupProfiles(() => Response.json(deletionAccepted, { status: 202 }));
+  assert.deepEqual(await app.deleteMyAccount(), deletionAccepted);
+  const [url, request] = app.calls[0];
+  assert.equal(url, 'https://example.test/me');
+  assert.equal(request.method, 'DELETE');
+  assert.equal(request.body, undefined);
+  assert.equal(request.headers['Content-Type'], undefined);
+});
+test('account deletion preserves recent-authentication metadata', async () => {
+  const app = setupProfiles(() => Response.json({
+    code: 'RECENT_AUTHENTICATION_REQUIRED', message: 'Sign in again.',
+  }, { status: 401, headers: { 'X-Request-Id': serverId } }));
+  await assert.rejects(app.deleteMyAccount(), error => {
+    assert.equal(error.code, 'RECENT_AUTHENTICATION_REQUIRED');
+    assert.equal(error.requestId, serverId);
+    return true;
+  });
+});
+test('account deletion rejects malformed accepted responses', async () => {
+  const app = setupProfiles(() => Response.json({ status: 'pending' }, { status: 202 }));
+  await assert.rejects(app.deleteMyAccount(), error => error.code === 'INVALID_RESPONSE');
+});
 test('all profile functions forward request IDs and cancellation signals', async () => {
-  const app = setupProfiles(() => Response.json(firstProfile));
+  const app = setupProfiles((_url, request) => Response.json(
+    request.method === 'DELETE' ? deletionAccepted : firstProfile,
+    request.method === 'DELETE' ? { status: 202 } : undefined,
+  ));
   const signal = new AbortController().signal;
   const opts = { requestId: serverId, signal };
   await app.getMyProfile(opts);
   await app.updateMyProfile({ preferredName: 'Sam' }, opts);
   await app.completeMyOnboarding(opts);
+  await app.deleteMyAccount(opts);
   for (const [, request] of app.calls) {
     assert.equal(request.headers['X-Request-Id'], serverId);
     assert.equal(request.signal, signal);
@@ -199,7 +227,7 @@ test('all profile functions forward request IDs and cancellation signals', async
 });
 test('all profile functions reject malformed server profiles', async () => {
   const app = setupProfiles(() => Response.json({ email: 'sam@example.com' }));
-  for (const run of [() => app.getMyProfile(), () => app.updateMyProfile({ preferredName: 'Sam' }), () => app.completeMyOnboarding()]) {
+  for (const run of [() => app.getMyProfile(), () => app.updateMyProfile({ preferredName: 'Sam' }), () => app.completeMyOnboarding(), () => app.deleteMyAccount()]) {
     await assert.rejects(run(), error => error.code === 'INVALID_RESPONSE');
   }
 });

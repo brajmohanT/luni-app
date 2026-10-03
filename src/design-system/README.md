@@ -29,11 +29,13 @@ const createStyles = (theme: Theme) => StyleSheet.create({
 });
 ```
 
-Call `setPreference('light' | 'dark' | 'system')` from appearance controls.
-Preference lives in memory for this foundation pass; persistence and the
-settings control remain feature work. `initialPreference` applies on mount.
-Existing screens retain their styles until migration, including navigation
-and status bars. The provider does not change global native appearance.
+Call and await `setPreference('light' | 'dark' | 'system')` from appearance
+controls. The app provider reads the device-wide preference from SQLite before
+mounting the theme and persists a new value before applying it. A nested
+`ThemeProvider` without `onPreferenceChange`, such as the development preview,
+keeps its preference local. `initialPreference` applies on mount. `SystemBars`
+keeps the status bar, Android navigation bar, and native root background aligned
+with the resolved theme.
 
 Use `colors.reaction` for filled blue reaction icons in both modes; `focus`
 is a separate color. Use `settingsBorder` for the stronger dark settings
@@ -145,7 +147,7 @@ In a development build, tap **Open Design System · Dev** at the top of any
 regular screen. The `/design-system` screen includes both brand backgrounds,
 the logo, all button variants, loading/disabled examples, and text fields.
 Switch light/dark/system appearance within the preview. Its nested theme
-provider keeps those choices separate from the app preference.
+provider keeps those choices separate from the persisted app preference.
 
 Tap **Try loading state** for a simulated save, or **Check email** to test an
 error without losing your input. All actions use local sample data. Close the

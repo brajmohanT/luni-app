@@ -11,7 +11,7 @@ import { env } from '@/lib/config/env';
 type ApiRequestOptions<T> = {
   path: string;
   responseSchema: ZodType<T>;
-  method?: 'GET' | 'POST' | 'PATCH' | 'PUT';
+  method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
   body?: unknown;
   signal?: AbortSignal;
   expectedUserId?: string;

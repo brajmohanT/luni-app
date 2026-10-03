@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  profileQueryOptions, updateProfileMutationOptions, completeOnboardingMutationOptions,
+  completeOnboardingMutationOptions,
+  deleteMyAccountMutationOptions,
+  profileQueryOptions,
+  updateProfileMutationOptions,
 } from '@/lib/queries/profile';
 import { useAuth } from '@/providers/auth-provider';
 
@@ -19,4 +22,10 @@ export function useCompleteMyOnboarding() {
   const { session } = useAuth();
   const client = useQueryClient();
   return useMutation(completeOnboardingMutationOptions(client, session?.user.id));
+}
+
+export function useDeleteMyAccount() {
+  const { session } = useAuth();
+  const client = useQueryClient();
+  return useMutation(deleteMyAccountMutationOptions(client, session?.user.id));
 }
